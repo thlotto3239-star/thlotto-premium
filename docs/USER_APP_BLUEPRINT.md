@@ -1,6 +1,7 @@
 # TH-LOTTO Premium — User App Blueprint
-**เวอร์ชัน:** 1.0 (Deploy: 29 เม.ย. 2569)  
-**Production URL:** https://th-lotto.life  
+**เวอร์ชัน:** 1.0 (Deploy: 29 เม.ย. 2569 — อัพเดทล่าสุด)  
+**Production URL:** https://th-lotto-app.vercel.app  
+**GitHub:** https://github.com/thlotto3239-star/thlotto-premium  
 **Database:** Supabase (ygopnjbvccenryejqmlw.supabase.co)
 
 ---
