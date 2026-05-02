@@ -7,7 +7,7 @@ const DEG = 360 / N;
 const toR = d => d * Math.PI / 180;
 const CX = 80, CY = 80, R = 68;
 
-const buildArc = (i, color) => {
+const buildArc = (i) => {
   const a1 = -90 + i * DEG, a2 = a1 + DEG;
   const x1 = CX + R * Math.cos(toR(a1)), y1 = CY + R * Math.sin(toR(a1));
   const x2 = CX + R * Math.cos(toR(a2)), y2 = CY + R * Math.sin(toR(a2));
@@ -45,6 +45,7 @@ export default function WheelAdmin() {
     setLoading(false);
   };
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load(); }, []);
 
   const current = (slot, field) =>

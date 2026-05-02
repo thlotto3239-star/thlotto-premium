@@ -61,7 +61,7 @@ const UploadSlip = () => {
       // 1. Upload to Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${profile.id}/${Date.now()}.${fileExt}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('slips')
         .upload(fileName, file);
 

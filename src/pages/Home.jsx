@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
 import { Link, useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
@@ -30,10 +29,9 @@ const formatThaiDate = (dateStr) => {
 };
 
 const Home = () => {
-  const { profile } = useAuth();
   const navigate = useNavigate();
   const [govResult, setGovResult] = useState(null);
-  const [draws, setDraws] = useState([]);
+  const [_draws, setDraws] = useState([]);
   const [popularLotteries, setPopularLotteries] = useState([]);
   const [banners, setBanners] = useState([]);
   const [promotions, setPromotions] = useState([]);
@@ -42,9 +40,9 @@ const Home = () => {
   const [trending, setTrending] = useState([]);
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState({});
-  const [currentBanner, setCurrentBanner] = useState(0);
+  const [_currentBanner, setCurrentBanner] = useState(0);
   const [selectedPromo, setSelectedPromo] = useState(null);
-  const [currentPromo, setCurrentPromo] = useState(0);
+  const [_currentPromo, setCurrentPromo] = useState(0);
   const promoSliderRef = useRef(null);
   const bannerSliderRef = useRef(null);
 
@@ -198,10 +196,6 @@ const Home = () => {
     const interval = setInterval(fetchGov, 60000);
     return () => clearInterval(interval);
   }, []);
-
-  const announcementText = announcements.length > 0
-    ? announcements.map(a => a.content).join('  •  ')
-    : 'ประกาศ: ระบบฝาก-ถอน อัตโนมัติ รวดเร็ว ทันใจ มั่นคง ปลอดภัย 100% บริการตลอด 24 ชั่วโมง';
 
   return (
     <div className="bg-white text-gray-900 pb-24 font-body min-h-screen">

@@ -65,8 +65,6 @@ const Wallet = () => {
 
   const isIncome = (type) => ['DEPOSIT', 'WIN', 'PAYOUT', 'BONUS'].includes(type);
 
-  const last4 = (profile?.member_id || '').toString().slice(-4).padStart(4, '•');
-
   const bankInfo = banks.find(b =>
     b.name === profile?.bank_name || b.code === profile?.bank_name
   );

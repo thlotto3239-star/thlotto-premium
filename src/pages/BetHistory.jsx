@@ -61,24 +61,6 @@ const BetHistory = () => {
     .filter(bet => activeTab === 'ALL' || bet.status === activeTab)
     .filter(bet => !filterDate || bet.created_at?.startsWith(filterDate));
 
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case 'WON': return 'bg-emerald-glow/20 text-emerald-glow border-emerald-glow/30';
-      case 'LOST': return 'bg-accent-red/10 text-accent-red border-accent-red/20';
-      case 'PENDING': return 'bg-accent-gold/10 text-accent-gold border-accent-gold/20';
-      default: return 'bg-gray-100 text-gray-400 border-gray-200';
-    }
-  };
-
-  const getStatusIconName = (status) => {
-    switch (status) {
-      case 'WON': return 'military_tech';
-      case 'LOST': return 'cancel';
-      case 'PENDING': return 'schedule';
-      default: return 'info';
-    }
-  };
-
   const getStatusText = (status) => {
     switch (status) {
       case 'WON': return 'ถูกรางวัล';

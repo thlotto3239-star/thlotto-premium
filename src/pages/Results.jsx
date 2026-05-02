@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import AppHeader from '../components/AppHeader';
 
@@ -28,7 +28,6 @@ const isPending = (v) => {
 };
 
 const Results = () => {
-  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
 

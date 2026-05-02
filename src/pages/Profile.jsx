@@ -78,7 +78,7 @@ const Profile = () => {
           </div>
           <div className="mt-6 text-center">
             <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight font-thai">{profile?.full_name || 'ผู้ใช้งานทั่วไป'}</h2>
-            <p className="text-slate-400 text-sm font-medium mt-1 uppercase tracking-tight font-thai">ID: {profile?.member_id || '------'} • สมาชิกตั้งแต่ {new Date(profile?.created_at || Date.now()).getFullYear()}</p>
+            <p className="text-slate-400 text-sm font-medium mt-1 uppercase tracking-tight font-thai">ID: {profile?.member_id || '------'} • สมาชิกตั้งแต่ {profile?.created_at ? new Date(profile.created_at).getFullYear() : '-'}</p>
           </div>
         </div>
         {/* Account Stats Grid */}

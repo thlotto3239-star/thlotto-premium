@@ -24,7 +24,7 @@ const Betting = () => {
   const [searchParams] = useSearchParams();
   const drawId = searchParams.get('draw');
   const navigate = useNavigate();
-  const { profile, refreshProfile } = useAuth();
+  const { refreshProfile } = useAuth();
 
   const [draw, setDraw] = useState(null);
   const [liveStreamUrl, setLiveStreamUrl] = useState('');

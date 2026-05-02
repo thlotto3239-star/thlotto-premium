@@ -5,7 +5,7 @@ import { supabase } from '../supabaseClient';
 const Deposit = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState(() => searchParams.get('amount') || '');
   const promoCode = searchParams.get('promo') || null;
   const promoName = searchParams.get('promoName') || null;
   const isPromoDeposit = !!promoCode;
@@ -17,11 +17,6 @@ const Deposit = () => {
   });
 
   useEffect(() => {
-    const amountParam = searchParams.get('amount');
-    if (amountParam) {
-      setAmount(amountParam);
-    }
-
     const fetchBankSettings = async () => {
       const { data, error } = await supabase
         .from('settings')
