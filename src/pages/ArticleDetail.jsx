@@ -18,6 +18,7 @@ const ArticleDetail = () => {
         .from('articles')
         .select('*')
         .eq('id', id)
+        .eq('is_published', true)
         .single();
       setArticle(data);
 

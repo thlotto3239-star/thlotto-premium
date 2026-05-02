@@ -7,6 +7,15 @@ const DepositSuccess = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useAuth();
+  const handleShare = () => {
+    const text = `เติมเงิน TH-LOTTO สำเร็จ ฿${Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+    if (navigator.share) {
+      navigator.share({ title: 'TH-LOTTO Premium', text }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(text);
+    }
+  };
+
   const amount = location.state?.amount || 0;
   const txRef = location.state?.txRef || '';
   const createdAt = location.state?.createdAt ? new Date(location.state.createdAt) : new Date();
@@ -22,7 +31,7 @@ const DepositSuccess = () => {
             <span className="material-symbols-outlined text-xl">close</span>
           </button>
           <h2 className="text-xs font-bold tracking-widest uppercase text-slate-300">TH-LOTTO Premium</h2>
-          <button className="flex w-10 h-10 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-colors active:bg-slate-100">
+          <button onClick={handleShare} className="flex w-10 h-10 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-colors active:bg-slate-100">
             <span className="material-symbols-outlined text-xl">share</span>
           </button>
         </header>

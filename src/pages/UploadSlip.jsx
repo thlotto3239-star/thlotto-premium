@@ -4,7 +4,7 @@ import { supabase } from '../supabaseClient';
 import { useAuth } from '../AuthContext';
 
 const UploadSlip = () => {
-  const { profile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [file, setFile] = useState(null);
@@ -82,6 +82,7 @@ const UploadSlip = () => {
       if (rpcError) throw rpcError;
 
       if (rpcData.success) {
+        await refreshProfile();
         navigate('/deposit-success', { state: { amount: depositAmount, txRef: rpcData.request_id } });
       } else {
         setError(rpcData.message);

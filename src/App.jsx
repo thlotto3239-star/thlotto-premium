@@ -32,6 +32,7 @@ import ChangePassword from './pages/ChangePassword';
 import Terms from './pages/Terms';
 import Articles from './pages/Articles';
 import ArticleDetail from './pages/ArticleDetail';
+import Processing from './pages/Processing';
 
 const RootRedirect = () => {
   const { user, loading } = useAuth();
@@ -76,6 +77,8 @@ function App() {
           <Route path="/terms" element={<ProtectedRoute><Terms /></ProtectedRoute>} />
           <Route path="/articles" element={<ProtectedRoute><Articles /></ProtectedRoute>} />
           <Route path="/articles/:id" element={<ProtectedRoute><ArticleDetail /></ProtectedRoute>} />
+          <Route path="/processing" element={<ProtectedRoute><Processing /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/home" replace />} />
 
         </Routes>
       </Router>

@@ -33,7 +33,7 @@ const Profile = () => {
           .eq('status', 'WON'),
         supabase
           .from('profiles')
-          .select('id', { count: 'exact' })
+          .select('id', { count: 'exact', head: true })
           .eq('referrer_id', user.id),
       ]);
       const betCount = betsRes.count || 0;

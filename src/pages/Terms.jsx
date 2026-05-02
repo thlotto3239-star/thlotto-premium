@@ -73,6 +73,9 @@ const Terms = () => {
   const [extraTerms, setExtraTerms] = useState([]);
   const [siteName, setSiteName] = useState('TH-LOTTO');
   const [serviceHours, setServiceHours] = useState('');
+  const [minDeposit, setMinDeposit] = useState(null);
+  const [minWithdraw, setMinWithdraw] = useState(null);
+  const [minBet, setMinBet] = useState(null);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -85,6 +88,9 @@ const Terms = () => {
         data.forEach(d => { map[d.key] = d.value; });
         if (map.site_name) setSiteName(map.site_name);
         if (map.service_hours_text) setServiceHours(map.service_hours_text);
+        if (map.min_deposit) setMinDeposit(map.min_deposit);
+        if (map.min_withdraw) setMinWithdraw(map.min_withdraw);
+        if (map.min_bet) setMinBet(map.min_bet);
         if (map.terms_html) {
           const parser = new DOMParser();
           const doc = parser.parseFromString(`<ul>${map.terms_html}</ul>`, 'text/html');
@@ -123,6 +129,33 @@ const Terms = () => {
             </p>
           </div>
         </div>
+
+        {/* Quick Info Bar */}
+        {(minDeposit || minWithdraw || minBet) && (
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            {minDeposit && (
+              <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 text-center flex flex-col items-center gap-1">
+                <span className="material-symbols-outlined text-emerald-600 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>savings</span>
+                <p className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wide">ฝากขั้นต่ำ</p>
+                <p className="text-base font-black text-emerald-900">฿{Number(minDeposit).toLocaleString()}</p>
+              </div>
+            )}
+            {minWithdraw && (
+              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-3 text-center flex flex-col items-center gap-1">
+                <span className="material-symbols-outlined text-blue-600 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
+                <p className="text-[10px] font-extrabold text-blue-700 uppercase tracking-wide">ถอนขั้นต่ำ</p>
+                <p className="text-base font-black text-blue-900">฿{Number(minWithdraw).toLocaleString()}</p>
+              </div>
+            )}
+            {minBet && (
+              <div className="bg-amber-50 border border-amber-100 rounded-2xl p-3 text-center flex flex-col items-center gap-1">
+                <span className="material-symbols-outlined text-amber-600 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>confirmation_number</span>
+                <p className="text-[10px] font-extrabold text-amber-700 uppercase tracking-wide">แทงขั้นต่ำ</p>
+                <p className="text-base font-black text-amber-900">฿{Number(minBet).toLocaleString()}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Extra terms from DB (if any) */}
         {extraTerms.length > 0 && (

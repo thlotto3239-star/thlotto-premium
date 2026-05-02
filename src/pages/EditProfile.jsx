@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import { useAuth } from '../AuthContext';
@@ -8,9 +8,44 @@ const EditProfile = () => {
   const { profile, user, signOut, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef(null);
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
   });
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert('ขนาดรูปภาพต้องไม่เกิน 2MB');
+      return;
+    }
+    setAvatarUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `${profile.id}/avatar.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: publicUrl })
+        .eq('id', profile.id);
+      if (updateError) throw updateError;
+      await refreshProfile();
+      alert('อัปเดตรูปโปรไฟล์สำเร็จ');
+    } catch (err) {
+      console.error('Avatar upload error:', err);
+      alert('เกิดข้อผิดพลาดในการอัปโหลดรูป');
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
 
   const handleUpdate = async () => {
     setLoading(true);
@@ -64,15 +99,29 @@ const EditProfile = () => {
         {/* Profile Picture Section */}
         <section className="flex flex-col items-center mb-8">
           <div className="relative">
+            <input
+              ref={avatarInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
             <div className="w-32 h-32 rounded-full border-4 border-white ring-1 ring-zinc-200 overflow-hidden bg-zinc-100">
               <img
                 alt="Avatar"
                 className="w-full h-full object-cover"
-                src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.phone}`}
+                src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.phone}`}
               />
             </div>
-            <button className="absolute bottom-0 right-0 bg-emerald-600 text-white p-3 rounded-full border-4 border-white transition-all duration-200 active:scale-90 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>photo_camera</span>
+            <button
+              onClick={() => avatarInputRef.current?.click()}
+              disabled={avatarUploading}
+              className="absolute bottom-0 right-0 bg-emerald-600 text-white p-3 rounded-full border-4 border-white transition-all duration-200 active:scale-90 flex items-center justify-center disabled:opacity-60"
+            >
+              {avatarUploading
+                ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                : <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>photo_camera</span>
+              }
             </button>
           </div>
           <p className="mt-4 text-sm font-semibold text-zinc-500">แก้ไขรูปโปรไฟล์</p>
