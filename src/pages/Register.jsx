@@ -53,6 +53,15 @@ const Register = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const PIN_BLACKLIST = [
+    '0000','1111','2222','3333','4444',
+    '5555','6666','7777','8888','9999',
+    '1234','4321','1122','2233','3344',
+    '4455','5566','6677','7788','8899',
+    '0123','3210','9876','6789','1212',
+    '2121','1010','0101','2580','0852'
+  ];
+
   const handleNextStep = (e) => {
     e.preventDefault();
     if (!/^0\d{8,9}$/.test(formData.phone)) {
@@ -65,6 +74,10 @@ const Register = () => {
     }
     if (formData.pin.length !== 4) {
       setError('PIN ต้องมี 4 หลัก');
+      return;
+    }
+    if (PIN_BLACKLIST.includes(formData.pin)) {
+      setError('PIN นี้ง่ายเกินไป กรุณาเลือก PIN ที่ปลอดภัยกว่า เช่น ไม่ใช่ 1234, 0000');
       return;
     }
     if (formData.pin !== formData.confirm_pin) {

@@ -13,9 +13,19 @@ const ChangePassword = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
 
+  const PIN_BLACKLIST = [
+    '0000','1111','2222','3333','4444',
+    '5555','6666','7777','8888','9999',
+    '1234','4321','1122','2233','3344',
+    '4455','5566','6677','7788','8899',
+    '0123','3210','9876','6789','1212',
+    '2121','1010','0101','2580','0852'
+  ];
+
   const validate = () => {
     if (!newPin) return 'กรุณากรอก PIN ใหม่';
     if (!/^\d{4}$/.test(newPin)) return 'PIN ต้องเป็นตัวเลข 4 หลักเท่านั้น';
+    if (PIN_BLACKLIST.includes(newPin)) return 'PIN นี้ง่ายเกินไป กรุณาเลือก PIN ที่ปลอดภัยกว่า';
     if (newPin !== confirmPin) return 'PIN ใหม่ไม่ตรงกัน';
     return '';
   };

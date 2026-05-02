@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
+import { supabase } from '../supabaseClient';
 
 const Login = () => {
   const [phone, setPhone] = useState('');
@@ -8,8 +9,20 @@ const Login = () => {
   const [showPin, setShowPin] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [lockSeconds, setLockSeconds] = useState(0);
   const { signIn } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (lockSeconds <= 0) return;
+    const timer = setInterval(() => {
+      setLockSeconds(prev => {
+        if (prev <= 1) { setError(''); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lockSeconds]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -17,15 +30,37 @@ const Login = () => {
       setError('กรุณากรอก PIN 4 หลัก');
       return;
     }
+    if (lockSeconds > 0) return;
     setLoading(true);
     setError('');
 
     try {
+      // ตรวจ rate limit ก่อน login
+      const { data: rlCheck } = await supabase.rpc('check_login_rate_limit', { p_phone: phone });
+      if (rlCheck?.locked) {
+        setLockSeconds(Math.max(rlCheck.remaining_seconds || 60, 1));
+        setError(`บัญชีถูกล็อคชั่วคราว กรุณารอ ${Math.ceil((rlCheck.remaining_seconds || 60) / 60)} นาที`);
+        return;
+      }
+
       const { error: signInError } = await signIn(phone, pin);
-      if (signInError) throw signInError;
+      if (signInError) {
+        // บันทึก failed attempt
+        await supabase.rpc('record_login_attempt', { p_phone: phone, p_success: false });
+        const remaining = (rlCheck?.remaining_attempts ?? 5) - 1;
+        setError(`เบอร์โทรศัพท์หรือ PIN ไม่ถูกต้อง${remaining > 0 ? ` (เหลืออีก ${remaining} ครั้ง)` : ''}`);
+        if (remaining <= 0) {
+          setLockSeconds(900);
+          setError('ใส่ PIN ผิดเกินจำนวนครั้ง บัญชีถูกล็อค 15 นาที');
+        }
+        return;
+      }
+
+      // บันทึก success → ลบ failed records
+      await supabase.rpc('record_login_attempt', { p_phone: phone, p_success: true });
       navigate('/home');
     } catch (err) {
-      setError('เบอร์โทรศัพท์หรือรหัสผ่านไม่ถูกต้อง');
+      setError('เกิดข้อผิดพลาด กรุณาลองใหม่');
       console.error(err);
     } finally {
       setLoading(false);
@@ -125,12 +160,14 @@ const Login = () => {
               {/* Login Button */}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || lockSeconds > 0}
                 className="w-full flex items-center justify-center gap-3 py-4 text-white font-extrabold text-lg rounded-full active:scale-[0.98] transition-all border-b-4 border-emerald-900 disabled:opacity-50"
-                style={{ background: '#008a3e' }}
+                style={{ background: lockSeconds > 0 ? '#dc2626' : '#008a3e' }}
               >
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : lockSeconds > 0 ? (
+                  <span>ล็อค {Math.floor(lockSeconds / 60)}:{String(lockSeconds % 60).padStart(2, '0')}</span>
                 ) : (
                   <>
                     <span>เข้าสู่ระบบ</span>
