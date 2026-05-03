@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import AppHeader from '../components/AppHeader';
+import { supabase } from '../supabaseClient';
 
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6H6WWef9PagUoZE5wOGcOcUgkz0OVhCVR4hV-EvPgVrG2532EPd3cNJzjfyyoIfvdzAek-nFNVvNp/pub?gid=36966565&single=true&output=csv';
 
@@ -14,35 +15,99 @@ const parseCSV = (text) => {
   }).filter(r => r.code);
 };
 
-const formatThaiDate = (dateStr) => {
-  if (!dateStr) return '';
-  const match = dateStr.match(/(\d{1,2})\s+([\u0e00-\u0e7f]+)\s+(\d{4})/);
-  if (match) return `งวดวันที่ ${match[1]} ${match[2]} ${match[3]}`;
-  return dateStr;
-};
-
 const isPending = (v) => {
   if (!v) return true;
   const s = v.trim().toLowerCase();
-  return !s || s === 'รอผล' || /^[x\s]+$/.test(s);
+  return !s || s === 'รอผล' || /^[x\s\-]+$/.test(s);
+};
+
+const fmtDBDate = (d) => {
+  if (!d) return '';
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+};
+
+const fmtCsvDate = (dateStr) => {
+  if (!dateStr) return '';
+  const thMatch = dateStr.match(/(\d{1,2})\s+([\u0e00-\u0e7f]+)\s+(\d{4})/);
+  if (thMatch) return `${thMatch[1]} ${thMatch[2]} ${thMatch[3]}`;
+  const slashMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (slashMatch) {
+    let [, d, m, y] = slashMatch;
+    if (parseInt(y) > 2400) y = String(parseInt(y) - 543);
+    else if (y.length === 2) { const n = parseInt(y); y = n > 43 ? String(n + 1957) : String(2000 + n); }
+    const dt = new Date(`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}T00:00:00`);
+    return dt.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+  return dateStr;
 };
 
 const Results = () => {
   const [rows, setRows] = useState([]);
+  const [dbResults, setDbResults] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchDB = async () => {
+    const { data } = await supabase
+      .from('lottery_results')
+      .select('market_id, draw_date, result_main, result_3top, result_3front, result_3bottom, result_2top, result_2bottom, status, announced_at, lottery_markets(code, name, logo_url)')
+      .eq('status', 'ANNOUNCED')
+      .order('announced_at', { ascending: false })
+      .limit(50);
+    setDbResults(data || []);
+  };
+
   useEffect(() => {
-    fetch(CSV_URL)
-      .then(r => r.text())
-      .then(text => { setRows(parseCSV(text)); })
-      .catch(err => console.error('CSV fetch error:', err))
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetch(CSV_URL).then(r => r.text()).then(text => setRows(parseCSV(text))).catch(() => {}),
+      fetchDB(),
+    ]).finally(() => setLoading(false));
+
+    const ch = supabase.channel('results-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lottery_results' }, fetchDB)
+      .subscribe();
+    return () => supabase.removeChannel(ch);
   }, []);
 
+  const normalizeDB = (r) => {
+    const code = r.lottery_markets?.code || '';
+    return {
+      code,
+      name:  r.lottery_markets?.name || '',
+      date:  fmtDBDate(r.draw_date),
+      main:  r.result_main    || '',
+      top3:  code === 'TH_GOV' ? (r.result_3front || '') : (r.result_3top || ''),
+      top2:  r.result_2top    || '',
+      bot2:  r.result_3bottom || '',
+      col6:  r.result_2bottom || '',
+      logo:  r.lottery_markets?.logo_url || '',
+      _db:   true,
+    };
+  };
 
-  const govRow     = rows.find(r => r.code === 'TH_GOV');
-  const foreignRows = rows.filter(r => ['LAO_DEV','HANOI_VIP','HANOI','HANOI_SPECIAL','MALAY'].includes(r.code));
-  const stockRows  = rows.filter(r => r.code.startsWith('STOCK_') || r.code.startsWith('NIKKEI_') || r.code.startsWith('CHINA_') || r.code.startsWith('HANGSENG_'));
+  const dbCodes = new Set(dbResults.map(r => r.lottery_markets?.code).filter(Boolean));
+
+  const govDB   = dbResults.find(r => r.lottery_markets?.code === 'TH_GOV');
+  const govRow  = govDB ? normalizeDB(govDB) : rows.find(r => r.code === 'TH_GOV');
+
+  const normCsvDate = (r) => ({ ...r, date: fmtCsvDate(r.date) });
+
+  const FOREIGN_CODES = ['LAO_DEV','HANOI_VIP','HANOI','HANOI_SPECIAL','MALAY'];
+  const dedupeByCode = (arr) => {
+    const seen = new Set();
+    return arr.filter(r => { if (seen.has(r.code)) return false; seen.add(r.code); return true; });
+  };
+  const foreignRows = dedupeByCode([
+    ...dbResults.filter(r => FOREIGN_CODES.includes(r.lottery_markets?.code)).map(normalizeDB),
+    ...rows.filter(r => FOREIGN_CODES.includes(r.code) && !dbCodes.has(r.code)).map(normCsvDate),
+  ]);
+
+  const isStock = (code) => code && (code.startsWith('STOCK_') || code.startsWith('NIKKEI_') || code.startsWith('CHINA_') || code.startsWith('HANGSENG_'));
+  const stockRows = dedupeByCode([
+    ...dbResults.filter(r => isStock(r.lottery_markets?.code)).map(normalizeDB),
+    ...rows.filter(r => isStock(r.code) && !dbCodes.has(r.code)).map(normCsvDate),
+  ]);
+
 
   return (
     <div className="bg-white min-h-screen text-slate-900 font-body flex flex-col">
@@ -55,7 +120,7 @@ const Results = () => {
           </div>
         ) : (
           <>
-            {/* ── GOV CARD (prototype-exact) ── */}
+            {/* ── GOV CARD ── */}
             {govRow && (
               <section className="mb-8">
                 <div className="bg-[#064e3b] rounded-[2.5rem] overflow-hidden text-white border border-emerald-900/10">
@@ -67,7 +132,9 @@ const Results = () => {
                         </div>
                         <div className="min-w-0">
                           <h2 className="text-lg font-bold">สลากกินแบ่งรัฐบาล</h2>
-                          <p className="text-white/70 text-[10px] font-medium truncate">{formatThaiDate(govRow.date)}</p>
+                          <p className="text-white/70 text-[10px] font-medium truncate">
+                            {govRow._db ? govRow.date : fmtCsvDate(govRow.date)}
+                          </p>
                         </div>
                       </div>
                       <div className={`px-3 py-1 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0 ml-2 ${isPending(govRow.main) ? 'bg-red-500 text-white' : 'bg-green-400 text-white'}`}>
@@ -77,24 +144,35 @@ const Results = () => {
                     <div className="mb-6 text-center">
                       <p className="text-white/80 text-[11px] font-medium mb-3">รางวัลที่ 1</p>
                       <div className="flex justify-center gap-1.5">
-                        {(govRow.main || '').split('').map((digit, i) => (
-                          <span key={i} className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#064e3b] font-bold text-xl">{digit}</span>
-                        ))}
+                        {isPending(govRow.main)
+                          ? Array.from({ length: 6 }).map((_, i) => (
+                              <span key={i} className="w-10 h-10 bg-white/15 border border-white/20 rounded-full flex items-center justify-center text-white/30 font-bold text-xl">?</span>
+                            ))
+                          : (govRow.main).split('').map((digit, i) => (
+                              <span key={i} className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#064e3b] font-bold text-xl">{digit}</span>
+                            ))
+                        }
                       </div>
                     </div>
                     <div className="h-px bg-white/10 mb-5"></div>
                     <div className="grid grid-cols-3 gap-2 text-center">
                       <div>
                         <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวหน้า</p>
-                        <div className="text-base font-bold">{govRow.top3}</div>
+                        <div className="text-base font-bold">
+                          {isPending(govRow.main) ? <span className="text-white/30">—</span> : (govRow.top3 || '—')}
+                        </div>
                       </div>
                       <div>
                         <p className="text-white/60 text-[9px] font-medium mb-1">2 ตัวล่าง</p>
-                        <div className="text-xl font-bold">{govRow.col6}</div>
+                        <div className="text-xl font-bold">
+                          {isPending(govRow.main) ? <span className="text-white/30">—</span> : (govRow.col6 || '—')}
+                        </div>
                       </div>
                       <div>
                         <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวท้าย</p>
-                        <div className="text-base font-bold">{govRow.bot2}</div>
+                        <div className="text-base font-bold">
+                          {isPending(govRow.main) ? <span className="text-white/30">—</span> : (govRow.bot2 || '—')}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -109,41 +187,49 @@ const Results = () => {
                   <h3 className="text-base font-bold text-slate-900">ผลหวยอื่นๆ</h3>
                 </div>
                 <div className="space-y-3">
-                  {foreignRows.map((r) => (
-                    <div key={r.code} className="bg-white p-4 rounded-2xl border border-slate-100">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-slate-50 shrink-0">
-                            {r.logo
-                              ? <img alt={r.name} className="w-full h-full object-cover" src={r.logo} />
-                              : <span className="material-symbols-outlined text-slate-400 text-lg">flag</span>}
+                  {foreignRows.map((r) => {
+                    const pending = isPending(r.main) && isPending(r.top3);
+                    const display2Top  = r._db ? r.top2  : r.col6;
+                    const display2Bot  = r._db ? r.col6  : r.bot2;
+                    return (
+                      <div key={r.code} className="bg-white p-4 rounded-2xl border border-slate-100">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-slate-50 shrink-0">
+                              {r.logo
+                                ? <img alt={r.name} className="w-full h-full object-cover" src={r.logo} />
+                                : <span className="material-symbols-outlined text-slate-400 text-lg">flag</span>}
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="font-bold text-slate-900 text-sm whitespace-nowrap truncate">{r.name}</h4>
+                              <p className="text-[9px] text-slate-400 font-medium whitespace-nowrap">{r.date}</p>
+                            </div>
                           </div>
-                          <div className="min-w-0">
-                            <h4 className="font-bold text-slate-900 text-sm whitespace-nowrap truncate">{r.name}</h4>
-                            <p className="text-[9px] text-slate-400 font-medium whitespace-nowrap">{r.date}</p>
+                          <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full shrink-0 ml-2 ${pending ? 'bg-slate-100 text-slate-400' : 'bg-green-100 text-green-700'}`}>
+                            {pending ? 'รอผล' : 'ประกาศแล้ว'}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2">
+                          <div className="text-center bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                            <p className="text-[7px] text-slate-400 font-bold uppercase">รางวัล</p>
+                            <p className="text-xs font-bold text-slate-800">{pending ? '—' : (r.main || r.top3)}</p>
+                          </div>
+                          <div className="text-center bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                            <p className="text-[7px] text-slate-400 font-bold uppercase">3 บน</p>
+                            <p className="text-xs font-bold text-slate-800">{pending ? '—' : (r.top3 || '—')}</p>
+                          </div>
+                          <div className="text-center bg-slate-50 p-1.5 rounded-xl border border-slate-100">
+                            <p className="text-[7px] text-slate-400 font-bold uppercase">2 บน</p>
+                            <p className="text-xs font-bold text-slate-800">{pending ? '—' : (display2Top || '—')}</p>
+                          </div>
+                          <div className="text-center bg-primary/5 p-1.5 rounded-xl border border-primary/10">
+                            <p className="text-[7px] text-primary font-bold uppercase">2 ล่าง</p>
+                            <p className="text-xs font-bold text-primary">{pending ? '—' : (display2Bot || '—')}</p>
                           </div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        <div className="text-center bg-slate-50 p-1.5 rounded-xl border border-slate-100">
-                          <p className="text-[7px] text-slate-400 font-bold uppercase">รางวัล</p>
-                          <p className="text-xs font-bold text-slate-800">{r.main}</p>
-                        </div>
-                        <div className="text-center bg-slate-50 p-1.5 rounded-xl border border-slate-100">
-                          <p className="text-[7px] text-slate-400 font-bold uppercase">3 บน</p>
-                          <p className="text-xs font-bold text-slate-800">{r.top3}</p>
-                        </div>
-                        <div className="text-center bg-slate-50 p-1.5 rounded-xl border border-slate-100">
-                          <p className="text-[7px] text-slate-400 font-bold uppercase">3 ท้าย</p>
-                          <p className="text-xs font-bold text-slate-800">{r.bot2}</p>
-                        </div>
-                        <div className="text-center bg-primary/5 p-1.5 rounded-xl border border-primary/10">
-                          <p className="text-[7px] text-primary font-bold uppercase">2 ล่าง</p>
-                          <p className="text-xs font-bold text-primary">{r.col6}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             )}
@@ -158,38 +244,41 @@ const Results = () => {
                   </h3>
                 </div>
                 <div className="grid grid-cols-1 gap-3">
-                  {stockRows.map((r) => (
-                    <div key={r.code} className="bg-white p-3 rounded-2xl border border-slate-100 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-3 min-w-0">
-                        {r.logo ? (
-                          <img alt={r.name} className="w-8 h-8 rounded-full object-cover shrink-0" src={r.logo} />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                            <span className="material-symbols-outlined text-slate-400 text-sm">show_chart</span>
+                  {stockRows.map((r) => {
+                    const pending = isPending(r.top3);
+                    return (
+                      <div key={r.code} className="bg-white p-3 rounded-2xl border border-slate-100 flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-3 min-w-0">
+                          {r.logo ? (
+                            <img alt={r.name} className="w-8 h-8 rounded-full object-cover shrink-0" src={r.logo} />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                              <span className="material-symbols-outlined text-slate-400 text-sm">show_chart</span>
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <h4 className="font-bold text-slate-900 text-xs whitespace-nowrap truncate">{r.name}</h4>
+                            <p className="text-[8px] text-slate-400 whitespace-nowrap">{r.date}</p>
                           </div>
-                        )}
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-slate-900 text-xs whitespace-nowrap truncate">{r.name}</h4>
-                          <p className="text-[8px] text-slate-400 whitespace-nowrap">{r.date}</p>
+                        </div>
+                        <div className="flex gap-4 text-right">
+                          <div>
+                            <p className="text-[7px] text-slate-400 font-bold uppercase">3 ตัว</p>
+                            <p className="text-xs font-bold text-slate-800">{pending ? '—' : r.top3}</p>
+                          </div>
+                          <div>
+                            <p className="text-[7px] text-primary font-bold uppercase">2 ตัว</p>
+                            <p className="text-xs font-bold text-primary">{pending ? '—' : (r.col6 || '—')}</p>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex gap-4 text-right">
-                        <div>
-                          <p className="text-[7px] text-slate-400 font-bold uppercase">3 ตัว</p>
-                          <p className="text-xs font-bold text-slate-800">{r.top3}</p>
-                        </div>
-                        <div>
-                          <p className="text-[7px] text-primary font-bold uppercase">2 ตัว</p>
-                          <p className="text-xs font-bold text-primary">{r.bot2}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             )}
 
-            {rows.length === 0 && (
+            {rows.length === 0 && dbResults.length === 0 && (
               <div className="py-20 text-center text-slate-400">
                 <span className="material-symbols-outlined text-5xl text-slate-200">emoji_events</span>
                 <p className="mt-4 text-sm font-medium">ยังไม่มีผลรางวัล</p>

@@ -112,8 +112,8 @@ const LotteryList = () => {
           filteredLotteries.map((draw) => (
             <div
               key={draw.id}
-              onClick={() => navigate(`/betting?draw=${draw.id}`)}
-              className="bg-white rounded-[2.5rem] p-6 border border-primary/5 group cursor-pointer active:scale-[0.99] transition-all"
+              onClick={() => { if (draw.is_open) navigate(`/betting?draw=${draw.id}`); }}
+              className={`bg-white rounded-[2.5rem] p-6 border border-primary/5 group transition-all ${draw.is_open ? 'cursor-pointer active:scale-[0.99]' : 'cursor-not-allowed opacity-70'}`}
               style={{ boxShadow: '0 10px 30px -5px rgba(26, 127, 43, 0.08)' }}
             >
               <div className="flex justify-between items-center mb-6">
@@ -151,10 +151,15 @@ const LotteryList = () => {
                   </div>
                 </div>
                 <button
-                  onClick={(e) => { e.stopPropagation(); navigate(`/betting?draw=${draw.id}`); }}
-                  className="bg-primary hover:bg-primary/90 text-white px-10 py-3.5 rounded-full font-extrabold text-sm shadow-lg shadow-primary/20 transition-all active:scale-95"
+                  disabled={!draw.is_open}
+                  onClick={(e) => { e.stopPropagation(); if (draw.is_open) navigate(`/betting?draw=${draw.id}`); }}
+                  className={`px-10 py-3.5 rounded-full font-extrabold text-sm transition-all ${
+                    draw.is_open
+                      ? 'bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 active:scale-95'
+                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                  }`}
                 >
-                  แทงเลย
+                  {draw.is_open ? 'แทงเลย' : 'ปิดรับแล้ว'}
                 </button>
               </div>
             </div>

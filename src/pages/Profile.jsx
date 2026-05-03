@@ -31,14 +31,11 @@ const Profile = () => {
           .select('payout_amount')
           .eq('user_id', user.id)
           .eq('status', 'WON'),
-        supabase
-          .from('profiles')
-          .select('id', { count: 'exact', head: true })
-          .eq('referrer_id', user.id),
+        supabase.rpc('get_my_referrals'),
       ]);
       const betCount = betsRes.count || 0;
       const totalWin = (wonBetsRes.data || []).reduce((sum, b) => sum + Number(b.payout_amount || 0), 0);
-      const referralCount = referralsRes.count || 0;
+      const referralCount = (referralsRes.data || []).length;
       const referralIncome = profile?.commission_balance || 0;
       setStats({ betCount, totalWin, referralCount, referralIncome });
     };

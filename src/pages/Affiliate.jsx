@@ -15,14 +15,9 @@ const Affiliate = () => {
   useEffect(() => {
     const fetchReferrals = async () => {
       try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, full_name, member_id, created_at')
-          .eq('referrer_id', profile.id)
-          .order('created_at', { ascending: false })
-          .limit(10);
+        const { data, error } = await supabase.rpc('get_my_referrals');
         if (error) throw error;
-        return data || [];
+        return (data || []).slice(0, 10);
       } catch (err) {
         console.error('Error fetching referrals:', err);
         return [];

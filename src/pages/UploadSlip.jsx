@@ -135,7 +135,7 @@ const UploadSlip = () => {
             id="slip-upload"
             className="hidden"
             onChange={handleFileChange}
-            accept="image/*,application/pdf"
+            accept="image/jpeg,image/png,image/webp,image/gif"
           />
           <label
             htmlFor="slip-upload"
@@ -166,7 +166,7 @@ const UploadSlip = () => {
                 </div>
                 <div className="text-center px-4">
                   <p className="text-[#1a7e2a] font-semibold text-lg mb-1">แตะเพื่ออัปโหลดสลิป</p>
-                  <p className="text-slate-400 text-xs">รองรับไฟล์ JPG, PNG, PDF (สูงสุด 5MB)</p>
+                  <p className="text-slate-400 text-xs">รองรับไฟล์ JPG, PNG, WebP (สูงสุด 5MB)</p>
                 </div>
               </>
             )}

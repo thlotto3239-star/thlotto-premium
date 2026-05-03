@@ -272,7 +272,7 @@ const Register = () => {
                     <span className="material-symbols-outlined font-bold">arrow_forward</span>
                   </button>
                   <p className="text-center text-slate-400 text-[10px] px-4 leading-relaxed">
-                    เมื่อคลิกถัดไป แสดงว่าคุณยอมรับ <Link to="/terms" className="text-[#008a3e] underline font-bold">ข้อกำหนดการให้บริการ</Link> และ <Link to="/privacy" className="text-[#008a3e] underline font-bold">นโยบายความเป็นส่วนตัว</Link> ของเรา
+                    เมื่อคลิกถัดไป แสดงว่าคุณยอมรับ <Link to="/terms" className="text-[#008a3e] underline font-bold">ข้อกำหนดการให้บริการ</Link> และ <Link to="/terms" className="text-[#008a3e] underline font-bold">นโยบายความเป็นส่วนตัว</Link> ของเรา
                   </p>
                 </div>
               </form>

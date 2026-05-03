@@ -85,8 +85,11 @@ const Betting = () => {
       if (streamSetting?.value) setLiveStreamUrl(streamSetting.value);
       const { data: markets } = await supabase.rpc('get_markets_with_countdown');
       const data = (markets || []).find(m => m.id === drawId);
-      if (!data) return;
+      if (!data) { navigate('/lottery-list', { replace: true }); return; }
       setDraw(data);
+      if (!data.is_open) {
+        setTimeLeft({ d: '00', h: '00', m: '00', s: '00', isExpired: true });
+      }
       const { data: rates } = await supabase
         .from('payout_rates')
         .select('bet_type, rate')
@@ -94,7 +97,12 @@ const Betting = () => {
       if (rates && rates.length > 0) {
         const rateMap = {};
         rates.forEach(r => { rateMap[r.bet_type] = Number(r.rate); });
-        setCategories(BASE_CATEGORIES.map(c => ({ ...c, rate: rateMap[c.code] ?? DEFAULT_RATES[c.code] })));
+        const filtered = BASE_CATEGORIES.filter(c => rateMap[c.code] !== undefined).map(c => ({ ...c, rate: rateMap[c.code] }));
+        setCategories(filtered);
+        if (!filtered.find(c => c.code === currentCategory)) {
+          const first = filtered.find(c => c.code === '3TOP') || filtered[0];
+          if (first) { setCurrentCategory(first.code); setDigitLimit(first.limit); }
+        }
       }
     };
     fetchDraw();
@@ -309,6 +317,26 @@ const Betting = () => {
             )}
           </div>
         </header>
+
+        {/* ── CLOSED OVERLAY ── */}
+        {timeLeft.isExpired && (
+          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm px-8 max-w-[430px] mx-auto">
+            <div className="bg-white rounded-3xl p-8 w-full text-center shadow-2xl">
+              <div className="size-20 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5">
+                <span className="material-symbols-outlined text-red-500 text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+              </div>
+              <h2 className="text-xl font-black text-slate-900 mb-2">ปิดรับแทงแล้ว</h2>
+              <p className="text-sm text-slate-400 mb-6">ตลาดหวยนี้หมดเวลารับแทงแล้ว<br/>กรุณาเลือกตลาดที่ยังเปิดรับแทง</p>
+              <button
+                onClick={() => navigate('/lottery-list', { replace: true })}
+                className="w-full py-4 rounded-full font-extrabold text-white text-sm"
+                style={{ background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' }}
+              >
+                กลับไปเลือกตลาด
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ── MAIN ── */}
         <main className="flex-1 px-4 flex flex-col gap-5 pb-[240px]">
