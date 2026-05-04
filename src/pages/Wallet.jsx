@@ -60,11 +60,14 @@ const Wallet = () => {
       case 'BET': return 'เดิมพัน';
       case 'BONUS': return 'โบนัส';
       case 'COMMISSION': return 'คอมมิชชั่นแนะนำเพื่อน';
+      case 'ADMIN_CREDIT': return 'เติมเงินโดยแอดมิน';
+      case 'ADMIN_DEBIT': return 'หักเงินโดยแอดมิน';
+      case 'REFUND': return 'คืนเงิน';
       default: return type;
     }
   };
 
-  const isIncome = (type) => ['DEPOSIT', 'WIN', 'PAYOUT', 'BONUS', 'COMMISSION'].includes(type);
+  const isIncome = (type) => ['DEPOSIT', 'WIN', 'PAYOUT', 'BONUS', 'COMMISSION', 'ADMIN_CREDIT', 'REFUND'].includes(type);
 
   const bankInfo = banks.find(b =>
     b.name === profile?.bank_name || b.code === profile?.bank_name
@@ -241,12 +244,13 @@ const Wallet = () => {
                   tx.type === 'WIN' || tx.type === 'PAYOUT' ? 'military_tech' :
                   tx.type === 'DEPOSIT' || tx.type === 'BONUS' ? 'input' :
                   'output';
+                const isDone = tx.status === 'COMPLETED' || tx.status === 'SUCCESS';
                 const statusBadge =
-                  tx.status === 'COMPLETED' ? 'bg-gold-premium/10 text-gold-premium' :
+                  isDone ? 'bg-gold-premium/10 text-gold-premium' :
                   tx.status === 'PENDING' ? 'bg-slate-100 text-slate-400' :
                   'bg-red-50 text-red-500';
                 const statusText =
-                  tx.status === 'COMPLETED' ? 'สำเร็จ' :
+                  isDone ? 'สำเร็จ' :
                   tx.status === 'PENDING' ? 'รอดำเนินการ' : 'ปฏิเสธ';
                 return (
                   <div key={tx.id} className="flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-50 shadow-soft">
