@@ -73,14 +73,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // แปลง PIN 4 หลัก → password ภายใน (Supabase ต้องการ 6+ ตัว)
-  const pinToPassword = (phone, pin) => `THLT_${pin}_${phone}`;
+  // แปลง PIN 4 หลัก → SHA256(pin+phone) — ป้องกัน reverse ถ้า source code หลุด
+  const pinToPassword = async (phone, pin) => {
+    const raw = new TextEncoder().encode(pin + phone);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', raw);
+    return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+  };
 
   const signIn = async (phone, pin) => {
     const email = `${phone}@thlotto.app`;
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password: pinToPassword(phone, pin),
+      password: await pinToPassword(phone, pin),
     });
     return { data, error };
   };
@@ -92,7 +96,7 @@ export const AuthProvider = ({ children }) => {
 
     const { data, error } = await supabase.auth.signUp({
       email,
-      password: pinToPassword(phone, pin),
+      password: await pinToPassword(phone, pin),
       options: {
         data: {
           phone,
