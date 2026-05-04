@@ -110,19 +110,19 @@ const Results = () => {
                       <div>
                         <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวหน้า</p>
                         <div className="text-base font-bold">
-                          {isPending(govRow.main) ? <span className="text-white/30">—</span> : (govRow.top3 || '—')}
+                          {govRow.top3 || '—'}
                         </div>
                       </div>
                       <div>
                         <p className="text-white/60 text-[9px] font-medium mb-1">2 ตัวล่าง</p>
                         <div className="text-xl font-bold">
-                          {isPending(govRow.main) ? <span className="text-white/30">—</span> : (govRow.col6 || '—')}
+                          {govRow.col6 || '—'}
                         </div>
                       </div>
                       <div>
                         <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวท้าย</p>
                         <div className="text-base font-bold">
-                          {isPending(govRow.main) ? <span className="text-white/30">—</span> : (govRow.bot2 || '—')}
+                          {govRow.bot2 || '—'}
                         </div>
                       </div>
                     </div>
@@ -163,19 +163,19 @@ const Results = () => {
                         <div className="grid grid-cols-4 gap-2">
                           <div className="text-center bg-slate-50 p-1.5 rounded-xl border border-slate-100">
                             <p className="text-[7px] text-slate-400 font-bold uppercase">รางวัล</p>
-                            <p className="text-xs font-bold text-slate-800">{pending ? '—' : (r.main || r.top3)}</p>
+                            <p className="text-xs font-bold text-slate-800">{r.main || r.top3 || '—'}</p>
                           </div>
                           <div className="text-center bg-slate-50 p-1.5 rounded-xl border border-slate-100">
                             <p className="text-[7px] text-slate-400 font-bold uppercase">3 บน</p>
-                            <p className="text-xs font-bold text-slate-800">{pending ? '—' : (r.top3 || '—')}</p>
+                            <p className="text-xs font-bold text-slate-800">{r.top3 || '—'}</p>
                           </div>
                           <div className="text-center bg-slate-50 p-1.5 rounded-xl border border-slate-100">
                             <p className="text-[7px] text-slate-400 font-bold uppercase">2 บน</p>
-                            <p className="text-xs font-bold text-slate-800">{pending ? '—' : (display2Top || '—')}</p>
+                            <p className="text-xs font-bold text-slate-800">{display2Top || '—'}</p>
                           </div>
                           <div className="text-center bg-primary/5 p-1.5 rounded-xl border border-primary/10">
                             <p className="text-[7px] text-primary font-bold uppercase">2 ล่าง</p>
-                            <p className="text-xs font-bold text-primary">{pending ? '—' : (display2Bot || '—')}</p>
+                            <p className="text-xs font-bold text-primary">{display2Bot || '—'}</p>
                           </div>
                         </div>
                       </div>
@@ -215,11 +215,11 @@ const Results = () => {
                         <div className="flex gap-4 text-right">
                           <div>
                             <p className="text-[7px] text-slate-400 font-bold uppercase">3 ตัว</p>
-                            <p className="text-xs font-bold text-slate-800">{pending ? '—' : r.top3}</p>
+                            <p className="text-xs font-bold text-slate-800">{r.top3 || '—'}</p>
                           </div>
                           <div>
                             <p className="text-[7px] text-primary font-bold uppercase">2 ตัว</p>
-                            <p className="text-xs font-bold text-primary">{pending ? '—' : (r.bot2 || '—')}</p>
+                            <p className="text-xs font-bold text-primary">{r.bot2 || '—'}</p>
                           </div>
                         </div>
                       </div>
