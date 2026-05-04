@@ -4,6 +4,27 @@
 
 ---
 
+## [1.5.2] — 2026-05-04
+
+### ✨ เพิ่มใหม่
+- **บันทึกผู้อนุมัติ** — `deposit_requests` และ `withdraw_requests` มี column `approved_by` + `approved_at` บันทึกว่าแอดมินคนไหนอนุมัติ/ปฏิเสธ เมื่อไหร่
+- **คอลัมน์ "ผู้ดำเนินการ"** ในหน้าฝากและถอน — แสดงชื่อ + เวลาที่อนุมัติ
+
+### 🔧 แก้ไข
+- RPCs ทั้ง 4: `admin_approve_deposit`, `admin_reject_deposit`, `admin_approve_withdraw`, `admin_reject_withdraw` — เพิ่ม `SET approved_by = auth.uid()`
+
+---
+
+## [1.5.1] — 2026-05-04
+
+### 🔒 Security / Access Control
+- **ซ่อน Super Admin** จาก Admin ธรรมดา — หน้า "ผู้ดูแลระบบ" ไม่แสดง super_admin ให้ admin ระดับล่างเห็น
+- **แก้ bug login 500** — `confirmation_token = NULL` ใน manually created user → ตั้งเป็น `''`
+- **อัพเกรด Super Admin** — บัญชี `0622306037` (อาม) เป็น super_admin ใหม่ PIN 3239
+- **Popup แจ้งเตือน** — ระบบ NotificationPopup global center-screen สำหรับทุก notification type
+
+---
+
 ## [1.5.0] — 2026-05-04
 
 ### ✨ เพิ่มใหม่
