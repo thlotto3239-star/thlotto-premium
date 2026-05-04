@@ -33,6 +33,7 @@ import Terms from './pages/Terms';
 import Articles from './pages/Articles';
 import ArticleDetail from './pages/ArticleDetail';
 import Processing from './pages/Processing';
+import NotificationPopup from './components/NotificationPopup';
 
 const RootRedirect = () => {
   const { user, loading } = useAuth();
@@ -43,6 +44,7 @@ const RootRedirect = () => {
 function App() {
   return (
     <AuthProvider>
+      <NotificationPopup />
       <Router>
         <Routes>
           {/* Public Routes */}
