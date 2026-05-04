@@ -77,16 +77,11 @@ const Betting = () => {
   useEffect(() => {
     const fetchDraw = async () => {
       if (!drawId) return;
-      const { data: streamSetting } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'live_stream_url')
-        .single();
-      if (streamSetting?.value) setLiveStreamUrl(streamSetting.value);
       const { data: markets } = await supabase.rpc('get_markets_with_countdown');
       const data = (markets || []).find(m => m.id === drawId);
       if (!data) { navigate('/lottery-list', { replace: true }); return; }
       setDraw(data);
+      if (data.stream_url) setLiveStreamUrl(data.stream_url);
       if (!data.is_open) {
         setTimeLeft({ d: '00', h: '00', m: '00', s: '00', isExpired: true });
       }
