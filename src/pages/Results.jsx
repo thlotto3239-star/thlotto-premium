@@ -18,7 +18,7 @@ const parseCSV = (text) => {
 const isPending = (v) => {
   if (!v) return true;
   const s = v.trim().toLowerCase();
-  return !s || s === 'รอผล' || /^[x\s\-]+$/.test(s);
+  return !s || s === 'รอผล' || /^[x\s-]+$/.test(s);
 };
 
 const fmtDBDate = (d) => {
@@ -31,7 +31,7 @@ const fmtCsvDate = (dateStr) => {
   if (!dateStr) return '';
   const thMatch = dateStr.match(/(\d{1,2})\s+([\u0e00-\u0e7f]+)\s+(\d{4})/);
   if (thMatch) return `${thMatch[1]} ${thMatch[2]} ${thMatch[3]}`;
-  const slashMatch = dateStr.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  const slashMatch = dateStr.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
   if (slashMatch) {
     let [, d, m, y] = slashMatch;
     if (parseInt(y) > 2400) y = String(parseInt(y) - 543);
