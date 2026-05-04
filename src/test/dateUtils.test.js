@@ -33,8 +33,10 @@ function parseThaiDate(s) {
   return null;
 }
 
-function pinToPassword(phone, pin) {
-  return `THLT_${pin}_${phone}`;
+async function pinToPassword(phone, pin) {
+  const raw = new TextEncoder().encode(pin + phone);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', raw);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 describe('Thai Date Parsing', () => {
@@ -70,9 +72,23 @@ describe('Thai Date Parsing', () => {
   });
 });
 
-describe('PIN to Password', () => {
-  it('สร้าง password จาก phone + PIN ถูกต้อง', () => {
-    expect(pinToPassword('0812345678', '1234')).toBe('THLT_1234_0812345678');
-    expect(pinToPassword('0999999999', '0000')).toBe('THLT_0000_0999999999');
+describe('PIN to Password (SHA256)', () => {
+  it('สร้าง password ด้วย SHA256(pin+phone) ถูกต้อง', async () => {
+    const r1 = await pinToPassword('0812345678', '1234');
+    expect(r1).toHaveLength(64);
+    expect(r1).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('phone+PIN ต่างกัน → hash ต่างกันเสมอ', async () => {
+    const a = await pinToPassword('0812345678', '1234');
+    const b = await pinToPassword('0812345678', '5678');
+    const c = await pinToPassword('0999999999', '1234');
+    expect(a).not.toBe(b);
+    expect(a).not.toBe(c);
+  });
+
+  it('SHA256("32390853232656") ต้องได้ค่าที่ถูกต้อง', async () => {
+    const result = await pinToPassword('0853232656', '3239');
+    expect(result).toBe('5d610e46ab1b4f50ad41984d1bc6f187159a6ec5318f7a960c149641ce7edab8');
   });
 });
