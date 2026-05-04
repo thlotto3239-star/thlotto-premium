@@ -1,4 +1,4 @@
-# TH-LOTTO — เอกสารระบบ (อัปเดต 2 พ.ค. 2569)
+# TH-LOTTO — เอกสารระบบฉบับสมบูรณ์ (อัปเดต 4 พ.ค. 2569)
 
 ---
 
@@ -224,26 +224,193 @@ https://docs.google.com/spreadsheets/d/e/2PACX-1vT6H6WWef9PagUoZE5wOGcOcUgkz0OVh
 
 ---
 
-## 11. การแก้ไขที่ทำในโปรเจค (ประวัติ)
+## 11. Settings สำคัญที่ต้องอัปเดต (Admin Panel)
 
-| รายการ | สถานะ |
-|--------|-------|
-| เพิ่ม result_p1, result_top3, result_bottom2 ใน lottery_results | ✅ |
-| แก้ fn_check_win: เพิ่ม 6DIGIT case (bug critical) | ✅ |
-| แก้ process_draw_results: เพิ่ม assert_admin() guard | ✅ |
-| แก้ draw times ทั้ง 21 ตลาดให้ถูกต้อง | ✅ |
-| แก้ Results.jsx: hybrid DB+CSV, pending state ถูกต้อง | ✅ |
-| แก้ fn_import_csv_result: STOCK/FOREIGN ถูกต้อง | ✅ |
-| แก้ Betting.jsx: แสดงเฉพาะ bet type ที่ market รองรับ | ✅ |
-| แก้ place_bet_securely: enforce restricted_numbers | ✅ |
+| key | หมายเหตุ |
+|-----|---------|
+| `company_bank_account_number` | **ต้องใส่เลขบัญชีจริงก่อน go-live** |
+| `company_promptpay_number` | **ต้องใส่เลข PromptPay จริงก่อน go-live** |
+| `contact_line_url` | URL LINE สำหรับ support |
+| `live_stream_url` | YouTube Live URL (ถ้ามี) |
+| `min_bet` | ยอดแทงขั้นต่ำ (default 1 บาท) |
+| `min_deposit` | ฝากขั้นต่ำ (default 100 บาท) |
+| `min_withdrawal` | ถอนขั้นต่ำ (default 100 บาท) |
+| `lucky_wheel_daily_limit` | หมุนได้กี่ครั้ง/วัน (default 3) |
+| `lucky_wheel_cost` | ราคาต่อครั้ง (default 10 บาท) |
+| `referral_commission_rate` | % commission เมื่อ refer ฝาก (default 0.5%) |
 
 ---
 
-## 12. Settings สำคัญที่ต้องอัปเดต (Admin)
+## 12. ประวัติ Bug Fixes ทั้งหมด (ตรวจสอบแล้ว)
 
-| key | ค่าปัจจุบัน | หมายเหตุ |
-|-----|-----------|---------|
-| `company_bank_account_number` | 123-4-56789-0 | **ต้องใส่เลขจริง** |
-| `company_promptpay_number` | 0812345678 | **ต้องใส่เลขจริง** |
-| `contact_line_url` | https://line.me/ti/p/@thlotto | อัปเดตถ้าเปลี่ยน |
-| `live_stream_url` | (ว่าง) | ใส่ YouTube Live URL ถ้าต้องการ |
+### รอบที่ 1 (Session แรก)
+| Bug | ระดับ | Fix |
+|-----|-------|-----|
+| `fn_check_win` ขาด 6DIGIT case | CRITICAL | เพิ่ม WHEN '6DIGIT' |
+| `fn_import_csv_result` ผิดสำหรับ STOCK/FOREIGN | HIGH | แก้ mapping 2TOP |
+| `fn_settle_result` parameter order ผิด | HIGH | แก้ลำดับ args ให้ถูกต้อง |
+| `admin_rebuild_draw_schedules` crash timestamp+timetz | HIGH | แก้ type casting |
+| `process_draw_results` ขาด assert_admin() | HIGH | เพิ่ม guard |
+
+### รอบที่ 2 (Audit Session)
+| Bug | ระดับ | Fix |
+|-----|-------|-----|
+| `request_withdrawal_securely` transactions ขาด reference_id | CRITICAL | RETURNING id → reference_id |
+| `BetHistory.jsx` แสดง ฿0 (bet.potential_win ไม่มีใน DB) | HIGH | คำนวณจาก amount × payout_rate |
+| `payout_rates` มี 4TOP ใน STOCK (ชนะไม่ได้) | HIGH | ลบ 4TOP ออกจาก STOCK |
+| `Deposits.jsx` / `Withdrawals.jsx` stale closure | MEDIUM | useRef pattern |
+| Admin `App.jsx` /test route ไม่มี guard | MEDIUM | ครอบด้วย AdminGuard |
+| `Wallet.jsx` COMMISSION type ไม่มี label | LOW | เพิ่มใน getTypeThai + isIncome |
+
+### รอบที่ 3 (วันนี้ 4 พ.ค. 2569)
+| Bug | ระดับ | Fix |
+|-----|-------|-----|
+| `admin_approve_deposit` crash: FOR UPDATE บน LEFT JOIN | CRITICAL | FOR UPDATE OF dr |
+| `admin_adjust_wallet` transactions status = PENDING | MEDIUM | เพิ่ม status='COMPLETED', balance_after |
+| `Transactions.jsx` ไม่รู้จัก ADMIN_CREDIT/ADMIN_DEBIT | LOW | เพิ่ม cases + isIncome |
+| `apply_promotion` ใช้โปรซ้ำได้ไม่จำกัด | HIGH | ตรวจประวัติ transactions |
+| `place_bet_securely` race condition balance | HIGH | SELECT FOR UPDATE บน wallets |
+
+---
+
+## 13. กฎ DEPLOYMENT — ห้ามละเมิด
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║  URL ที่ใช้งานจริงมีเพียง 2 ลิงค์นี้เท่านั้น:               ║
+║                                                              ║
+║  ผู้ใช้  : https://th-lotto-app.vercel.app/                  ║
+║  แอดมิน : https://th-lotto-admin.vercel.app/                 ║
+║                                                              ║
+║  ห้ามสร้าง deployment ใหม่หรือ URL อื่น                      ║
+╚══════════════════════════════════════════════════════════════╝
+```
+
+### Git Workflow ที่ถูกต้อง
+
+#### User App (thlotto-premium)
+```
+develop  → พัฒนา / แก้บัค
+main     → production (Vercel auto-deploy)
+
+ขั้นตอน:
+1. แก้ไขบน develop
+2. git add + git commit -m "fix: ..."
+3. git push origin develop
+4. git checkout main
+5. git merge develop --no-edit
+6. git push origin main        ← Vercel deploy อัตโนมัติ
+7. git checkout develop
+```
+
+#### Admin App (TH-LOTTO-Admin-push)
+```
+develop  → พัฒนา / แก้บัค
+master   → production (Vercel auto-deploy)
+
+ขั้นตอน:
+1. แก้ไขบน develop
+2. git add + git commit -m "fix: ..."
+3. git push origin develop
+4. git checkout master
+5. git merge develop --no-edit
+6. git push origin master       ← Vercel deploy อัตโนมัติ
+7. git checkout develop
+```
+
+> ⚠️ **PowerShell ใช้ && ไม่ได้** — ต้องแยก command ทีละบรรทัด
+
+---
+
+## 14. กฎการพัฒนาระบบในอนาคต
+
+### ✅ ทำ
+- แก้บัคใน Database ผ่าน Supabase MCP migration → มีผลทันที ไม่ต้อง redeploy
+- ใช้ `CREATE OR REPLACE FUNCTION` เสมอเมื่อแก้ RPC
+- ตรวจ `git diff --stat HEAD` ก่อน commit ทุกครั้ง
+- ทำงานบน branch `develop` เสมอ ห้าม push ตรงไป `main`/`master`
+- DB schema เปลี่ยนผ่าน `mcp1_apply_migration` เท่านั้น
+
+### ❌ ห้ามทำ
+- ห้ามแก้ไฟล์ `Home.jsx` โดยไม่ระวัง (encoding artifact เกิดง่าย)
+- ห้ามลบหรือ revert ไฟล์ที่ถูก audit แล้ว
+- ห้ามเพิ่ม FOR UPDATE บน LEFT JOIN (PostgreSQL ไม่รองรับ → ใช้ `FOR UPDATE OF table_alias`)
+- ห้ามใช้ `&&` ใน PowerShell (ใช้ `;` หรือแยก command)
+- ห้ามสร้าง Vercel project ใหม่ (ใช้ project เดิม deploy ทับ)
+- ห้ามเปลี่ยน URL production โดยไม่แจ้งเจ้าของโปรเจค
+
+### 🔍 ก่อน deploy ทุกครั้ง ตรวจ:
+1. `git diff --stat HEAD` → มีเฉพาะไฟล์ที่ตั้งใจแก้
+2. `git status` → working tree clean
+3. ทั้ง `develop` และ `main`/`master` sync กัน
+
+---
+
+## 15. Architecture ภาพรวม
+
+```
+┌─────────────────────────────────────────────────────┐
+│                   USER BROWSER                       │
+│  th-lotto-app.vercel.app    th-lotto-admin.vercel.app│
+│  (React + Vite + Tailwind)  (React + Vite + Tailwind)│
+└──────────────────┬──────────────────┬───────────────┘
+                   │                  │
+                   ▼                  ▼
+┌─────────────────────────────────────────────────────┐
+│              SUPABASE BACKEND                        │
+│                                                      │
+│  Auth (JWT + PIN)    Storage (avatars, slips)        │
+│  PostgreSQL DB       Realtime (WebSocket)            │
+│  RPC Functions       Edge Functions (Deno)           │
+│  pg_cron             Row Level Security              │
+└──────────────────────────────────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────────────┐
+│           EXTERNAL DEPENDENCIES (2 จุด)              │
+│                                                      │
+│  promptpay.io → QR Code สำหรับชำระเงิน               │
+│  Google Sheets CSV → แหล่งข้อมูลผลรางวัล              │
+└──────────────────────────────────────────────────────┘
+```
+
+### RPC Functions หลัก
+| Function | หน้าที่ |
+|----------|---------|
+| `place_bet_securely` | แทงหวย (lock wallet, ตรวจเลขอั้น) |
+| `request_withdrawal_securely` | ขอถอนเงิน (ตรวจ PIN, ตัด balance) |
+| `admin_approve_deposit` | อนุมัติฝาก (บวก balance, commission) |
+| `admin_approve_withdraw` | อนุมัติถอน (mark COMPLETED) |
+| `admin_reject_withdraw` | ปฏิเสธถอน (คืนเงิน) |
+| `admin_set_result_and_settle` | ประกาศผล + settle bets |
+| `fn_settle_result` | คำนวณแพ้ชนะทุก pending bet |
+| `fn_check_win` | ตรวจว่าเลขถูกหรือไม่ |
+| `fn_import_csv_result` | นำเข้าผลจาก CSV |
+| `apply_promotion` | ให้โบนัสโปร (ตรวจประวัติการใช้) |
+| `spin_lucky_wheel` | หมุนวงล้อ |
+| `transfer_referral_income` | โอน commission → wallet |
+
+### Triggers
+| Trigger | เงื่อนไข | หน้าที่ |
+|---------|---------|---------|
+| `trg_on_result_announced` | AFTER INSERT/UPDATE OF status | เรียก fn_settle_result อัตโนมัติ |
+
+### Cron Jobs
+| Job | ตาราง | หน้าที่ |
+|-----|-------|---------|
+| `update-draw-status-cron` | ทุก 1 นาที | อัปเดต draw_schedules status |
+| `fetch-and-settle-cron` | ทุก 2 นาที | ดึง CSV → import → settle |
+| `cleanup-old-data-daily` | 04:00 ทุกวัน | ลบข้อมูลเก่า |
+
+---
+
+## 16. สิ่งที่ต้องทำก่อน Go-Live จริง
+
+- [ ] อัปเดต `company_bank_account_number` ใน Admin Settings
+- [ ] อัปเดต `company_promptpay_number` ใน Admin Settings
+- [ ] ตั้ง lucky wheel prizes ให้ครบ (Admin → วงล้อ)
+- [ ] ตั้ง lucky_wheel_cost และ daily_limit
+- [ ] เพิ่มธนาคารที่รองรับ (Admin → ธนาคาร)
+- [ ] ตรวจ draw_schedules ว่า generate ถูกต้อง
+- [ ] ทดสอบ: สมัคร → ฝาก → แทง → รอผล → รับรางวัล → ถอน (end-to-end)
+- [ ] ทดสอบ admin: อนุมัติฝาก, อนุมัติถอน, ประกาศผล
