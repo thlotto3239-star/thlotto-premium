@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import AppHeader from '../components/AppHeader';
-import { supabase } from '../supabaseClient';
 
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6H6WWef9PagUoZE5wOGcOcUgkz0OVhCVR4hV-EvPgVrG2532EPd3cNJzjfyyoIfvdzAek-nFNVvNp/pub?gid=36966565&single=true&output=csv';
 
@@ -21,17 +20,11 @@ const isPending = (v) => {
   return !s || s === 'รอผล' || /^[x\s-]+$/.test(s);
 };
 
-const fmtDBDate = (d) => {
-  if (!d) return '';
-  const dt = new Date(d + 'T00:00:00');
-  return dt.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
-};
-
 const fmtCsvDate = (dateStr) => {
   if (!dateStr) return '';
   const thMatch = dateStr.match(/(\d{1,2})\s+([\u0e00-\u0e7f]+)\s+(\d{4})/);
   if (thMatch) return `${thMatch[1]} ${thMatch[2]} ${thMatch[3]}`;
-  const slashMatch = dateStr.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+  const slashMatch = dateStr.match(/(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/);
   if (slashMatch) {
     let [, d, m, y] = slashMatch;
     if (parseInt(y) > 2400) y = String(parseInt(y) - 543);
@@ -42,71 +35,29 @@ const fmtCsvDate = (dateStr) => {
   return dateStr;
 };
 
+const FOREIGN_CODES = ['LAO_DEV','HANOI_VIP','HANOI','HANOI_SPECIAL','MALAY'];
+const isStock = (code) => code && (code.startsWith('STOCK_') || code.startsWith('NIKKEI_') || code.startsWith('CHINA_') || code.startsWith('HANGSENG_'));
+
 const Results = () => {
   const [rows, setRows] = useState([]);
-  const [dbResults, setDbResults] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchDB = async () => {
-    const { data } = await supabase
-      .from('lottery_results')
-      .select('market_id, draw_date, result_main, result_3top, result_3front, result_3bottom, result_2top, result_2bottom, status, announced_at, lottery_markets(code, name, logo_url)')
-      .eq('status', 'ANNOUNCED')
-      .order('announced_at', { ascending: false })
-      .limit(50);
-    setDbResults(data || []);
-  };
-
-  useEffect(() => {
-    Promise.all([
-      fetch(CSV_URL).then(r => r.text()).then(text => setRows(parseCSV(text))).catch(() => {}),
-      fetchDB(),
-    ]).finally(() => setLoading(false));
-
-    const ch = supabase.channel('results-live')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'lottery_results' }, fetchDB)
-      .subscribe();
-    return () => supabase.removeChannel(ch);
+  const fetchCSV = useCallback(() => {
+    fetch(CSV_URL + '&t=' + Date.now())
+      .then(r => r.text())
+      .then(text => { setRows(parseCSV(text)); setLoading(false); })
+      .catch(() => setLoading(false));
   }, []);
 
-  const normalizeDB = (r) => {
-    const code = r.lottery_markets?.code || '';
-    return {
-      code,
-      name:  r.lottery_markets?.name || '',
-      date:  fmtDBDate(r.draw_date),
-      main:  r.result_main    || '',
-      top3:  code === 'TH_GOV' ? (r.result_3front || '') : (r.result_3top || ''),
-      top2:  r.result_2top    || '',
-      bot2:  r.result_3bottom || '',
-      col6:  r.result_2bottom || '',
-      logo:  r.lottery_markets?.logo_url || '',
-      _db:   true,
-    };
-  };
+  useEffect(() => {
+    fetchCSV();
+    const interval = setInterval(fetchCSV, 2 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [fetchCSV]);
 
-  const dbCodes = new Set(dbResults.map(r => r.lottery_markets?.code).filter(Boolean));
-
-  const govDB   = dbResults.find(r => r.lottery_markets?.code === 'TH_GOV');
-  const govRow  = govDB ? normalizeDB(govDB) : rows.find(r => r.code === 'TH_GOV');
-
-  const normCsvDate = (r) => ({ ...r, date: fmtCsvDate(r.date) });
-
-  const FOREIGN_CODES = ['LAO_DEV','HANOI_VIP','HANOI','HANOI_SPECIAL','MALAY'];
-  const dedupeByCode = (arr) => {
-    const seen = new Set();
-    return arr.filter(r => { if (seen.has(r.code)) return false; seen.add(r.code); return true; });
-  };
-  const foreignRows = dedupeByCode([
-    ...dbResults.filter(r => FOREIGN_CODES.includes(r.lottery_markets?.code)).map(normalizeDB),
-    ...rows.filter(r => FOREIGN_CODES.includes(r.code) && !dbCodes.has(r.code)).map(normCsvDate),
-  ]);
-
-  const isStock = (code) => code && (code.startsWith('STOCK_') || code.startsWith('NIKKEI_') || code.startsWith('CHINA_') || code.startsWith('HANGSENG_'));
-  const stockRows = dedupeByCode([
-    ...dbResults.filter(r => isStock(r.lottery_markets?.code)).map(normalizeDB),
-    ...rows.filter(r => isStock(r.code) && !dbCodes.has(r.code)).map(normCsvDate),
-  ]);
+  const govRow    = rows.find(r => r.code === 'TH_GOV');
+  const foreignRows = rows.filter(r => FOREIGN_CODES.includes(r.code));
+  const stockRows   = rows.filter(r => isStock(r.code));
 
 
   return (
@@ -133,7 +84,7 @@ const Results = () => {
                         <div className="min-w-0">
                           <h2 className="text-lg font-bold">สลากกินแบ่งรัฐบาล</h2>
                           <p className="text-white/70 text-[10px] font-medium truncate">
-                            {govRow._db ? govRow.date : fmtCsvDate(govRow.date)}
+                            {fmtCsvDate(govRow.date)}
                           </p>
                         </div>
                       </div>
@@ -189,8 +140,8 @@ const Results = () => {
                 <div className="space-y-3">
                   {foreignRows.map((r) => {
                     const pending = isPending(r.main) && isPending(r.top3);
-                    const display2Top  = r._db ? r.top2  : r.col6;
-                    const display2Bot  = r._db ? r.col6  : r.bot2;
+                    const display2Top  = r.col6;
+                    const display2Bot  = r.bot2;
                     return (
                       <div key={r.code} className="bg-white p-4 rounded-2xl border border-slate-100">
                         <div className="flex items-center justify-between mb-3">
@@ -202,7 +153,7 @@ const Results = () => {
                             </div>
                             <div className="min-w-0">
                               <h4 className="font-bold text-slate-900 text-sm whitespace-nowrap truncate">{r.name}</h4>
-                              <p className="text-[9px] text-slate-400 font-medium whitespace-nowrap">{r.date}</p>
+                              <p className="text-[9px] text-slate-400 font-medium whitespace-nowrap">{fmtCsvDate(r.date)}</p>
                             </div>
                           </div>
                           <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full shrink-0 ml-2 ${pending ? 'bg-slate-100 text-slate-400' : 'bg-green-100 text-green-700'}`}>
@@ -258,7 +209,7 @@ const Results = () => {
                           )}
                           <div className="min-w-0">
                             <h4 className="font-bold text-slate-900 text-xs whitespace-nowrap truncate">{r.name}</h4>
-                            <p className="text-[8px] text-slate-400 whitespace-nowrap">{r.date}</p>
+                            <p className="text-[8px] text-slate-400 whitespace-nowrap">{fmtCsvDate(r.date)}</p>
                           </div>
                         </div>
                         <div className="flex gap-4 text-right">
@@ -268,7 +219,7 @@ const Results = () => {
                           </div>
                           <div>
                             <p className="text-[7px] text-primary font-bold uppercase">2 ตัว</p>
-                            <p className="text-xs font-bold text-primary">{pending ? '—' : (r.col6 || '—')}</p>
+                            <p className="text-xs font-bold text-primary">{pending ? '—' : (r.bot2 || '—')}</p>
                           </div>
                         </div>
                       </div>
@@ -278,7 +229,7 @@ const Results = () => {
               </section>
             )}
 
-            {rows.length === 0 && dbResults.length === 0 && (
+            {rows.length === 0 && (
               <div className="py-20 text-center text-slate-400">
                 <span className="material-symbols-outlined text-5xl text-slate-200">emoji_events</span>
                 <p className="mt-4 text-sm font-medium">ยังไม่มีผลรางวัล</p>
