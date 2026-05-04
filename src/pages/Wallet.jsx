@@ -59,11 +59,12 @@ const Wallet = () => {
       case 'PAYOUT': return 'ถูกรางวัล';
       case 'BET': return 'เดิมพัน';
       case 'BONUS': return 'โบนัส';
+      case 'COMMISSION': return 'คอมมิชชั่นแนะนำเพื่อน';
       default: return type;
     }
   };
 
-  const isIncome = (type) => ['DEPOSIT', 'WIN', 'PAYOUT', 'BONUS'].includes(type);
+  const isIncome = (type) => ['DEPOSIT', 'WIN', 'PAYOUT', 'BONUS', 'COMMISSION'].includes(type);
 
   const bankInfo = banks.find(b =>
     b.name === profile?.bank_name || b.code === profile?.bank_name

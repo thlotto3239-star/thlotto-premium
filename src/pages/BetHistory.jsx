@@ -251,7 +251,7 @@ const BetHistory = () => {
                     ) : bet.status === 'PENDING' ? (
                       <>
                         <p className="text-[10px] text-slate-400 uppercase font-bold">รางวัลสูงสุดที่อาจได้</p>
-                        <p className="text-lg font-extrabold text-slate-400">฿{Number(bet.potential_win || 0).toLocaleString()}</p>
+                        <p className="text-lg font-extrabold text-slate-400">฿{(Number(bet.amount || 0) * Number(bet.payout_rate || 0)).toLocaleString()}</p>
                       </>
                     ) : (
                       <>
