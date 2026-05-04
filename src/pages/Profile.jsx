@@ -90,7 +90,7 @@ const Profile = () => {
             <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider font-thai">รายได้แนะนำเพื่อน</p>
             <p className="text-lg font-extrabold text-slate-900 font-display">฿{(profile?.commission_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
           </div>
-          <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex flex-col gap-2">
+          <div onClick={() => navigate('/bet-history')} className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex flex-col gap-2 cursor-pointer active:scale-[0.97] transition-all">
             <span className="material-symbols-outlined text-primary fill-1" style={{ fontVariationSettings: "'FILL' 1" }}>confirmation_number</span>
             <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider font-thai">รายการแทง</p>
             <p className="text-lg font-extrabold text-slate-900 font-display">{stats.betCount} <span className="text-xs font-medium text-slate-400 font-thai">ครั้ง</span></p>
