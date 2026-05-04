@@ -161,6 +161,15 @@ const Profile = () => {
               </div>
               <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">chevron_right</span>
             </button>
+            <button onClick={() => navigate('/bet-history')} className="flex items-center justify-between p-4 group active:bg-slate-50 transition-colors w-full text-left">
+              <div className="flex items-center gap-4">
+                <div className="size-10 rounded-full bg-amber-50 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-amber-600 text-[20px]">receipt_long</span>
+                </div>
+                <span className="font-bold text-slate-800 font-thai">ประวัติโพย</span>
+              </div>
+              <span className="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">chevron_right</span>
+            </button>
           </div>
         </div>
 
