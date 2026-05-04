@@ -117,11 +117,13 @@ const Transactions = () => {
       case 'BET': return 'แทงหวย';
       case 'BONUS': return 'โบนัส';
       case 'COMMISSION': return 'รายได้แนะนำเพื่อน';
+      case 'ADMIN_CREDIT': return 'แอดมินปรับยอด (เพิ่ม)';
+      case 'ADMIN_DEBIT': return 'แอดมินปรับยอด (หัก)';
       default: return type;
     }
   };
 
-  const isIncome = (type) => ['DEPOSIT', 'WIN', 'PAYOUT', 'BONUS', 'COMMISSION'].includes(type);
+  const isIncome = (type) => ['DEPOSIT', 'WIN', 'PAYOUT', 'BONUS', 'COMMISSION', 'ADMIN_CREDIT'].includes(type);
 
   const filteredTransactions = activeFilter === 'ALL' 
     ? transactions 
