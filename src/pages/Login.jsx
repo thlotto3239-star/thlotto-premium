@@ -4,7 +4,7 @@ import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
 
 const Login = () => {
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState(() => localStorage.getItem('thlotto_phone') || '');
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -58,6 +58,7 @@ const Login = () => {
 
       // บันทึก success → ลบ failed records
       await supabase.rpc('record_login_attempt', { p_phone: phone, p_success: true });
+      localStorage.setItem('thlotto_phone', phone);
       navigate('/home');
     } catch (err) {
       setError('เกิดข้อผิดพลาด กรุณาลองใหม่');
