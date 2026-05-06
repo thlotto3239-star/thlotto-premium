@@ -1,39 +1,45 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
 import ProtectedRoute from './ProtectedRoute';
-
-// Pages
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Results from './pages/Results';
-import Profile from './pages/Profile';
-import EditProfile from './pages/EditProfile';
-import Deposit from './pages/Deposit';
-import DepositSuccess from './pages/DepositSuccess';
-import QRPayment from './pages/QRPayment';
-import UploadSlip from './pages/UploadSlip';
-import RegistrationSuccess from './pages/RegistrationSuccess';
-import Betting from './pages/Betting';
-import LotteryList from './pages/LotteryList';
-import BetHistory from './pages/BetHistory';
-import Wallet from './pages/Wallet';
-import Affiliate from './pages/Affiliate';
-import LuckyWheel from './pages/LuckyWheel';
-import Withdrawal from './pages/Withdrawal';
-import WithdrawalConfirm from './pages/WithdrawalConfirm';
-import Transactions from './pages/Transactions';
-import Notifications from './pages/Notifications';
-import Support from './pages/Support';
-import Promotions from './pages/Promotions';
-import BankAccount from './pages/BankAccount';
-import ChangePassword from './pages/ChangePassword';
-import Terms from './pages/Terms';
-import Articles from './pages/Articles';
-import ArticleDetail from './pages/ArticleDetail';
-import Processing from './pages/Processing';
 import NotificationPopup from './components/NotificationPopup';
+
+// Lazy-loaded pages — โหลดเฉพาะหน้าที่ผู้ใช้เปิด
+const Home               = lazy(() => import('./pages/Home'));
+const Login              = lazy(() => import('./pages/Login'));
+const Register           = lazy(() => import('./pages/Register'));
+const Results            = lazy(() => import('./pages/Results'));
+const Profile            = lazy(() => import('./pages/Profile'));
+const EditProfile        = lazy(() => import('./pages/EditProfile'));
+const Deposit            = lazy(() => import('./pages/Deposit'));
+const DepositSuccess     = lazy(() => import('./pages/DepositSuccess'));
+const QRPayment          = lazy(() => import('./pages/QRPayment'));
+const UploadSlip         = lazy(() => import('./pages/UploadSlip'));
+const RegistrationSuccess = lazy(() => import('./pages/RegistrationSuccess'));
+const Betting            = lazy(() => import('./pages/Betting'));
+const LotteryList        = lazy(() => import('./pages/LotteryList'));
+const BetHistory         = lazy(() => import('./pages/BetHistory'));
+const Wallet             = lazy(() => import('./pages/Wallet'));
+const Affiliate          = lazy(() => import('./pages/Affiliate'));
+const LuckyWheel         = lazy(() => import('./pages/LuckyWheel'));
+const Withdrawal         = lazy(() => import('./pages/Withdrawal'));
+const WithdrawalConfirm  = lazy(() => import('./pages/WithdrawalConfirm'));
+const Transactions       = lazy(() => import('./pages/Transactions'));
+const Notifications      = lazy(() => import('./pages/Notifications'));
+const Support            = lazy(() => import('./pages/Support'));
+const Promotions         = lazy(() => import('./pages/Promotions'));
+const BankAccount        = lazy(() => import('./pages/BankAccount'));
+const ChangePassword     = lazy(() => import('./pages/ChangePassword'));
+const Terms              = lazy(() => import('./pages/Terms'));
+const Articles           = lazy(() => import('./pages/Articles'));
+const ArticleDetail      = lazy(() => import('./pages/ArticleDetail'));
+const Processing         = lazy(() => import('./pages/Processing'));
+
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin"></div>
+  </div>
+);
 
 const RootRedirect = () => {
   const { user, loading } = useAuth();
@@ -46,6 +52,7 @@ function App() {
     <AuthProvider>
       <NotificationPopup />
       <Router>
+        <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<RootRedirect />} />
@@ -83,6 +90,7 @@ function App() {
           <Route path="*" element={<Navigate to="/home" replace />} />
 
         </Routes>
+        </Suspense>
       </Router>
     </AuthProvider>
   );
