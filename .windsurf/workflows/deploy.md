@@ -35,11 +35,12 @@ npx vite build
 git add -A && git commit -m "feat: <description>"
 ```
 
-5. Push + Deploy
+5. Push (Vercel auto-deploy)
+// turbo
 ```bash
 git push origin develop:main
-npx vercel --prod --yes
 ```
+> Vercel จะ auto-deploy อัตโนมัติ ไม่ต้องรัน vercel --prod อีก
 
 ## ข้อห้าม
 - ห้าม deploy ไปโดเมนอื่นนอกจาก https://th-lotto-app.vercel.app/
