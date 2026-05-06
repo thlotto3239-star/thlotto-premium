@@ -209,6 +209,7 @@ const Profile = () => {
             <span className="material-symbols-outlined text-[20px]">logout</span>
             ออกจากระบบ
           </button>
+          <p className="mt-4 text-center text-[10px] text-slate-300">v{__APP_VERSION__}</p>
         </div>
         <BottomNav />
       </div>
