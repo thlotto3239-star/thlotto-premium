@@ -196,7 +196,6 @@ const Results = () => {
                 </div>
                 <div className="grid grid-cols-1 gap-3">
                   {stockRows.map((r) => {
-                    const pending = isPending(r.top3);
                     return (
                       <div key={r.code} className="bg-white p-3 rounded-2xl border border-slate-100 flex items-center justify-between gap-2">
                         <div className="flex items-center gap-3 min-w-0">

@@ -73,6 +73,11 @@ function SinglePopup({ notif, onDismiss }) {
   const [visible, setVisible] = useState(false);
   const intervalRef = useRef(null);
 
+  const handleDismiss = useCallback(() => {
+    setVisible(false);
+    setTimeout(onDismiss, 300);
+  }, [onDismiss]);
+
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true));
 
@@ -88,12 +93,7 @@ function SinglePopup({ notif, onDismiss }) {
     }, 50);
 
     return () => clearInterval(intervalRef.current);
-  }, []);
-
-  const handleDismiss = useCallback(() => {
-    setVisible(false);
-    setTimeout(onDismiss, 300);
-  }, [onDismiss]);
+  }, [handleDismiss]);
 
   const isWin = notif.type === 'WIN';
 
