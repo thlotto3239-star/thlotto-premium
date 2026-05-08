@@ -56,22 +56,7 @@ const LuckyWheel = () => {
   const [statusLoading, setStatusLoading] = useState(true);
   const [showInfo, setShowInfo]         = useState(false);
 
-  useEffect(() => {
-    if (profile?.id) { fetchHistory(); fetchSpinStatus(); }
-  }, [profile?.id]);
-
-  const fetchSpinStatus = async () => {
-    setStatusLoading(true);
-    try {
-      const { data } = await supabase.rpc('get_spin_status');
-      if (data?.success) {
-        setSpinStatus(data);
-        if (data.prizes?.length === N) setSegments(data.prizes);
-      }
-    } finally { setStatusLoading(false); }
-  };
-
-  const fetchHistory = async () => {
+  const fetchHistory = React.useCallback(async () => {
     if (!profile?.id) return;
     const { data } = await supabase
       .from('lucky_wheel_spins')
@@ -80,7 +65,22 @@ const LuckyWheel = () => {
       .order('spun_at', { ascending: false })
       .limit(5);
     setHistory(data || []);
-  };
+  }, [profile?.id]);
+
+  const fetchSpinStatus = React.useCallback(async () => {
+    setStatusLoading(true);
+    try {
+      const { data } = await supabase.rpc('get_spin_status');
+      if (data?.success) {
+        setSpinStatus(data);
+        if (data.prizes?.length === N) setSegments(data.prizes);
+      }
+    } finally { setStatusLoading(false); }
+  }, []);
+
+  useEffect(() => {
+    if (profile?.id) { fetchHistory(); fetchSpinStatus(); }
+  }, [profile?.id, fetchHistory, fetchSpinStatus]);
 
   const handleSpin = async () => {
     if (isSpinning || !spinStatus.can_spin) return;

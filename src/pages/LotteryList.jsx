@@ -137,7 +137,7 @@ const LotteryList = () => {
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">อัตราจ่าย</p>
-                  <p className="text-lg font-extrabold text-slate-900">บาทละ <span className="text-primary">{draw.payout_3top || 900}</span></p>
+                  <p className="text-lg font-extrabold text-slate-900">บาทละ <span className="text-primary">{draw.payout_3top}</span></p>
                 </div>
               </div>
               <div className="flex items-center justify-between pt-5 border-t border-slate-100">

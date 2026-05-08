@@ -10,6 +10,8 @@ const Withdrawal = () => {
   const [showPin, setShowPin] = useState(false);
   const [loading, setLoading] = useState(false);
   const [minWithdraw, setMinWithdraw] = useState(300);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pendingAmount, setPendingAmount] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,12 +26,17 @@ const Withdrawal = () => {
     fetchMin();
   }, []);
 
-  const handleWithdrawal = async () => {
+  const handleWithdrawal = () => {
     if (!amount || parseFloat(amount) < minWithdraw) {
       alert(`กรุณาระบุจำนวนเงินที่ต้องการถอน (ขั้นต่ำ ${minWithdraw.toLocaleString()} บาท)`);
       return;
     }
+    setPendingAmount(parseFloat(amount));
+    setPin('');
+    setShowPinModal(true);
+  };
 
+  const handleConfirmPin = async () => {
     if (!pin || pin.length !== 4 || !/^\d{4}$/.test(pin)) {
       alert('กรุณากรอก PIN 4 หลัก');
       return;
@@ -38,17 +45,19 @@ const Withdrawal = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.rpc('request_withdrawal_securely', {
-        p_amount: parseFloat(amount),
+        p_amount: pendingAmount,
         p_pin: pin
       });
 
       if (error) throw error;
 
       if (data.success) {
+        setShowPinModal(false);
         await refreshProfile();
-        navigate('/withdrawal-confirm', { state: { amount, bankName: profile?.bank_name } });
+        navigate('/withdrawal-confirm', { state: { amount: pendingAmount, bankName: profile?.bank_name } });
       } else {
         alert(data.message);
+        setPin('');
       }
     } catch (err) {
       console.error('Error requesting withdrawal:', err);
@@ -144,6 +153,8 @@ const Withdrawal = () => {
               placeholder="0.00"
               type="text"
               inputMode="decimal"
+              autoComplete="new-password"
+              name="withdrawal-amount"
               value={amount}
               onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
             />
@@ -170,37 +181,13 @@ const Withdrawal = () => {
           </button>
         </div>
 
-        {/* PIN */}
-        <section>
-          <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-            <p className="text-center text-slate-900 font-extrabold text-sm mb-3 uppercase tracking-widest">ระบุ PIN 4 หลัก เพื่อยืนยัน</p>
-            <div className="relative">
-              <input
-                type={showPin ? 'text' : 'password'}
-                inputMode="numeric"
-                maxLength={4}
-                className="w-full bg-white border border-slate-200 rounded-xl py-4 px-5 pr-14 text-center text-2xl font-bold tracking-[0.5em] text-slate-900 placeholder:text-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                placeholder="••••"
-                value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPin(!showPin)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary"
-              >
-                <span className="material-symbols-outlined text-xl">{showPin ? 'visibility' : 'visibility_off'}</span>
-              </button>
-            </div>
-          </div>
-        </section>
       </main>
 
       {/* Footer */}
       <footer className="fixed bottom-0 left-0 right-0 p-6 bg-white/95 backdrop-blur-lg border-t border-slate-100">
         <button
           onClick={handleWithdrawal}
-          disabled={loading || !amount || parseFloat(amount) < minWithdraw || pin.length !== 4}
+          disabled={loading || !amount || parseFloat(amount) < minWithdraw}
           className="w-full h-16 rounded-full flex items-center justify-center gap-3 text-white text-lg font-extrabold active:scale-[0.98] transition-all disabled:opacity-50"
           style={{ background: 'linear-gradient(135deg, #1a7e2a 0%, #156321 100%)' }}
         >
@@ -218,6 +205,69 @@ const Withdrawal = () => {
           <span className="text-[10px] font-bold uppercase tracking-widest text-slate-900">Secure SSL 256-bit Encryption</span>
         </div>
       </footer>
+
+      {/* PIN Modal */}
+      {showPinModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowPinModal(false)}></div>
+          <div className="relative bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl">
+            <button
+              onClick={() => setShowPinModal(false)}
+              className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+            
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="material-symbols-outlined text-3xl text-primary">lock</span>
+              </div>
+              <h3 className="text-lg font-extrabold text-slate-900">ยืนยันรหัส PIN</h3>
+              <p className="text-sm text-slate-500 mt-1">ถอนเงิน ฿{pendingAmount?.toLocaleString()}</p>
+            </div>
+
+            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 mb-6">
+              <p className="text-center text-slate-900 font-extrabold text-sm mb-3 uppercase tracking-widest">ระบุ PIN 4 หลัก</p>
+              <div className="relative">
+                <input
+                  type={showPin ? 'text' : 'password'}
+                  inputMode="numeric"
+                  maxLength={4}
+                  autoFocus
+                  className="w-full bg-white border border-slate-200 rounded-xl py-4 px-5 pr-14 text-center text-2xl font-bold tracking-[0.5em] text-slate-900 placeholder:text-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  placeholder="••••"
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  onKeyDown={(e) => e.key === 'Enter' && handleConfirmPin()}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPin(!showPin)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary"
+                >
+                  <span className="material-symbols-outlined text-xl">{showPin ? 'visibility' : 'visibility_off'}</span>
+                </button>
+              </div>
+            </div>
+
+            <button
+              onClick={handleConfirmPin}
+              disabled={loading || pin.length !== 4}
+              className="w-full h-14 rounded-full flex items-center justify-center gap-2 text-white text-base font-extrabold active:scale-[0.98] transition-all disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, #1a7e2a 0%, #156321 100%)' }}
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-lg">check_circle</span>
+                  ยืนยันการถอนเงิน
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

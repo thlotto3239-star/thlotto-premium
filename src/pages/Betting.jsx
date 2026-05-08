@@ -72,7 +72,8 @@ const Betting = () => {
 
   useEffect(() => {
     if (!drawId) { navigate('/lottery-list', { replace: true }); return; }
-  }, [drawId, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [drawId]);
 
   useEffect(() => {
     const fetchDraw = async () => {
@@ -101,6 +102,7 @@ const Betting = () => {
       }
     };
     fetchDraw();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drawId]);
 
   const getEmbedUrl = (url, muted) => {

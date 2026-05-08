@@ -48,6 +48,7 @@ const QRPayment = () => {
       });
     }, 1000);
     return () => clearInterval(timerRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const minutes = Math.floor(secondsLeft / 60).toString().padStart(2, '0');
