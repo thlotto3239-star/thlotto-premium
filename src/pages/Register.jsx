@@ -64,11 +64,11 @@ const Register = () => {
       return;
     }
     if (formData.pin.length !== 4) {
-      setError('PIN ต้องมี 4 หลัก');
+      setError('รหัสผ่านต้องมี 4 หลัก');
       return;
     }
     if (formData.pin !== formData.confirm_pin) {
-      setError('PIN ไม่ตรงกัน');
+      setError('รหัสผ่านไม่ตรงกัน');
       return;
     }
     setError('');
@@ -109,7 +109,7 @@ const Register = () => {
       if (raw.includes('duplicate') || raw.includes('unique') || raw.includes('already') || raw.includes('database error saving new user')) {
         msg = 'เบอร์นี้ถูกใช้สมัครสมาชิกไปแล้ว กรุณาเข้าสู่ระบบ หรือใช้เบอร์อื่น';
       } else if (raw.includes('password')) {
-        msg = 'PIN ไม่ถูกต้องตามรูปแบบ';
+        msg = 'รหัสผ่านไม่ถูกต้องตามรูปแบบ';
       } else if (raw.includes('network') || raw.includes('fetch')) {
         msg = 'ไม่สามารถเชื่อมต่อระบบได้ กรุณาลองใหม่';
       }
@@ -202,9 +202,14 @@ const Register = () => {
                   </div>
                 </div>
 
+                <div className="flex flex-col gap-2 mb-2">
+                  <p className="text-xs text-slate-500 text-center bg-slate-50 p-2 rounded-lg">
+                    รหัสผ่าน 4 หลักนี้จะใช้สำหรับเข้าสู่ระบบและถอนเงิน
+                  </p>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-2">
-                    <label className="text-slate-700 text-sm font-bold ml-4">ตั้งรหัส PIN</label>
+                    <label className="text-slate-700 text-sm font-bold ml-4">ตั้งรหัสผ่าน (4 หลัก)</label>
                     <input
                       name="pin"
                       value={formData.pin}
@@ -218,7 +223,7 @@ const Register = () => {
                     />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-slate-700 text-sm font-bold ml-4">ยืนยันรหัส PIN</label>
+                    <label className="text-slate-700 text-sm font-bold ml-4">ยืนยันรหัสผ่าน</label>
                     <input
                       name="confirm_pin"
                       value={formData.confirm_pin}

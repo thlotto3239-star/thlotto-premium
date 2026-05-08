@@ -16,6 +16,7 @@ const DepositSuccess     = lazy(() => import('./pages/DepositSuccess'));
 const QRPayment          = lazy(() => import('./pages/QRPayment'));
 const UploadSlip         = lazy(() => import('./pages/UploadSlip'));
 const RegistrationSuccess = lazy(() => import('./pages/RegistrationSuccess'));
+const ForgotPassword       = lazy(() => import('./pages/ForgotPassword'));
 const Betting            = lazy(() => import('./pages/Betting'));
 const LotteryList        = lazy(() => import('./pages/LotteryList'));
 const BetHistory         = lazy(() => import('./pages/BetHistory'));
@@ -58,6 +59,7 @@ function App() {
           <Route path="/" element={<RootRedirect />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Protected Routes */}
           <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />

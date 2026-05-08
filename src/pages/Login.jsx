@@ -10,6 +10,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [lockSeconds, setLockSeconds] = useState(0);
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem('thlotto_remember') === 'true');
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
@@ -27,7 +28,7 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     if (pin.length !== 4) {
-      setError('กรุณากรอก PIN 4 หลัก');
+      setError('กรุณากรอกรหัสผ่าน 4 หลัก');
       return;
     }
     if (lockSeconds > 0) return;
@@ -43,22 +44,26 @@ const Login = () => {
         return;
       }
 
-      const { error: signInError } = await signIn(phone, pin);
+      const { error: signInError } = await signIn(phone, pin, rememberMe);
       if (signInError) {
         // บันทึก failed attempt
         await supabase.rpc('record_login_attempt', { p_phone: phone, p_success: false });
         const remaining = (rlCheck?.remaining_attempts ?? 5) - 1;
-        setError(`เบอร์โทรศัพท์หรือ PIN ไม่ถูกต้อง${remaining > 0 ? ` (เหลืออีก ${remaining} ครั้ง)` : ''}`);
+        setError(`เบอร์โทรศัพท์หรือรหัสผ่านไม่ถูกต้อง${remaining > 0 ? ` (เหลืออีก ${remaining} ครั้ง)` : ''}`);
         if (remaining <= 0) {
           setLockSeconds(900);
-          setError('ใส่ PIN ผิดเกินจำนวนครั้ง บัญชีถูกล็อค 15 นาที');
+          setError('ใส่รหัสผ่านผิดเกินจำนวนครั้ง บัญชีถูกล็อค 15 นาที');
         }
         return;
       }
+      
+      // บันทึกการตั้งค่าจำฉันไว้
+      localStorage.setItem('thlotto_remember', rememberMe.toString());
 
       // บันทึก success → ลบ failed records
       await supabase.rpc('record_login_attempt', { p_phone: phone, p_success: true });
       localStorage.setItem('thlotto_phone', phone);
+      localStorage.setItem('thlotto_remember', rememberMe.toString());
       navigate('/home');
     } catch (err) {
       setError('เกิดข้อผิดพลาด กรุณาลองใหม่');
@@ -121,9 +126,9 @@ const Login = () => {
                 </div>
               </div>
 
-              {/* PIN */}
+              {/* รหัสผ่าน */}
               <div className="flex flex-col gap-2">
-                <label className="text-slate-700 text-sm font-bold ml-4" htmlFor="pin">รหัสความปลอดภัย (PIN)</label>
+                <label className="text-slate-700 text-sm font-bold ml-4" htmlFor="pin">รหัสผ่าน (4 หลัก)</label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 flex items-center pl-6 text-slate-400 pointer-events-none">
                     <span className="material-symbols-outlined text-xl">lock</span>
@@ -151,10 +156,19 @@ const Login = () => {
                 </div>
               </div>
 
-              {/* Forgot PIN */}
-              <div className="flex justify-end">
-                <Link to="/support" className="text-xs font-bold text-primary hover:opacity-80 transition-opacity">
-                  ลืมรหัส PIN?
+              {/* Remember Me & Forgot Password */}
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary"
+                  />
+                  <span className="text-xs text-slate-600 font-medium">จำฉันไว้</span>
+                </label>
+                <Link to="/forgot-password" className="text-xs font-bold text-primary hover:opacity-80 transition-opacity">
+                  ลืมรหัสผ่าน?
                 </Link>
               </div>
 

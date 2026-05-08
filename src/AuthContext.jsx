@@ -11,6 +11,20 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Check active sessions and sets the user
     const getSession = async () => {
+      // ตรวจสอบ session expiry สำหรับ "จำฉันไว้"
+      const sessionExpiry = localStorage.getItem('thlotto_session_expiry');
+      if (sessionExpiry) {
+        const expiryTime = parseInt(sessionExpiry);
+        if (Date.now() > expiryTime) {
+          // Session หมดอายุแล้ว → sign out
+          await supabase.auth.signOut();
+          localStorage.removeItem('thlotto_session_expiry');
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+      }
+      
       const { data: { session } } = await supabase.auth.getSession();
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -80,12 +94,24 @@ export const AuthProvider = ({ children }) => {
     return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
   };
 
-  const signIn = async (phone, pin) => {
+  const signIn = async (phone, pin, rememberMe = false) => {
     const email = `${phone}@thlotto.app`;
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password: await pinToPassword(phone, pin),
     });
+    
+    // ตั้งค่า session ให้คงทนตาม rememberMe
+    if (!error && data?.session) {
+      if (rememberMe) {
+        // จำ session 7 วัน
+        localStorage.setItem('thlotto_session_expiry', (Date.now() + 7 * 24 * 60 * 60 * 1000).toString());
+      } else {
+        // session นี้เท่านั้น (clear expiry)
+        localStorage.removeItem('thlotto_session_expiry');
+      }
+    }
+    
     return { data, error };
   };
 
