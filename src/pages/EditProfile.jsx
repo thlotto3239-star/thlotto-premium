@@ -28,28 +28,19 @@ const EditProfile = () => {
     try {
       const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext) ? ext : 'jpg';
-      const fileName = `${profile.id}/avatar.${safeExt}`;
-
-      // ลบไฟล์เก่าทั้งหมดก่อน upload ใหม่
-      const { data: existingFiles } = await supabase.storage
-        .from('avatars')
-        .list(profile.id);
-      if (existingFiles?.length > 0) {
-        const filesToRemove = existingFiles.map(f => `${profile.id}/${f.name}`);
-        await supabase.storage.from('avatars').remove(filesToRemove);
-      }
+      const fileName = `${profile.id}/${Date.now()}.${safeExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { contentType: file.type || 'image/jpeg', upsert: true });
+        .upload(fileName, file);
       if (uploadError) throw uploadError;
+
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
-      const avatarWithCacheBust = `${publicUrl}?t=${Date.now()}`;
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: avatarWithCacheBust })
+        .update({ avatar_url: publicUrl })
         .eq('id', profile.id);
       if (updateError) throw updateError;
       await refreshProfile();
