@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../AuthContext';
+import { useModal } from '../contexts/ModalContext';
 
 // ─── Wheel geometry ────────────────────────────────────────────────────────
 // Default segments shown before DB loads — overridden by get_spin_status.prizes
@@ -45,6 +46,7 @@ const slotAngle = idx => idx * DEG + DEG / 2;
 
 const LuckyWheel = () => {
   const { profile, refreshProfile } = useAuth();
+  const { showSuccess, showInfo: modalShowInfo } = useModal();
   const navigate = useNavigate();
   const [segments, setSegments]         = useState(DEFAULT_SEGMENTS);
   const [rotation, setRotation]         = useState(0);
@@ -54,7 +56,7 @@ const LuckyWheel = () => {
   const [history, setHistory]           = useState([]);
   const [spinStatus, setSpinStatus]     = useState({ spins_left: 0, daily_limit: 5, spin_cost: 10, can_spin: false });
   const [statusLoading, setStatusLoading] = useState(true);
-  const [showInfo, setShowInfo]         = useState(false);
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   const fetchHistory = React.useCallback(async () => {
     if (!profile?.id) return;
@@ -90,7 +92,7 @@ const LuckyWheel = () => {
       const { data, error } = await supabase.rpc('spin_lucky_wheel');
       if (error) throw error;
       if (!data.success) {
-        alert(data.message);
+        modalShowInfo('ไม่สามารถหมุนได้', data.message);
         setIsSpinning(false);
         fetchSpinStatus();
         return;
@@ -101,14 +103,27 @@ const LuckyWheel = () => {
       setPrizeData(data);
       setTimeout(() => {
         setIsSpinning(false);
-        setShowPrize(true);
         refreshProfile();
         fetchHistory();
         fetchSpinStatus();
+        // ใช้ Modal ระบบใหม่แทน
+        if (data.amount > 0) {
+          showSuccess(
+            '🎉 ยินดีด้วย!',
+            `คุณได้รับ ${data.prize}\n${data.message}`,
+            () => {} // callback ว่าง เพราะไม่ต้อง navigate ไปไหน
+          );
+        } else {
+          modalShowInfo(
+            '😢 เสียดายจัง',
+            `ผลการหมุน: ${data.prize}\n${data.message}\nลองใหม่อีกครั้ง!`,
+            () => {}
+          );
+        }
       }, 5300);
     } catch (err) {
       console.error(err);
-      alert('เกิดข้อผิดพลาดในการหมุน');
+      modalShowInfo('เกิดข้อผิดพลาด', 'ไม่สามารถหมุนวงล้อได้ กรุณาลองใหม่');
       setIsSpinning(false);
     }
   };
@@ -138,7 +153,7 @@ const LuckyWheel = () => {
           <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.35em]">TH LOTTO VIP</p>
           <p className="text-sm font-black text-white" style={{ whiteSpace: 'normal' }}>Premium Lucky Wheel</p>
         </div>
-        <button onClick={() => setShowInfo(true)}
+        <button onClick={() => setShowInfoModal(true)}
           className="w-11 h-11 flex items-center justify-center rounded-2xl text-white"
           style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <span className="material-symbols-outlined text-xl">info</span>
@@ -412,9 +427,9 @@ const LuckyWheel = () => {
       )}
 
       {/* ── INFO MODAL ── */}
-      {showInfo && (
+      {showInfoModal && (
         <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/60 backdrop-blur-sm"
-          onClick={() => setShowInfo(false)}>
+          onClick={() => setShowInfoModal(false)}>
           <div className="w-full max-w-md rounded-t-[3rem] p-8 pb-12"
             style={{ background: '#0d2d1a', border: '1px solid rgba(255,255,255,0.08)', borderBottom: 'none' }}
             onClick={e => e.stopPropagation()}>
@@ -434,7 +449,7 @@ const LuckyWheel = () => {
                 </div>
               ))}
             </div>
-            <button onClick={() => setShowInfo(false)}
+            <button onClick={() => setShowInfoModal(false)}
               className="mt-8 w-full py-4 rounded-2xl font-black text-sm text-emerald-400"
               style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.18)' }}>
               เข้าใจแล้ว

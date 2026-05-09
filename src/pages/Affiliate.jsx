@@ -3,9 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
+import { useModal } from '../contexts/ModalContext';
 
 const Affiliate = () => {
   const { profile, refreshProfile } = useAuth();
+  const { showSuccess, showError, showInfo } = useModal();
   const navigate = useNavigate();
   const [referrals, setReferrals] = useState([]);
   const [activities, setActivities] = useState([]);
@@ -74,14 +76,14 @@ const Affiliate = () => {
       if (error) throw error;
       
       if (data.success) {
-        alert(`โอนรายได้จำนวน ${data.amount} บาท สำเร็จ!`);
+        showSuccess('โอนรายได้สำเร็จ!', `โอนเงิน ฿${data.amount?.toLocaleString()} เข้ากระเป๋าแล้ว`);
         await refreshProfile();
       } else {
-        alert(data.message);
+        showError('โอนไม่สำเร็จ', data.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่');
       }
     } catch (err) {
       console.error('Error transferring income:', err);
-      alert('เกิดข้อผิดพลาดในการโอน');
+      showError('เกิดข้อผิดพลาด', 'ไม่สามารถโอนรายได้ได้ กรุณาลองใหม่');
     } finally {
       setTransferring(false);
     }
@@ -90,7 +92,7 @@ const Affiliate = () => {
   const copyToClipboard = () => {
     const link = `${window.location.origin}/register?ref=${profile?.member_id}`;
     navigator.clipboard.writeText(link);
-    alert('คัดลอกลิงก์แนะนำเพื่อนแล้ว!');
+    showSuccess('คัดลอกแล้ว!', 'ลิงก์แนะนำเพื่อนถูกคัดลอกไปยังคลิปบอร์ด');
   };
 
   return (
@@ -102,7 +104,7 @@ const Affiliate = () => {
         </button>
         <h1 className="text-lg font-extrabold text-slate-900 tracking-tight">ระบบแนะนำเพื่อน</h1>
         <button
-          onClick={() => alert('รับคอมมิชชั่น 8% จากทุกยอดเดิมพันของเพื่อนที่คุณแนะนำ\n\nสะสมได้ไม่จำกัด แล้วกด "โอนรายได้เข้ากระเป๋า" เพื่อรับเงิน')}
+          onClick={() => showInfo('วิธีการใช้งาน', 'รับคอมมิชชั่น 8% จากทุกยอดเดิมพันของเพื่อนที่คุณแนะนำ\n\nสะสมได้ไม่จำกัด แล้วกด "โอนรายได้เข้ากระเป๋า" เพื่อรับเงิน')}
           className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-700"
         >
           <span className="material-symbols-outlined text-[20px]">info</span>

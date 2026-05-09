@@ -3,9 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
+import { useModal } from '../contexts/ModalContext';
 
 const EditProfile = () => {
   const { profile, user, signOut, refreshProfile } = useAuth();
+  const { showSuccess, showError } = useModal();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
@@ -18,7 +20,7 @@ const EditProfile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 2 * 1024 * 1024) {
-      alert('ขนาดรูปภาพต้องไม่เกิน 2MB');
+      showError('ขนาดไฟล์ใหญ่เกินไป', 'รูปภาพต้องไม่เกิน 2MB');
       return;
     }
     setAvatarUploading(true);
@@ -38,10 +40,10 @@ const EditProfile = () => {
         .eq('id', profile.id);
       if (updateError) throw updateError;
       await refreshProfile();
-      alert('อัปเดตรูปโปรไฟล์สำเร็จ');
+      showSuccess('อัปเดตรูปโปรไฟล์สำเร็จ!', 'รูปโปรไฟล์ของคุณถูกอัปเดตแล้ว');
     } catch (err) {
       console.error('Avatar upload error:', err);
-      alert('เกิดข้อผิดพลาดในการอัปโหลดรูป');
+      showError('อัปโหลดไม่สำเร็จ', 'เกิดข้อผิดพลาดในการอัปโหลดรูป กรุณาลองใหม่');
     } finally {
       setAvatarUploading(false);
     }
@@ -59,10 +61,10 @@ const EditProfile = () => {
 
       if (error) throw error;
       await refreshProfile();
-      alert('บันทึกข้อมูลสำเร็จ');
+      showSuccess('บันทึกสำเร็จ!', 'ข้อมูลโปรไฟล์ถูกอัปเดตแล้ว');
     } catch (err) {
       console.error('Error updating profile:', err);
-      alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+      showError('บันทึกไม่สำเร็จ', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่');
     } finally {
       setLoading(false);
     }

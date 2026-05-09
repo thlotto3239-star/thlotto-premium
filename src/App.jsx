@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './AuthContext';
 import { ModalProvider } from './contexts/ModalContext';
 import ProtectedRoute from './ProtectedRoute';
 import NotificationPopup from './components/NotificationPopup';
+import RealtimeNotification from './components/RealtimeNotification';
 
 // Lazy-loaded pages — โหลดเฉพาะหน้าที่ผู้ใช้เปิด
 const Home               = lazy(() => import('./pages/Home'));
@@ -54,6 +55,7 @@ function App() {
     <AuthProvider>
       <ModalProvider>
         <NotificationPopup />
+        <RealtimeNotification />
         <Router>
           <Suspense fallback={<PageLoader />}>
           <Routes>
