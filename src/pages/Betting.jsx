@@ -22,7 +22,7 @@ const BASE_CATEGORIES = [
 ];
 
 const Betting = () => {
-  const { profile, refreshProfile } = useAuth();
+  const { refreshProfile } = useAuth();
   const { showSuccess, showError, showConfirm } = useModal();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

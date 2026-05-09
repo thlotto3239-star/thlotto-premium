@@ -38,7 +38,7 @@ const ForgotPassword = () => {
 
       // ไปขั้นตอนตั้งรหัสผ่านใหม่
       setStep(2);
-    } catch (err) {
+    } catch {
       setError('เกิดข้อผิดพลาด กรุณาลองใหม่');
     } finally {
       setLoading(false);
@@ -62,7 +62,7 @@ const ForgotPassword = () => {
 
     try {
       // เรียก RPC สำหรับ reset password (ต้องสร้างใน Supabase)
-      const { data, error: resetError } = await supabase.rpc('reset_user_password', {
+      const { error: resetError } = await supabase.rpc('reset_user_password', {
         p_phone: phone,
         p_new_pin: newPin
       });
@@ -78,7 +78,7 @@ const ForgotPassword = () => {
       setTimeout(() => {
         navigate('/login');
       }, 2000);
-    } catch (err) {
+    } catch {
       setError('เกิดข้อผิดพลาด กรุณาลองใหม่');
     } finally {
       setLoading(false);

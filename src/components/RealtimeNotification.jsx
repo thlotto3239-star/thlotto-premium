@@ -7,7 +7,7 @@ import { useAuth } from '../AuthContext';
 // Subscribe ตลอดเวลาที่ login และแสดง Modal สำคัญ
 
 const RealtimeNotification = () => {
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const { showSuccess, showInfo } = useModal();
 
   useEffect(() => {

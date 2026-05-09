@@ -6,7 +6,9 @@ import { useModal } from '../contexts/ModalContext';
 
 const Withdrawal = () => {
   const { profile, refreshProfile } = useAuth();
-  const { showSuccess, showError, showConfirm, showInfo } = useModal();
+  const { showSuccess, showError } = useModal();
+  // ใช้ profile data ในการแสดงผลและตรวจสอบ
+  const userProfile = profile;
   const [amount, setAmount] = useState('');
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
@@ -39,8 +41,8 @@ const Withdrawal = () => {
     }
     
     // ตรวจสอบยอดเงิน
-    if (withdrawAmount > (profile?.balance || 0)) {
-      showError('ยอดเงินไม่เพียงพอ', `ยอดเงินคงเหลือของคุณ: ฿${(profile?.balance || 0).toLocaleString()}`);
+    if (withdrawAmount > (userProfile?.balance || 0)) {
+      showError('ยอดเงินไม่เพียงพอ', `ยอดเงินคงเหลือของคุณ: ฿${(userProfile?.balance || 0).toLocaleString()}`);
       return;
     }
     
@@ -71,7 +73,7 @@ const Withdrawal = () => {
         showSuccess(
           'ส่งคำขอถอนเงินสำเร็จ!',
           `รอการอนุมัติประมาณ 10-30 นาที\nยอดถอน: ฿${pendingAmount?.toLocaleString()}`,
-          () => navigate('/withdrawal-confirm', { state: { amount: pendingAmount, bankName: profile?.bank_name } })
+          () => navigate('/withdrawal-confirm', { state: { amount: pendingAmount, bankName: userProfile?.bank_name } })
         );
       } else {
         showError('ถอนเงินไม่สำเร็จ', data.message || 'กรุณาตรวจสอบรหัสผ่านและลองใหม่');
@@ -138,7 +140,7 @@ const Withdrawal = () => {
             <div className="flex items-baseline justify-center gap-2">
               <span className="text-2xl font-extrabold text-primary">฿</span>
               <p className="text-5xl font-extrabold text-primary tracking-tight">
-                {(profile?.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                {(userProfile?.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </p>
             </div>
           </div>
@@ -148,12 +150,12 @@ const Withdrawal = () => {
         <section className="mb-6">
           <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest px-1 mb-3">บัญชีรับเงินของคุณ</p>
           <div className="flex items-center gap-4 bg-white p-4 rounded-2xl border border-slate-100">
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 font-extrabold text-lg border-2 border-white shadow ${getBankColor(profile?.bank_name)}`}>
-              {bankShortName(profile?.bank_name)}
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 font-extrabold text-lg border-2 border-white shadow ${getBankColor(userProfile?.bank_name)}`}>
+              {bankShortName(userProfile?.bank_name)}
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className="text-slate-900 font-extrabold text-base truncate">{profile?.bank_name || 'ไม่พบข้อมูล'}</p>
-              <p className="text-slate-400 font-body tabular-nums text-sm tracking-widest">{profile?.bank_account_number || 'xxx-x-xxxxx-x'}</p>
+              <p className="text-slate-900 font-extrabold text-base truncate">{userProfile?.bank_name || 'ไม่พบข้อมูล'}</p>
+              <p className="text-slate-400 font-body tabular-nums text-sm tracking-widest">{userProfile?.bank_account_number || 'xxx-x-xxxxx-x'}</p>
             </div>
             <div className="text-primary">
               <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
@@ -192,7 +194,7 @@ const Withdrawal = () => {
             </button>
           ))}
           <button
-            onClick={() => setAmount((profile?.balance || 0).toString())}
+            onClick={() => setAmount((userProfile?.balance || 0).toString())}
             className="px-5 py-2.5 rounded-full border border-primary/20 text-sm font-bold text-primary bg-primary/5 active:scale-95 transition-all"
           >
             ทั้งหมด
