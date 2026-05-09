@@ -10,8 +10,6 @@ const Withdrawal = () => {
   // ใช้ profile data ในการแสดงผลและตรวจสอบ
   const userProfile = profile;
   const [amount, setAmount] = useState('');
-  const [pin, setPin] = useState('');
-  const [showPin, setShowPin] = useState(false);
   const [loading, setLoading] = useState(false);
   const [minWithdraw, setMinWithdraw] = useState(300);
   const [showPinModal, setShowPinModal] = useState(false);
@@ -47,21 +45,14 @@ const Withdrawal = () => {
     }
     
     setPendingAmount(withdrawAmount);
-    setPin('');
     setShowPinModal(true);
   };
 
-  const handleConfirmPin = async () => {
-    if (!pin || pin.length !== 4 || !/^\d{4}$/.test(pin)) {
-      showError('รหัสผ่านไม่ถูกต้อง', 'กรุณากรอกรหัสผ่าน 4 หลัก');
-      return;
-    }
-
+  const handleConfirmWithdrawal = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase.rpc('request_withdrawal_securely', {
-        p_amount: pendingAmount,
-        p_pin: pin
+        p_amount: pendingAmount
       });
 
       if (error) throw error;
@@ -69,15 +60,13 @@ const Withdrawal = () => {
       if (data.success) {
         setShowPinModal(false);
         await refreshProfile();
-        // แสดง Modal Success แล้วค่อยไปหน้า withdrawal-confirm
         showSuccess(
           'ส่งคำขอถอนเงินสำเร็จ!',
           `รอการอนุมัติประมาณ 10-30 นาที\nยอดถอน: ฿${pendingAmount?.toLocaleString()}`,
           () => navigate('/withdrawal-confirm', { state: { amount: pendingAmount, bankName: userProfile?.bank_name } })
         );
       } else {
-        showError('ถอนเงินไม่สำเร็จ', data.message || 'กรุณาตรวจสอบรหัสผ่านและลองใหม่');
-        setPin('');
+        showError('ถอนเงินไม่สำเร็จ', data.message || 'กรุณาลองใหม่');
       }
     } catch (err) {
       console.error('Error requesting withdrawal:', err);
@@ -242,49 +231,41 @@ const Withdrawal = () => {
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="material-symbols-outlined text-3xl text-primary">lock</span>
               </div>
-              <h3 className="text-lg font-extrabold text-slate-900">ยืนยันรหัส PIN</h3>
+              <h3 className="text-lg font-extrabold text-slate-900">ยืนยันการถอนเงิน</h3>
               <p className="text-sm text-slate-500 mt-1">ถอนเงิน ฿{pendingAmount?.toLocaleString()}</p>
             </div>
 
-            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 mb-6">
-              <p className="text-center text-slate-900 font-extrabold text-sm mb-3 uppercase tracking-widest">ระบุ PIN 4 หลัก</p>
-              <div className="relative">
-                <input
-                  type={showPin ? 'text' : 'password'}
-                  inputMode="numeric"
-                  maxLength={4}
-                  autoFocus
-                  className="w-full bg-white border border-slate-200 rounded-xl py-4 px-5 pr-14 text-center text-2xl font-bold tracking-[0.5em] text-slate-900 placeholder:text-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  placeholder="••••"
-                  value={pin}
-                  onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                  onKeyDown={(e) => e.key === 'Enter' && handleConfirmPin()}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPin(!showPin)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary"
-                >
-                  <span className="material-symbols-outlined text-xl">{showPin ? 'visibility' : 'visibility_off'}</span>
-                </button>
-              </div>
+            <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 mb-6">
+              <p className="text-center text-slate-900 font-extrabold text-base mb-2">ยืนยันการถอนเงิน</p>
+              <p className="text-center text-3xl font-extrabold text-primary">
+                ฿{pendingAmount?.toLocaleString()}
+              </p>
             </div>
 
-            <button
-              onClick={handleConfirmPin}
-              disabled={loading || pin.length !== 4}
-              className="w-full h-14 rounded-full flex items-center justify-center gap-2 text-white text-base font-extrabold active:scale-[0.98] transition-all disabled:opacity-50"
-              style={{ background: 'linear-gradient(135deg, #1a7e2a 0%, #156321 100%)' }}
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  <span className="material-symbols-outlined text-lg">check_circle</span>
-                  ยืนยันการถอนเงิน
-                </>
-              )}
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowPinModal(false)}
+                disabled={loading}
+                className="flex-1 h-14 rounded-full flex items-center justify-center text-slate-600 text-base font-bold border-2 border-slate-200 hover:bg-slate-50 active:scale-[0.98] transition-all"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleConfirmWithdrawal}
+                disabled={loading}
+                className="flex-1 h-14 rounded-full flex items-center justify-center gap-2 text-white text-base font-extrabold active:scale-[0.98] transition-all disabled:opacity-50"
+                style={{ background: 'linear-gradient(135deg, #1a7e2a 0%, #156321 100%)' }}
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                ) : (
+                  <>
+                    <span className="material-symbols-outlined text-lg">check_circle</span>
+                    ยืนยัน
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
