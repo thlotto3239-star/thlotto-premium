@@ -19,31 +19,75 @@ const EditProfile = () => {
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validation ก่อนอัปโหลด
+    if (!profile?.id) {
+      showError('ไม่พบข้อมูลผู้ใช้', 'กรุณาเข้าสู่ระบบใหม่');
+      return;
+    }
+
     if (file.size > 2 * 1024 * 1024) {
       showError('ขนาดไฟล์ใหญ่เกินไป', 'รูปภาพต้องไม่เกิน 2MB');
       return;
     }
+
+    // รองรับเฉพาะรูปภาพ
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      showError('รูปแบบไฟล์ไม่รองรับ', 'รองรับเฉพาะ JPG, PNG, WebP เท่านั้น');
+      return;
+    }
+
     setAvatarUploading(true);
     try {
-      const ext = file.name.split('.').pop();
+      const ext = file.name.split('.').pop().toLowerCase();
       const fileName = `${profile.id}/avatar.${ext}`;
+
+      console.log('[Avatar Upload] Starting upload:', {
+        userId: profile.id,
+        fileName: fileName,
+        fileSize: file.size,
+        fileType: file.type
+      });
+
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file, { upsert: true });
-      if (uploadError) throw uploadError;
+
+      if (uploadError) {
+        console.error('[Avatar Upload] Storage error:', uploadError);
+        throw new Error(`Storage: ${uploadError.message}`);
+      }
+
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
+
+      console.log('[Avatar Upload] Got public URL:', publicUrl);
+
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
         .eq('id', profile.id);
-      if (updateError) throw updateError;
+
+      if (updateError) {
+        console.error('[Avatar Upload] Database error:', updateError);
+        throw new Error(`Database: ${updateError.message}`);
+      }
+
       await refreshProfile();
       showSuccess('อัปเดตรูปโปรไฟล์สำเร็จ!', 'รูปโปรไฟล์ของคุณถูกอัปเดตแล้ว');
     } catch (err) {
-      console.error('Avatar upload error:', err);
-      showError('อัปโหลดไม่สำเร็จ', 'เกิดข้อผิดพลาดในการอัปโหลดรูป กรุณาลองใหม่');
+      console.error('[Avatar Upload] Error:', err);
+      // แสดง error ที่ชัดเจน
+      const errorMsg = err.message || 'ไม่ทราบสาเหตุ';
+      if (errorMsg.includes('Storage')) {
+        showError('อัปโหลดไม่สำเร็จ', `ปัญหา Storage: ${errorMsg.replace('Storage: ', '')}`);
+      } else if (errorMsg.includes('Database')) {
+        showError('บันทึกไม่สำเร็จ', `ปัญหาฐานข้อมูล: ${errorMsg.replace('Database: ', '')}`);
+      } else {
+        showError('อัปโหลดไม่สำเร็จ', errorMsg);
+      }
     } finally {
       setAvatarUploading(false);
     }
