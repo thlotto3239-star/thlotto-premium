@@ -398,6 +398,7 @@ const Register = () => {
                     name="bank_account_number"
                     value={formData.bank_account_number}
                     onChange={handleInputChange}
+                    required
                     className="w-full h-14 bg-slate-50 border border-slate-200 rounded-xl px-4 text-lg focus:outline-none focus:ring-2 focus:ring-[#008a00]/20 focus:border-[#008a00] transition-all placeholder:text-slate-400" 
                     placeholder="xxx-x-xxxxx-x" 
                     type="text"

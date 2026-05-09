@@ -15,6 +15,7 @@ const EditProfile = () => {
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
   });
+  const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.phone}`;
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
@@ -34,9 +35,10 @@ const EditProfile = () => {
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
+      const avatarWithCacheBust = `${publicUrl}?t=${Date.now()}`;
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: publicUrl })
+        .update({ avatar_url: avatarWithCacheBust })
         .eq('id', profile.id);
       if (updateError) throw updateError;
       await refreshProfile();
@@ -50,6 +52,10 @@ const EditProfile = () => {
   };
 
   const handleUpdate = async () => {
+    if (!formData.full_name.trim()) {
+      showError('กรุณากรอกชื่อ', 'ชื่อ-นามสกุลไม่สามารถเว้นว่างได้');
+      return;
+    }
     setLoading(true);
     try {
       const { error } = await supabase
@@ -84,14 +90,14 @@ const EditProfile = () => {
           <h1 className="text-2xl font-black text-emerald-600 tracking-tight uppercase">TH-LOTTO</h1>
         </div>
         <div className="flex items-center gap-2">
-          <button className="p-2 transition-all duration-200 active:scale-95 hover:bg-zinc-50 rounded-full">
+          <button onClick={() => navigate('/notifications')} className="p-2 transition-all duration-200 active:scale-95 hover:bg-zinc-50 rounded-full">
             <span className="material-symbols-outlined text-emerald-600">notifications</span>
           </button>
           <div className="w-8 h-8 rounded-full bg-zinc-200 overflow-hidden border border-zinc-100">
             <img
               alt="Profile"
               className="w-full h-full object-cover"
-              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.phone}`}
+              src={profile?.avatar_url || defaultAvatar}
             />
           </div>
         </div>
@@ -112,7 +118,7 @@ const EditProfile = () => {
               <img
                 alt="Avatar"
                 className="w-full h-full object-cover"
-                src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.phone}`}
+                src={profile?.avatar_url || defaultAvatar}
               />
             </div>
             <button
@@ -182,15 +188,8 @@ const EditProfile = () => {
             <div className="divide-y divide-zinc-50">
               <div onClick={() => navigate('/change-password')} className="py-4 flex justify-between items-center group cursor-pointer">
                 <div>
-                  <p className="font-bold text-zinc-800">เปลี่ยนรหัสผ่าน</p>
-                  <p className="text-xs text-zinc-500 font-medium">เปลี่ยนรหัสผ่านของบัญชี</p>
-                </div>
-                <span className="material-symbols-outlined text-zinc-300 group-hover:text-emerald-600 transition-colors">chevron_right</span>
-              </div>
-              <div onClick={() => navigate('/change-password')} className="py-4 flex justify-between items-center group cursor-pointer">
-                <div>
-                  <p className="font-bold text-zinc-800">PIN 4 หลัก</p>
-                  <p className="text-xs text-zinc-500 font-medium">ตั้งหรือเปลี่ยน PIN สำหรับถอนเงิน</p>
+                  <p className="font-bold text-zinc-800">เปลี่ยน PIN (รหัสผ่าน)</p>
+                  <p className="text-xs text-zinc-500 font-medium">ใช้สำหรับเข้าสู่ระบบและยืนยันการถอนเงิน</p>
                 </div>
                 <span className="material-symbols-outlined text-zinc-300 group-hover:text-emerald-600 transition-colors">chevron_right</span>
               </div>

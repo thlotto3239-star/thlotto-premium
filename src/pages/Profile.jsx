@@ -65,7 +65,7 @@ const Profile = () => {
           <div className="relative">
             <div className="size-32 rounded-full p-1 border-2 border-gold-premium">
               <div className="size-full rounded-full bg-white p-1">
-                <div className="size-full rounded-full bg-cover bg-center" style={{ backgroundImage: `url('${profile?.avatar_url || 'https://lh3.googleusercontent.com/aida-public/AB6AXuBgof3BCFj0rErRAwKrIsWBLEWMdvgPl8nEtwZp4Rdi5D2FtM5MeFaCdN-mvSekasJaxAPmbZeD4AzLkfUqdNETdbKUy6oaVXOEOGbyAjjNfPxCBm_lxQVZVBTmnlPxAPbi_eVhqjgfWBHfavqn-LY8lnIxIgAKTqn51tMMKbmnWSkTJ_iegEl7pHS6layrdt47gsJ4tCG4EsxNjWKmMsrkniohPpAH_LAmP9SYmrRknJWD_tj9d8935gZe6xoaxyIs3ewfwxz70Q'}')` }}></div>
+                <div className="size-full rounded-full bg-cover bg-center" style={{ backgroundImage: `url('${profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.phone}`}')` }}></div>
               </div>
             </div>
             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-4 py-1 rounded-full border border-gold-premium/30 flex items-center gap-1">

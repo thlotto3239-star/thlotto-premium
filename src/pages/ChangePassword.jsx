@@ -7,11 +7,13 @@ import BottomNav from '../components/BottomNav';
 const ChangePassword = () => {
   const navigate = useNavigate();
   const { profile, user } = useAuth();
+  const [currentPin, setCurrentPin] = useState('');
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const hasPin = !!profile?.pin_hash;
 
   const pinToPassword = async (phone, pin) => {
     const raw = new TextEncoder().encode(pin + phone);
@@ -20,6 +22,8 @@ const ChangePassword = () => {
   };
 
   const validate = () => {
+    if (hasPin && !currentPin) return 'กรุณากรอก PIN ปัจจุบัน';
+    if (hasPin && !/^\d{4}$/.test(currentPin)) return 'PIN ปัจจุบันต้องเป็นตัวเลข 4 หลัก';
     if (!newPin) return 'กรุณากรอก PIN ใหม่';
     if (!/^\d{4}$/.test(newPin)) return 'PIN ต้องเป็นตัวเลข 4 หลักเท่านั้น';
     if (newPin !== confirmPin) return 'PIN ใหม่ไม่ตรงกัน';
@@ -35,6 +39,17 @@ const ChangePassword = () => {
       const phone = profile?.phone;
       if (!phone) throw new Error('ไม่พบข้อมูลผู้ใช้ กรุณาเข้าสู่ระบบใหม่');
 
+      // ตรวจ PIN เก่าก่อน (ถ้ามี)
+      if (hasPin) {
+        const currentHash = await pinToPassword(phone, currentPin);
+        if (currentHash !== profile.pin_hash) {
+          setError('PIN ปัจจุบันไม่ถูกต้อง');
+          setCurrentPin('');
+          setLoading(false);
+          return;
+        }
+      }
+
       const newPassword = await pinToPassword(phone, newPin);
 
       const { error: authErr } = await supabase.auth.updateUser({ password: newPassword });
@@ -44,6 +59,7 @@ const ChangePassword = () => {
       if (pinResult && !pinResult.success) throw new Error(pinResult.message);
 
       setSuccess(true);
+      setCurrentPin('');
       setNewPin('');
       setConfirmPin('');
     } catch (e) {
@@ -95,6 +111,27 @@ const ChangePassword = () => {
 
             {/* Form */}
             <div className="space-y-5">
+              {/* Current PIN (only if user has PIN set) */}
+              {hasPin && (
+                <div>
+                  <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-2 px-1">
+                    PIN ปัจจุบัน
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-[20px]">key</span>
+                    <input
+                      type="password"
+                      inputMode="numeric"
+                      maxLength={4}
+                      value={currentPin}
+                      onChange={e => setCurrentPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      placeholder="••••"
+                      className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all outline-none font-bold text-xl text-center tracking-[0.5em]"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* New PIN */}
               <div>
                 <label className="block text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-2 px-1">
@@ -157,7 +194,7 @@ const ChangePassword = () => {
               {/* Submit */}
               <button
                 onClick={handleSubmit}
-                disabled={loading || newPin.length !== 4 || confirmPin.length !== 4}
+                disabled={loading || newPin.length !== 4 || confirmPin.length !== 4 || (hasPin && currentPin.length !== 4)}
                 className="w-full py-4 rounded-full font-extrabold text-white text-sm uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 style={{ background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' }}
               >

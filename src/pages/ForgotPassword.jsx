@@ -6,7 +6,8 @@ const ForgotPassword = () => {
   const [phone, setPhone] = useState('');
   const [newPin, setNewPin] = useState('');
   const [confirmPin, setConfirmPin] = useState('');
-  const [step, setStep] = useState(1); // 1: phone, 2: new password
+  const [bankAccount, setBankAccount] = useState('');
+  const [step, setStep] = useState(1); // 1: phone, 2: verify bank, 3: new password
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -36,13 +37,24 @@ const ForgotPassword = () => {
         return;
       }
 
-      // ไปขั้นตอนตั้งรหัสผ่านใหม่
+      // ไปขั้นตอนยืนยันเลขบัญชี
       setStep(2);
     } catch {
       setError('เกิดข้อผิดพลาด กรุณาลองใหม่');
     } finally {
       setLoading(false);
     }
+  };
+
+  // ยืนยันเลขบัญชีธนาคาร
+  const handleVerifyBank = (e) => {
+    e.preventDefault();
+    if (!bankAccount.trim()) {
+      setError('กรุณากรอกเลขบัญชีธนาคาร');
+      return;
+    }
+    setError('');
+    setStep(3);
   };
 
   // ตั้งรหัสผ่านใหม่
@@ -61,14 +73,19 @@ const ForgotPassword = () => {
     setError('');
 
     try {
-      // เรียก RPC สำหรับ reset password (ต้องสร้างใน Supabase)
-      const { error: resetError } = await supabase.rpc('reset_user_password', {
+      const { data, error: resetError } = await supabase.rpc('reset_user_password', {
         p_phone: phone,
-        p_new_pin: newPin
+        p_new_pin: newPin,
+        p_bank_account_number: bankAccount.trim()
       });
 
       if (resetError) {
         setError(resetError.message || 'ไม่สามารถเปลี่ยนรหัสผ่านได้');
+        return;
+      }
+
+      if (data && !data.success) {
+        setError(data.message || 'ไม่สามารถเปลี่ยนรหัสผ่านได้');
         return;
       }
 
@@ -110,11 +127,13 @@ const ForgotPassword = () => {
         <div className="flex-1 px-6 pb-12">
           <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100">
             <h2 className="text-slate-900 text-2xl font-extrabold mb-2">
-              {step === 1 ? 'ลืมรหัสผ่าน?' : 'ตั้งรหัสผ่านใหม่'}
+              {step === 1 ? 'ลืมรหัสผ่าน?' : step === 2 ? 'ยืนยันตัวตน' : 'ตั้งรหัสผ่านใหม่'}
             </h2>
             <p className="text-slate-500 text-sm font-medium mb-8">
               {step === 1 
                 ? 'กรุณากรอกเบอร์โทรศัพท์ที่ใช้สมัครสมาชิก' 
+                : step === 2
+                ? 'กรุณากรอกเลขบัญชีธนาคารที่ผูกไว้กับบัญชีนี้'
                 : 'กรุณาตั้งรหัสผ่านใหม่ 4 หลัก'}
             </p>
 
@@ -168,6 +187,49 @@ const ForgotPassword = () => {
                   )}
                 </button>
               </form>
+            ) : step === 2 ? (
+              <form onSubmit={handleVerifyBank} className="space-y-6">
+                <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 flex gap-3">
+                  <span className="material-symbols-outlined text-primary shrink-0">verified_user</span>
+                  <p className="text-xs leading-relaxed text-slate-600">
+                    เพื่อความปลอดภัย กรุณากรอกเลขบัญชีธนาคารที่ผูกไว้ตอนสมัครสมาชิก
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-slate-700 text-sm font-bold ml-4">เลขบัญชีธนาคาร</label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-6 text-slate-400 pointer-events-none">
+                      <span className="material-symbols-outlined text-xl">account_balance</span>
+                    </div>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="xxx-x-xxxxx-x"
+                      value={bankAccount}
+                      onChange={(e) => setBankAccount(e.target.value)}
+                      required
+                      className="flex w-full rounded-full border border-slate-200 bg-slate-50/50 py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-3 py-4 text-white font-extrabold text-lg rounded-full active:scale-[0.98] transition-all border-b-4 border-emerald-900"
+                  style={{ background: '#008a3e' }}
+                >
+                  <span>ยืนยันตัวตน</span>
+                  <span className="material-symbols-outlined font-bold">arrow_forward</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setStep(1); setError(''); }}
+                  className="w-full py-3 text-slate-500 font-medium text-sm hover:text-slate-700 transition-colors"
+                >
+                  ← กลับไปแก้ไขเบอร์โทร
+                </button>
+              </form>
             ) : (
               <form onSubmit={handleResetPassword} className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
@@ -217,10 +279,10 @@ const ForgotPassword = () => {
 
                 <button
                   type="button"
-                  onClick={() => setStep(1)}
+                  onClick={() => { setStep(2); setError(''); }}
                   className="w-full py-3 text-slate-500 font-medium text-sm hover:text-slate-700 transition-colors"
                 >
-                  ← กลับไปแก้ไขเบอร์โทร
+                  ← กลับขั้นตอนก่อนหน้า
                 </button>
               </form>
             )}
