@@ -55,8 +55,8 @@ const ChangePassword = () => {
       const { error: authErr } = await supabase.auth.updateUser({ password: newPassword });
       if (authErr) throw authErr;
 
-      const { data: pinResult } = await supabase.rpc('set_user_pin', { p_pin: newPin, p_user_id: user.id });
-      if (pinResult && !pinResult.success) throw new Error(pinResult.message);
+      const { error: pinErr } = await supabase.rpc('set_user_pin', { p_pin: newPin, p_user_id: user.id });
+      if (pinErr) throw new Error(pinErr.message || 'ไม่สามารถบันทึก PIN ได้');
 
       setSuccess(true);
       setCurrentPin('');

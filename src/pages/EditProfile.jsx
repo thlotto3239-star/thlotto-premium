@@ -41,7 +41,7 @@ const EditProfile = () => {
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { contentType: file.type || 'image/jpeg' });
+        .upload(fileName, file, { contentType: file.type || 'image/jpeg', upsert: true });
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
