@@ -40,8 +40,8 @@ const EditProfile = () => {
 
     setAvatarUploading(true);
     try {
-      // ใช้ user.id จาก useAuth() โดยตรง (RLS ตรวจสอบ auth.uid())
-      const userId = user?.id;
+      // ใช้ profile.id แบบโค้ดเดิมที่เคยทำงานได้ (RLS ตรวจสอบ auth.uid() = profile.id)
+      const userId = profile?.id;
       if (!userId) {
         showError('ไม่พบข้อมูลผู้ใช้', 'กรุณาเข้าสู่ระบบใหม่');
         navigate('/login');
@@ -56,7 +56,7 @@ const EditProfile = () => {
         fileName: fileName,
         fileSize: file.size,
         fileType: file.type,
-        hasUser: !!user
+        hasProfile: !!profile
       });
 
       const { error: uploadError } = await supabase.storage
