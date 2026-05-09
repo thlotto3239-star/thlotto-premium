@@ -27,6 +27,7 @@ const ChangePassword = () => {
     if (!newPin) return 'กรุณากรอก PIN ใหม่';
     if (!/^\d{4}$/.test(newPin)) return 'PIN ต้องเป็นตัวเลข 4 หลักเท่านั้น';
     if (newPin !== confirmPin) return 'PIN ใหม่ไม่ตรงกัน';
+    if (hasPin && newPin === currentPin) return 'PIN ใหม่ต้องไม่ซ้ำกับ PIN ปัจจุบัน';
     return '';
   };
 
@@ -63,7 +64,14 @@ const ChangePassword = () => {
       setNewPin('');
       setConfirmPin('');
     } catch (e) {
-      setError(e.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+      const msg = e.message || '';
+      if (msg.includes('different from the old')) {
+        setError('PIN ใหม่ต้องไม่ซ้ำกับ PIN ปัจจุบัน');
+      } else if (msg.includes('session_not_found') || msg.includes('not authenticated')) {
+        setError('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
+      } else {
+        setError(msg || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+      }
     } finally {
       setLoading(false);
     }

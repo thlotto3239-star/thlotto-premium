@@ -20,30 +20,9 @@ const ForgotPassword = () => {
       setError('เบอร์โทรศัพท์ไม่ถูกต้อง');
       return;
     }
-
-    setLoading(true);
     setError('');
-
-    try {
-      // ตรวจสอบว่ามี user นี้จริงไหม
-      const { data: userData, error: userError } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone')
-        .eq('phone', phone)
-        .single();
-
-      if (userError || !userData) {
-        setError('ไม่พบบัญชีผู้ใช้งานนี้ในระบบ กรุณาตรวจสอบเบอร์โทรศัพท์');
-        return;
-      }
-
-      // ไปขั้นตอนยืนยันเลขบัญชี
-      setStep(2);
-    } catch {
-      setError('เกิดข้อผิดพลาด กรุณาลองใหม่');
-    } finally {
-      setLoading(false);
-    }
+    // ไปขั้นตอนยืนยันเลขบัญชีเลย (RPC จะตรวจสอบเบอร์โทรให้)
+    setStep(2);
   };
 
   // ยืนยันเลขบัญชีธนาคาร
