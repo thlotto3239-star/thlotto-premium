@@ -26,11 +26,22 @@ const EditProfile = () => {
     }
     setAvatarUploading(true);
     try {
-      const ext = file.name.split('.').pop();
-      const fileName = `${profile.id}/avatar.${ext}`;
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext) ? ext : 'jpg';
+      const fileName = `${profile.id}/avatar.${safeExt}`;
+
+      // ลบไฟล์เก่าทั้งหมดก่อน upload ใหม่
+      const { data: existingFiles } = await supabase.storage
+        .from('avatars')
+        .list(profile.id);
+      if (existingFiles?.length > 0) {
+        const filesToRemove = existingFiles.map(f => `${profile.id}/${f.name}`);
+        await supabase.storage.from('avatars').remove(filesToRemove);
+      }
+
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, file, { contentType: file.type || 'image/jpeg' });
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
@@ -45,7 +56,7 @@ const EditProfile = () => {
       showSuccess('อัปเดตรูปโปรไฟล์สำเร็จ!', 'รูปโปรไฟล์ของคุณถูกอัปเดตแล้ว');
     } catch (err) {
       console.error('Avatar upload error:', err);
-      showError('อัปโหลดไม่สำเร็จ', 'เกิดข้อผิดพลาดในการอัปโหลดรูป กรุณาลองใหม่');
+      showError('อัปโหลดไม่สำเร็จ', err?.message || err?.statusCode || 'เกิดข้อผิดพลาดในการอัปโหลดรูป กรุณาลองใหม่');
     } finally {
       setAvatarUploading(false);
     }
