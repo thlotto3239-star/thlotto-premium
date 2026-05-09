@@ -2,9 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../AuthContext';
+import { useModal } from '../contexts/ModalContext';
 
 const UploadSlip = () => {
   const { profile, refreshProfile } = useAuth();
+  const { showSuccess, showError, showConfirm } = useModal();
   const navigate = useNavigate();
   const location = useLocation();
   const [file, setFile] = useState(null);
@@ -50,49 +52,63 @@ const UploadSlip = () => {
 
   const handleSubmit = async () => {
     if (!file) {
-      setError('กรุณาอัปโหลดสลิปโอนเงิน');
+      showError('กรุณาอัปโหลดสลิป', 'กรุณาเลือกไฟล์สลิปก่อนกดยืนยัน');
       return;
     }
 
-    setUploading(true);
-    setError('');
-    
-    try {
-      // 1. Upload to Storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${profile.id}/${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage
-        .from('slips')
-        .upload(fileName, file);
+    // แสดง Modal Confirm ก่อนส่ง
+    showConfirm(
+      'ยืนยันการฝากเงิน?',
+      `ยอดเงิน: ฿${parseFloat(depositAmount).toLocaleString()}${promoName ? `\nโปรโมชั่น: ${promoName}` : ''}`,
+      async () => {
+        setUploading(true);
+        setError('');
+        
+        try {
+          // 1. Upload to Storage
+          const fileExt = file.name.split('.').pop();
+          const fileName = `${profile.id}/${Date.now()}.${fileExt}`;
+          const { error: uploadError } = await supabase.storage
+            .from('slips')
+            .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+          if (uploadError) throw uploadError;
 
-      // 2. Get Public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('slips')
-        .getPublicUrl(fileName);
+          // 2. Get Public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('slips')
+            .getPublicUrl(fileName);
 
-      // 3. Submit RPC
-      const { data: rpcData, error: rpcError } = await supabase.rpc('submit_deposit_slip', {
-        p_amount: parseFloat(depositAmount),
-        p_slip_url: publicUrl,
-        p_promo_code: promoCode || null,
-      });
+          // 3. Submit RPC
+          const { data: rpcData, error: rpcError } = await supabase.rpc('submit_deposit_slip', {
+            p_amount: parseFloat(depositAmount),
+            p_slip_url: publicUrl,
+            p_promo_code: promoCode || null,
+          });
 
-      if (rpcError) throw rpcError;
+          if (rpcError) throw rpcError;
 
-      if (rpcData.success) {
-        await refreshProfile();
-        navigate('/deposit-success', { state: { amount: depositAmount, txRef: rpcData.request_id } });
-      } else {
-        setError(rpcData.message);
-      }
-    } catch (err) {
-      console.error('Error submitting slip:', err);
-      setError('เกิดข้อผิดพลาดในการอัปโหลด กรุณาลองใหม่อีกครั้ง');
-    } finally {
-      setUploading(false);
-    }
+          if (rpcData.success) {
+            await refreshProfile();
+            // แสดง Modal Success แล้วค่อยไปหน้า deposit-success
+            showSuccess(
+              'ส่งสลิปสำเร็จ!',
+              `รอการอนุมัติประมาณ 1-5 นาที\nเลขที่รายการ: ${rpcData.request_id || '-'}`,
+              () => navigate('/deposit-success', { state: { amount: depositAmount, txRef: rpcData.request_id } })
+            );
+          } else {
+            showError('ไม่สำเร็จ', rpcData.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่');
+          }
+        } catch (err) {
+          console.error('Error submitting slip:', err);
+          showError('เกิดข้อผิดพลาด', 'ไม่สามารถส่งสลิปได้ กรุณาลองใหม่อีกครั้ง');
+        } finally {
+          setUploading(false);
+        }
+      },
+      'ยืนยัน',
+      'ยกเลิก'
+    );
   };
 
   return (

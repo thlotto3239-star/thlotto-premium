@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
+import { ModalProvider } from './contexts/ModalContext';
 import ProtectedRoute from './ProtectedRoute';
 import NotificationPopup from './components/NotificationPopup';
 
@@ -51,15 +52,16 @@ const RootRedirect = () => {
 function App() {
   return (
     <AuthProvider>
-      <NotificationPopup />
-      <Router>
-        <Suspense fallback={<PageLoader />}>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<RootRedirect />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+      <ModalProvider>
+        <NotificationPopup />
+        <Router>
+          <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<RootRedirect />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Protected Routes */}
           <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
@@ -93,7 +95,8 @@ function App() {
 
         </Routes>
         </Suspense>
-      </Router>
+        </Router>
+      </ModalProvider>
     </AuthProvider>
   );
 }

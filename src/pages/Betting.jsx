@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../AuthContext';
+import { useModal } from '../contexts/ModalContext';
 
 const DEFAULT_RATES = {
   '4TOP': 6000, '3TOP': 900, '3TODE': 150, '3FRONT': 450,
@@ -21,11 +22,11 @@ const BASE_CATEGORIES = [
 ];
 
 const Betting = () => {
+  const { profile, refreshProfile } = useAuth();
+  const { showSuccess, showError, showConfirm } = useModal();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const drawId = searchParams.get('draw');
-  const navigate = useNavigate();
-  const { refreshProfile } = useAuth();
-
   const [draw, setDraw] = useState(null);
   const [liveStreamUrl, setLiveStreamUrl] = useState('');
   const [isMuted, setIsMuted] = useState(true);
@@ -193,29 +194,47 @@ const Betting = () => {
   const handleSubmit = async () => {
     if (cart.length === 0) return;
     if (timeLeft.isExpired) {
-      alert('งวดนี้ปิดรับแทงแล้ว ไม่สามารถส่งโพยได้');
+      showError('งวดปิดแล้ว', 'งวดนี้ปิดรับแทงแล้ว ไม่สามารถส่งโพยได้');
       return;
     }
-    setLoading(true);
-    try {
-      const { data, error } = await supabase.rpc('place_bet_securely', {
-        p_market_id: drawId,
-        p_bets: cart.map(item => ({
-          numbers: item.numbers,
-          bet_type: item.type,
-          amount: item.amount,
-          payout_rate: item.rate
-        }))
-      });
-      if (error) throw error;
-      if (data && !data.success) throw new Error(data.message);
-      await refreshProfile();
-      navigate('/bet-history');
-    } catch (err) {
-      alert(err.message || 'เกิดข้อผิดพลาดในการส่งโพย');
-    } finally {
-      setLoading(false);
-    }
+
+    // คำนวณยอดรวม
+    const totalAmount = cart.reduce((sum, item) => sum + item.amount, 0);
+
+    // แสดง Confirm Modal ก่อนส่ง
+    showConfirm(
+      'ยืนยันการแทงหวย?',
+      `จำนวนโพย: ${cart.length} รายการ\nยอดรวม: ฿${totalAmount.toLocaleString()}\n\nยืนยันการส่งโพย?`,
+      async () => {
+        setLoading(true);
+        try {
+          const { data, error } = await supabase.rpc('place_bet_securely', {
+            p_market_id: drawId,
+            p_bets: cart.map(item => ({
+              numbers: item.numbers,
+              bet_type: item.bet_type,
+              amount: item.amount,
+              rate: item.rate
+            }))
+          });
+          if (error) throw error;
+          if (!data.success) throw new Error(data.message);
+          await refreshProfile();
+          // แสดง Success แล้วค่อยไปหน้า bet-history
+          showSuccess(
+            'ส่งโพยสำเร็จ!',
+            `แทงหวยสำเร็จ ${cart.length} รายการ\nยอดรวม: ฿${totalAmount.toLocaleString()}`,
+            () => navigate('/bet-history')
+          );
+        } catch (err) {
+          showError('แทงหวยไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการส่งโพย กรุณาลองใหม่');
+        } finally {
+          setLoading(false);
+        }
+      },
+      'ยืนยันแทง',
+      'ยกเลิก'
+    );
   };
 
   const lastCartItem = cart[cart.length - 1];

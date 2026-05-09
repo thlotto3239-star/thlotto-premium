@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
+import { useModal } from '../contexts/ModalContext';
 
 const Withdrawal = () => {
   const { profile, refreshProfile } = useAuth();
+  const { showSuccess, showError, showConfirm, showInfo } = useModal();
   const [amount, setAmount] = useState('');
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
@@ -27,18 +29,29 @@ const Withdrawal = () => {
   }, []);
 
   const handleWithdrawal = () => {
-    if (!amount || parseFloat(amount) < minWithdraw) {
-      alert(`กรุณาระบุจำนวนเงินที่ต้องการถอน (ขั้นต่ำ ${minWithdraw.toLocaleString()} บาท)`);
+    const withdrawAmount = parseFloat(amount);
+    if (!amount || withdrawAmount < minWithdraw) {
+      showError(
+        'จำนวนเงินไม่ถูกต้อง',
+        `กรุณาระบุจำนวนเงินที่ต้องการถอน (ขั้นต่ำ ${minWithdraw.toLocaleString()} บาท)`
+      );
       return;
     }
-    setPendingAmount(parseFloat(amount));
+    
+    // ตรวจสอบยอดเงิน
+    if (withdrawAmount > (profile?.balance || 0)) {
+      showError('ยอดเงินไม่เพียงพอ', `ยอดเงินคงเหลือของคุณ: ฿${(profile?.balance || 0).toLocaleString()}`);
+      return;
+    }
+    
+    setPendingAmount(withdrawAmount);
     setPin('');
     setShowPinModal(true);
   };
 
   const handleConfirmPin = async () => {
     if (!pin || pin.length !== 4 || !/^\d{4}$/.test(pin)) {
-      alert('กรุณากรอก PIN 4 หลัก');
+      showError('รหัสผ่านไม่ถูกต้อง', 'กรุณากรอกรหัสผ่าน 4 หลัก');
       return;
     }
 
@@ -54,14 +67,19 @@ const Withdrawal = () => {
       if (data.success) {
         setShowPinModal(false);
         await refreshProfile();
-        navigate('/withdrawal-confirm', { state: { amount: pendingAmount, bankName: profile?.bank_name } });
+        // แสดง Modal Success แล้วค่อยไปหน้า withdrawal-confirm
+        showSuccess(
+          'ส่งคำขอถอนเงินสำเร็จ!',
+          `รอการอนุมัติประมาณ 10-30 นาที\nยอดถอน: ฿${pendingAmount?.toLocaleString()}`,
+          () => navigate('/withdrawal-confirm', { state: { amount: pendingAmount, bankName: profile?.bank_name } })
+        );
       } else {
-        alert(data.message);
+        showError('ถอนเงินไม่สำเร็จ', data.message || 'กรุณาตรวจสอบรหัสผ่านและลองใหม่');
         setPin('');
       }
     } catch (err) {
       console.error('Error requesting withdrawal:', err);
-      alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+      showError('เกิดข้อผิดพลาด', 'ไม่สามารถถอนเงินได้ กรุณาลองใหม่อีกครั้ง');
     } finally {
       setLoading(false);
     }
