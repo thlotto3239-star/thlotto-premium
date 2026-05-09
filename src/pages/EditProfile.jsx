@@ -40,14 +40,25 @@ const EditProfile = () => {
 
     setAvatarUploading(true);
     try {
+      // ตรวจสอบ session ก่อน upload (สำคัญ!)
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        showError('Session หมดอายุ', 'กรุณาเข้าสู่ระบบใหม่');
+        navigate('/login');
+        return;
+      }
+
+      // ใช้ user.id จาก session แทน profile.id (RLS ตรวจสอบ auth.uid())
+      const userId = session.user.id;
       const ext = file.name.split('.').pop().toLowerCase();
-      const fileName = `${profile.id}/avatar.${ext}`;
+      const fileName = `${userId}/avatar.${ext}`;
 
       console.log('[Avatar Upload] Starting upload:', {
-        userId: profile.id,
+        userId: userId,
         fileName: fileName,
         fileSize: file.size,
-        fileType: file.type
+        fileType: file.type,
+        hasSession: !!session
       });
 
       const { error: uploadError } = await supabase.storage
