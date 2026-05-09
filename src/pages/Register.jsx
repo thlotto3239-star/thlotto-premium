@@ -81,13 +81,9 @@ const Register = () => {
     setError('');
 
     try {
-      // Pre-check: เบอร์นี้มีในระบบแล้วหรือยัง
-      const { data: existing } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('phone', formData.phone)
-        .maybeSingle();
-      if (existing) {
+      // Pre-check: เบอร์นี้มีในระบบแล้วหรือยัง (ผ่าน RPC — ไม่ expose ข้อมูล profiles)
+      const { data: phoneExists } = await supabase.rpc('check_phone_exists', { p_phone: formData.phone });
+      if (phoneExists) {
         throw new Error('เบอร์นี้ถูกใช้สมัครสมาชิกไปแล้ว กรุณาเข้าสู่ระบบ หรือใช้เบอร์อื่น');
       }
 
