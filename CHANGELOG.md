@@ -4,6 +4,14 @@
 
 ---
 
+## [1.5.3] — 2026-05-09
+
+### 🔧 แก้ไข
+- **Avatar Upload** — แก้ไข RLS policy violation โดยใช้ `user?.id` จาก `useAuth()` แทน `getSession()` ซ้ำใน `EditProfile.jsx`
+- ลดการเรียก `supabase.auth.getSession()` ที่อาจ return ค่าไม่ตรงกับ `auth.uid()` ในฐานข้อมูล
+
+---
+
 ## [1.5.2] — 2026-05-04
 
 ### ✨ เพิ่มใหม่
