@@ -1,5 +1,5 @@
 # TH LOTTO PREMIUM — Project Status & AI Handoff Document
-> อัพเดทล่าสุด: 2026-05-04 | เวอร์ชัน: 1.5.2
+> อัพเดทล่าสุด: 2026-05-11 | เวอร์ชัน: 1.5.3
 > ⚠️ เอกสารนี้ต้องอัพเดทด้วยทุกครั้งที่มีการเปลี่ยนแปลงระบบ
 
 ---
@@ -38,7 +38,7 @@ vercel deploy --prod --yes
 
 ---
 
-## 👤 Admin Accounts (ณ วันที่ 2026-05-04)
+## 👤 Admin Accounts (ณ วันที่ 2026-05-11)
 
 | ชื่อ | เบอร์ | PIN | Role | สิทธิ์ |
 |------|-------|-----|------|--------|
@@ -191,7 +191,9 @@ https://docs.google.com/spreadsheets/d/e/2PACX-1vT6H6WWef9PagUoZE5wOGcOcUgkz0OVh
 | 4 | MEDIUM | `Deposits.jsx / Withdrawals.jsx` — stale closure ใน realtime | ใช้ `useRef` wrap load function |
 | 5 | MEDIUM | Admin `App.jsx /test` route — ไม่มี auth guard | เพิ่ม auth guard |
 | 6 | LOW | `Wallet.jsx` — ไม่แสดง COMMISSION type | เพิ่ม COMMISSION ใน type map |
-| 7 | BUG | Admin login 500 — `confirmation_token = NULL` | SET `confirmation_token = ''` |
+| 7 | BUG | Admin login 500
+| 8 | CRITICAL | Betting.jsx — handleSubmit field name ไม่ตรง RPC (item.bet_type + 
+ate) | แก้เป็น item.type + payout_rate ตาม RPC place_bet_securely | — `confirmation_token = NULL` | SET `confirmation_token = ''` |
 
 ---
 

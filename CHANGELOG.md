@@ -1,6 +1,21 @@
-# CHANGELOG — TH LOTTO Premium
+﻿# CHANGELOG — TH LOTTO Premium
 
 ประวัติการเปลี่ยนแปลงระบบทั้งหมด เรียงจากล่าสุดก่อน
+
+---
+
+## [1.5.3] — 2026-05-11
+
+### 🔧 แก้ไข
+- [CRITICAL] **Betting.jsx — แทงหวยส่งโพยไม่ได้** — field name ไม่ตรงกับ RPC place_bet_securely (เกิดจาก commit 446257c ที่เขียน handleSubmit ใหม่ตอนเพิ่ม Modal)
+  - et_type: item.bet_type → แก้เป็น et_type: item.type (cart เก็บ category ในชื่อ 	ype)
+  - 
+ate: item.rate → แก้เป็น payout_rate: item.rate (RPC อ่าน payout_rate ไม่ใช่ 
+ate)
+
+### ✨ เพิ่มใหม่ (Admin Panel — repo: TH-LOTTO-Admin-push)
+- **WheelAdmin.jsx — จัดการภาพปกกงล้อ** — เพิ่ม preview ภาพ, URL input, อัพโหลดไฟล์ไป Supabase Storage (sliders/wheel-banner/)
+- ใช้ RPC dmin_upsert_setting key lucky_wheel_banner_url
 
 ---
 
