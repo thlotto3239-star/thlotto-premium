@@ -39,6 +39,7 @@ const Home = () => {
   const [announcements, setAnnouncements] = useState([]);
   const [trending, setTrending] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [luckyWheelBanner, setLuckyWheelBanner] = useState('');
   const [timeLeft, setTimeLeft] = useState({});
   const [_currentBanner, setCurrentBanner] = useState(0);
   const [selectedPromo, setSelectedPromo] = useState(null);
@@ -90,6 +91,14 @@ const Home = () => {
           .select('*')
           .eq('is_active', true)
           .order('display_order', { ascending: true });
+
+        // 8. Fetch Lucky Wheel Banner URL
+        const { data: wheelData } = await supabase
+          .from('settings')
+          .select('value')
+          .eq('key', 'lucky_wheel_banner_url')
+          .single();
+        if (wheelData?.value) setLuckyWheelBanner(wheelData.value);
 
         setDraws(drawData || []);
         setPopularLotteries(popularData || []);
@@ -501,7 +510,7 @@ const Home = () => {
         {/* Lucky Wheel Banner */}
         <section>
           <div className="relative rounded-3xl overflow-hidden h-44 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate('/lucky-wheel')}>
-            <img alt="Lucky Wheel" className="absolute inset-0 w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE_XhmAUlmz16WTp7uaSwSysyYQNU3kpaWipJyEx7S1JD1GlqT3ged1ngCO0SCNk7af7h4bUNPwb4xSS6vnFTuG9v-rGBDf15x9mA1gIH60sGwGXXmheJfEhZiY5TUWKR0z_00HQWSxsvlsp2XDKU76uXjpdBBKiqKSRBBgrswuNnD2xX_Tcj6ghPYL3L5O7EZSru3jnbXbat9UGEaCIqDq2YWV8_QF_zwZq3yyNhV2d1XBXheUgDMNHyedaapayHFcBi19040iQ" />
+            <img alt="Lucky Wheel" className="absolute inset-0 w-full h-full object-cover" src={luckyWheelBanner || 'https://placehold.co/800x400/1a7e2a/white?text=Lucky+Wheel'} />
             <div className="absolute inset-0 bg-black/10"></div>
             <div className="absolute bottom-4 right-6">
               <button className="bg-white text-primary px-8 py-2 rounded-full font-bold text-sm shadow-xl flex items-center gap-2">
