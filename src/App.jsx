@@ -37,6 +37,7 @@ const Terms              = lazy(() => import('./pages/Terms'));
 const Articles           = lazy(() => import('./pages/Articles'));
 const ArticleDetail      = lazy(() => import('./pages/ArticleDetail'));
 const Processing         = lazy(() => import('./pages/Processing'));
+const InstantLottery     = lazy(() => import('./pages/InstantLottery'));
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -93,6 +94,7 @@ function App() {
           <Route path="/articles" element={<ProtectedRoute><Articles /></ProtectedRoute>} />
           <Route path="/articles/:id" element={<ProtectedRoute><ArticleDetail /></ProtectedRoute>} />
           <Route path="/processing" element={<ProtectedRoute><Processing /></ProtectedRoute>} />
+          <Route path="/instant-lottery" element={<ProtectedRoute><InstantLottery /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/home" replace />} />
 
         </Routes>
