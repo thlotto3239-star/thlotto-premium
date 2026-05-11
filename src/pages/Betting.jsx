@@ -212,9 +212,9 @@ const Betting = () => {
             p_market_id: drawId,
             p_bets: cart.map(item => ({
               numbers: item.numbers,
-              bet_type: item.bet_type,
+              bet_type: item.type,
               amount: item.amount,
-              rate: item.rate
+              payout_rate: item.rate
             }))
           });
           if (error) throw error;
