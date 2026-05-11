@@ -21,7 +21,7 @@ const Promotions = () => {
 
   const handleAccept = (promo) => {
     setSelected(null);
-    navigate(`/deposit?promo=${promo.id}&amount=${promo.min_deposit || 100}`);
+    navigate(`/deposit?promo=${promo.promo_code || promo.id}&promoName=${encodeURIComponent(promo.title)}&amount=${promo.min_deposit || 100}`);
   };
 
   useEffect(() => {

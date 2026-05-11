@@ -164,7 +164,7 @@ const Wallet = () => {
             {promotions.length > 0 ? promotions.map((p) => (
               <div
                 key={p.id}
-                onClick={() => navigate(`/deposit?promo=${p.id}&amount=${p.min_deposit || 100}`)}
+                onClick={() => navigate(`/deposit?promo=${p.promo_code || p.id}&promoName=${encodeURIComponent(p.title)}&amount=${p.min_deposit || 100}`)}
                 className="min-w-[280px] bg-slate-50 rounded-2xl p-4 border border-slate-100 cursor-pointer active:scale-[0.98] transition-all"
               >
                 <div className="flex items-center gap-3 mb-3">
