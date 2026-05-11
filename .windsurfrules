@@ -1,0 +1,38 @@
+# TH-LOTTO Project Rules (Auto-loaded)
+
+## MANDATORY: Read these files FIRST before ANY action
+1. Read DEVELOPMENT_GUIDE.md
+2. Read PROJECT_STATUS.md
+3. Read CHANGELOG.md
+4. Read DEPLOY_MAP.md
+
+## Project Structure (DO NOT CONFUSE)
+- User App: repo thlotto3239-star/thlotto-premium | branch main | https://th-lotto-app.vercel.app
+- Admin Panel: repo thlotto3239-star/TH-LOTTO-Admin-push | branch master | https://th-lotto-admin.vercel.app
+- Local User App: c:\\Users\\armyn\\Downloads\\thlotto-app-main\\thlotto-app-main
+- Local Admin: c:\\Users\\armyn\\Downloads\\thlotto-admin
+
+## BEFORE editing code
+1. Verify correct repo (User App vs Admin Panel)
+2. Read the ORIGINAL code first - preserve working logic
+3. Compare frontend field names with RPC/DB column names
+4. commit checkpoint before making changes
+
+## AFTER editing code
+1. git add + commit (describe changes clearly)
+2. git push origin main (or master for Admin)
+3. npx vercel --prod --yes
+4. Verify live site works
+5. Update CHANGELOG.md (new version on top, same format)
+6. Update PROJECT_STATUS.md (version + date + bug table)
+7. commit + push + deploy docs
+8. Report summary to project owner
+
+## FORBIDDEN
+- DO NOT touch working code that was not requested
+- DO NOT deploy to other domains
+- DO NOT create new Vercel projects
+- DO NOT change auth flow (SHA256)
+- DO NOT delete DB schema without checking references
+- DO NOT skip documentation updates
+- DO NOT rewrite functions without preserving original field names/logic
