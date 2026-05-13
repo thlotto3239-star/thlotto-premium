@@ -1,566 +1,761 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../AuthContext';
-import BottomNav from '../components/BottomNav';
+
+// ============================================================
+// หวยไทย 1 นาที (Instant Lottery) — Single-bet auto-popup UX
+// ============================================================
 
 const BET_TABS = [
-  { code: '2top', name: '2 ตัวบน', digits: 2, positioned: false },
-  { code: '2bottom', name: '2 ตัวล่าง', digits: 2, positioned: false },
-  { code: '3top', name: '3 ตัวบน', digits: 3, positioned: false },
-  { code: '3toad', name: '3 ตัวโต๊ด', digits: 3, positioned: false },
-  { code: '3front', name: '3 ตัวหน้า', digits: 3, positioned: false },
-  { code: '3back', name: '3 ตัวท้าย', digits: 3, positioned: false },
-  { code: '6straight', name: '6 ตัวตรง', digits: 6, positioned: false },
-  { code: 'pin_top', name: 'ปักหลักบน', digits: 0, positioned: true },
-  { code: 'pin_bottom', name: 'ปักหลักล่าง', digits: 0, positioned: true },
+  { code: '2top',      name: '2 ตัวบน',    digits: 2, positioned: false },
+  { code: '2bottom',   name: '2 ตัวล่าง',   digits: 2, positioned: false },
+  { code: '3top',      name: '3 ตัวบน',    digits: 3, positioned: false },
+  { code: '3toad',     name: '3 ตัวโต๊ด',   digits: 3, positioned: false },
+  { code: '3front',    name: '3 ตัวหน้า',   digits: 3, positioned: false },
+  { code: '3back',     name: '3 ตัวท้าย',   digits: 3, positioned: false },
+  { code: '6straight', name: '6 ตัวตรง',    digits: 6, positioned: false },
+  { code: 'pin_top',    name: 'ปักหลักบน',  digits: 0, positioned: true, maxPin: 7, positions: ['hundreds', 'tens', 'units'] },
+  { code: 'pin_bottom', name: 'ปักหลักล่าง', digits: 0, positioned: true, maxPin: 7, positions: ['tens', 'units'] },
 ];
 
 const CHIPS = [10, 20, 50, 100, 200, 500];
+const POS_LABEL = { hundreds: 'หลักร้อย', tens: 'หลักสิบ', units: 'หลักหน่วย' };
+const POS_SHORT = { hundreds: 'ร้อย', tens: 'สิบ', units: 'หน่วย' };
+
+const BET_NAME_BY_CODE = BET_TABS.reduce((a, c) => ({ ...a, [c.code]: c.name }), {});
+
+const fmt = (n) => Math.floor(parseFloat(n || 0)).toLocaleString('th-TH');
 
 export default function InstantLottery() {
   const navigate = useNavigate();
-  const { profile } = useAuth();
-  const balance = profile?.balance ?? 0;
+  const { profile, user, refreshProfile, signOut } = useAuth();
+  const balance = Math.floor(profile?.balance ?? 0);
 
-  // --- State ---
+  // ---- State ----
   const [activeTab, setActiveTab] = useState('2top');
   const [inputNumber, setInputNumber] = useState('');
   const [pinSelection, setPinSelection] = useState({ hundreds: [], tens: [], units: [] });
-  const [amount, setAmount] = useState(0);
-  const [cart, setCart] = useState([]);
+
+  const [drawId, setDrawId] = useState(() => Math.floor(Date.now() / 60000));
+  const [viewingDrawId, setViewingDrawId] = useState(() => Math.floor(Date.now() / 60000) - 1);
   const [countdown, setCountdown] = useState(60);
-  const [drawId, setDrawId] = useState(0);
-  const [lastResult, setLastResult] = useState(null);
   const [bettingOpen, setBettingOpen] = useState(true);
+  const [resultDisplay, setResultDisplay] = useState(null);
+
+  const [pendingBet, setPendingBet] = useState(null);
+  const [amountInput, setAmountInput] = useState('');
   const [showMoneyModal, setShowMoneyModal] = useState(false);
-  const [showResultPopup, setShowResultPopup] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [showResultModal, setShowResultModal] = useState(false);
   const [popupData, setPopupData] = useState(null);
+
   const [showHistory, setShowHistory] = useState(false);
   const [historyData, setHistoryData] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   const [toast, setToast] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const prevDrawIdRef = useRef(0);
+  const [balanceFlash, setBalanceFlash] = useState(false);
 
-  const currentTabInfo = BET_TABS.find(t => t.code === activeTab);
+  const prevBalanceRef = useRef(balance);
+  const prevDrawIdRef = useRef(null);
 
-  // --- Draw ID & Countdown ---
+  const tabInfo = BET_TABS.find(t => t.code === activeTab);
+
+  // ============================================================
+  // Timer — sync every second + detect minute change
+  // ============================================================
   useEffect(() => {
     const tick = () => {
       const now = Date.now();
-      const currentDrawId = Math.floor(now / 60000);
-      const secondsInMinute = new Date(now).getSeconds();
-      const remaining = 60 - secondsInMinute;
+      const newDrawId = Math.floor(now / 60000);
+      const secs = new Date(now).getSeconds();
+      const remaining = 60 - secs;
 
-      setDrawId(currentDrawId);
+      setDrawId(newDrawId);
       setCountdown(remaining);
       setBettingOpen(remaining > 5);
+
+      if (prevDrawIdRef.current !== null && newDrawId > prevDrawIdRef.current) {
+        const finishedDraw = prevDrawIdRef.current;
+        resetBetUI();
+        setShowMoneyModal(false);
+        // Wait 3s for server to generate result, then show popup
+        setTimeout(() => {
+          setViewingDrawId(finishedDraw);
+          fetchAndShowPopup(finishedDraw);
+        }, 3000);
+      }
+      prevDrawIdRef.current = newDrawId;
+
+      if (remaining <= 5) {
+        setShowMoneyModal(false);
+      }
     };
     tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // --- Load result when draw changes ---
+  // Balance flash when changed
   useEffect(() => {
-    if (drawId === 0) return;
-    if (drawId === prevDrawIdRef.current) return;
-
-    const prevDraw = prevDrawIdRef.current;
-    prevDrawIdRef.current = drawId;
-
-    // Load result for previous draw
-    if (prevDraw > 0) {
-      loadResultAndPopup(prevDraw);
+    if (prevBalanceRef.current !== balance) {
+      setBalanceFlash(true);
+      const t = setTimeout(() => setBalanceFlash(false), 800);
+      prevBalanceRef.current = balance;
+      return () => clearTimeout(t);
     }
-    // Load latest result for display
-    loadLatestResult(drawId - 1);
-  }, [drawId]);
+  }, [balance]);
 
-  const loadLatestResult = async (dId) => {
-    if (!dId || dId <= 0) return;
+  // Load result when viewing draw changes
+  useEffect(() => {
+    loadResult(viewingDrawId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewingDrawId]);
+
+  // ============================================================
+  // Helpers
+  // ============================================================
+  const resetBetUI = () => {
+    setInputNumber('');
+    setPinSelection({ hundreds: [], tens: [], units: [] });
+    setPendingBet(null);
+  };
+
+  const loadResult = async (targetDrawId) => {
+    if (!targetDrawId || targetDrawId <= 0) return;
     try {
-      const { data } = await supabase.rpc('fn_get_instant_result', { p_draw_id: dId });
-      if (data?.ok) setLastResult(data);
-    } catch (err) {
-      console.error('loadLatestResult error:', err);
+      const { data } = await supabase.rpc('fn_get_instant_result', { p_draw_id: targetDrawId });
+      if (data?.ok) {
+        setResultDisplay({
+          prize6: data.result_6d,
+          f3: data.result_3front,
+          b3: data.result_3back,
+          t2: data.result_2top,
+        });
+      } else {
+        setResultDisplay(null);
+      }
+    } catch (e) {
+      setResultDisplay(null);
     }
   };
 
-  const loadResultAndPopup = async (dId) => {
+  const fetchAndShowPopup = async (targetDrawId) => {
     try {
-      const { data } = await supabase.rpc('fn_get_instant_popup', { p_draw_id: dId });
-      if (data?.ok && data.has_bet) {
+      const { data } = await supabase.rpc('fn_get_instant_popup', { p_draw_id: targetDrawId });
+      if (data?.ok) {
         setPopupData(data);
-        setShowResultPopup(true);
+        setShowResultModal(true);
+        // Update result display too
+        setResultDisplay({
+          prize6: data.result_6d,
+          f3: data.result_3front,
+          b3: data.result_3back,
+          t2: data.result_2top,
+        });
       }
-    } catch (err) {
-      console.error('loadResultAndPopup error:', err);
+    } catch (e) { /* silent */ }
+  };
+
+  const navigateDraw = (step) => {
+    const next = viewingDrawId + step;
+    if (next >= drawId) return;
+    setViewingDrawId(next);
+  };
+
+  // ---- Change tab ----
+  const selectTab = (code) => {
+    setActiveTab(code);
+    resetBetUI();
+  };
+
+  // ---- Numpad (non-positioned) ----
+  const numPress = (v) => {
+    if (!tabInfo || tabInfo.positioned) return;
+    if (!bettingOpen) return;
+    if (v === 'del') {
+      setInputNumber(s => s.slice(0, -1));
+      return;
+    }
+    const reqLen = tabInfo.digits;
+    if (inputNumber.length < reqLen) {
+      const newVal = inputNumber + String(v);
+      setInputNumber(newVal);
+      if (newVal.length === reqLen) {
+        setTimeout(() => {
+          setPendingBet({ type: activeTab, numbers: newVal, display: newVal });
+          setAmountInput('');
+          setShowMoneyModal(true);
+        }, 300);
+      }
     }
   };
 
-  // --- Numpad input ---
-  const handleNumpad = (val) => {
-    if (!currentTabInfo || currentTabInfo.positioned) return;
-    const maxLen = currentTabInfo.digits;
-    if (val === 'del') {
-      setInputNumber(prev => prev.slice(0, -1));
-    } else if (val === 'clear') {
-      setInputNumber('');
-    } else {
-      if (inputNumber.length < maxLen) {
-        setInputNumber(prev => prev + val);
-      }
+  const manualSubmit = () => {
+    if (!tabInfo || tabInfo.positioned) return;
+    if (!inputNumber) return;
+    setPendingBet({ type: activeTab, numbers: inputNumber, display: inputNumber });
+    setAmountInput('');
+    setShowMoneyModal(true);
+  };
+
+  // ---- Pin (positioned) ----
+  const togglePin = (posKey, digit) => {
+    if (!bettingOpen) return;
+    const curr = pinSelection[posKey] || [];
+    const isActive = curr.includes(digit);
+    if (isActive) {
+      setPinSelection({ ...pinSelection, [posKey]: curr.filter(d => d !== digit) });
+      return;
+    }
+    const total = (pinSelection.hundreds?.length || 0) + (pinSelection.tens?.length || 0) + (pinSelection.units?.length || 0);
+    if (total >= 7) return;
+    const newSel = { ...pinSelection, [posKey]: [...curr, digit] };
+    setPinSelection(newSel);
+    const newTotal = (newSel.hundreds?.length || 0) + (newSel.tens?.length || 0) + (newSel.units?.length || 0);
+    if (newTotal === 7) {
+      setTimeout(() => confirmPin(newSel), 300);
     }
   };
 
-  // --- Pin selection ---
-  const togglePinDigit = (position, digit) => {
-    setPinSelection(prev => {
-      const arr = prev[position] || [];
-      const newArr = arr.includes(digit) ? arr.filter(d => d !== digit) : [...arr, digit];
-      // Max 7 total across all positions
-      const total = (position === 'hundreds' ? newArr.length : (prev.hundreds?.length || 0))
-        + (position === 'tens' ? newArr.length : (prev.tens?.length || 0))
-        + (position === 'units' ? newArr.length : (prev.units?.length || 0));
-      if (total > 7) return prev;
-      return { ...prev, [position]: newArr };
-    });
-  };
-
-  // --- Add to cart ---
-  const addToCart = () => {
-    if (amount <= 0) { showToast('กรุณาระบุจำนวนเงิน'); return; }
-
-    if (currentTabInfo.positioned) {
-      // Pin bet
-      const pin = activeTab === 'pin_top'
-        ? { hundreds: pinSelection.hundreds, tens: pinSelection.tens, units: pinSelection.units }
-        : { tens: pinSelection.tens, units: pinSelection.units };
-
-      const hasSelection = Object.values(pin).some(arr => arr.length > 0);
-      if (!hasSelection) { showToast('กรุณาเลือกตัวเลข'); return; }
-
-      // Calculate number of combinations
-      let combos = 1;
-      if (pin.hundreds?.length) combos *= pin.hundreds.length;
-      if (pin.tens?.length) combos *= pin.tens.length;
-      if (pin.units?.length) combos *= pin.units.length;
-
-      setCart(prev => [...prev, {
-        type: activeTab,
-        numbers: JSON.stringify(pin),
-        amountPerCombo: amount,
-        totalAmount: amount * combos,
-        combos,
-        label: currentTabInfo.name,
-      }]);
-      setPinSelection({ hundreds: [], tens: [], units: [] });
-    } else {
-      // Normal bet
-      if (!inputNumber || inputNumber.length !== currentTabInfo.digits) {
-        showToast(`กรุณาใส่เลข ${currentTabInfo.digits} หลัก`);
-        return;
-      }
-      setCart(prev => [...prev, {
-        type: activeTab,
-        numbers: inputNumber,
-        amountPerCombo: amount,
-        totalAmount: amount,
-        combos: 1,
-        label: currentTabInfo.name,
-      }]);
-      setInputNumber('');
+  const confirmPin = (selObj) => {
+    const sel = selObj || pinSelection;
+    const total = (sel.hundreds?.length || 0) + (sel.tens?.length || 0) + (sel.units?.length || 0);
+    if (total < 1) {
+      setToast({ type: 'error', text: 'เลือกตัวเลขอย่างน้อย 1 ตัว' });
+      setTimeout(() => setToast(null), 1500);
+      return;
     }
-    setAmount(0);
-    showToast('เพิ่มรายการแล้ว');
+    const positions = tabInfo.positions;
+    const parts = positions.filter(k => sel[k]?.length).map(k => `${POS_SHORT[k]}:${sel[k].join('')}`);
+    const display = parts.join(' + ');
+    const numbersObj = {};
+    positions.forEach(k => { if (sel[k]?.length) numbersObj[k] = sel[k]; });
+    setPendingBet({ type: activeTab, numbers: JSON.stringify(numbersObj), display });
+    setAmountInput('');
+    setShowMoneyModal(true);
   };
 
-  // --- Submit bets ---
-  const submitBets = async () => {
-    if (cart.length === 0) { showToast('ไม่มีรายการแทง'); return; }
-    if (!bettingOpen) { showToast('หมดเวลาแทงงวดนี้'); return; }
-    if (submitting) return;
-
-    const totalAmount = cart.reduce((sum, item) => sum + item.totalAmount, 0);
-    if (totalAmount > balance) { showToast('ยอดเงินไม่พอ'); return; }
-
+  // ---- Submit bet ----
+  const submitBet = async () => {
+    const amt = parseFloat(amountInput);
+    if (!amt || amt < 1) {
+      setToast({ type: 'error', text: 'ระบุเงินให้ถูกต้อง' });
+      setTimeout(() => setToast(null), 1500);
+      return;
+    }
+    if (!pendingBet) return;
     setSubmitting(true);
     try {
-      for (const item of cart) {
-        const { data, error } = await supabase.rpc('fn_place_instant_bet', {
-          p_draw_id: drawId,
-          p_bet_type: item.type,
-          p_numbers: item.numbers,
-          p_amount: item.amountPerCombo,
-        });
-        if (error || !data?.ok) {
-          showToast(data?.error || error?.message || 'เกิดข้อผิดพลาด');
-          break;
-        }
+      const { data, error } = await supabase.rpc('fn_place_instant_bet', {
+        p_draw_id: drawId,
+        p_bet_type: pendingBet.type,
+        p_numbers: pendingBet.numbers,
+        p_amount: amt,
+      });
+      if (error) throw error;
+      if (data?.ok) {
+        setShowMoneyModal(false);
+        resetBetUI();
+        refreshProfile();
+        setToast({ type: 'success', text: 'บันทึกสำเร็จ' });
+        setTimeout(() => setToast(null), 1800);
+      } else {
+        setToast({ type: 'error', text: data?.error || 'แทงไม่สำเร็จ' });
+        setTimeout(() => setToast(null), 2500);
       }
-      setCart([]);
-      showToast('บันทึกสำเร็จ');
-    } catch (err) {
-      showToast('เกิดข้อผิดพลาด: ' + err.message);
+    } catch (e) {
+      setToast({ type: 'error', text: e?.message || 'เกิดข้อผิดพลาด' });
+      setTimeout(() => setToast(null), 2500);
     } finally {
       setSubmitting(false);
     }
   };
 
-  // --- Remove from cart ---
-  const removeFromCart = (index) => {
-    setCart(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // --- History ---
+  // ---- History ----
   const openHistory = async () => {
+    setShowHistory(true);
+    setLoadingHistory(true);
     try {
       const { data } = await supabase.rpc('fn_get_instant_bets');
-      if (data?.ok) setHistoryData(data.bets || []);
-    } catch (err) {
-      console.error('openHistory error:', err);
+      setHistoryData(data?.bets || []);
+    } catch (e) {
+      setHistoryData([]);
+    } finally {
+      setLoadingHistory(false);
     }
-    setShowHistory(true);
   };
 
-  // --- Toast ---
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3000);
+  // ---- Logout ----
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
   };
 
-  // --- Format result digits for display ---
-  const renderDigits = (str, size = 'w-9 h-9 text-lg') => {
-    if (!str) return Array.from({ length: 6 }).map((_, i) => (
-      <div key={i} className={`${size} bg-gray-700/50 rounded-full flex items-center justify-center text-white/30 text-lg`}>-</div>
-    ));
-    return str.split('').map((d, i) => (
-      <div key={i} className={`${size} bg-white rounded-full flex items-center justify-center text-emerald-900 font-bold text-lg`}>{d}</div>
-    ));
-  };
+  // ============================================================
+  // RENDER
+  // ============================================================
+  const drawShort = String(drawId).slice(-4);
+  const timerMin = '00';
+  const timerSec = String(countdown).padStart(2, '0');
+  const prize6 = resultDisplay?.prize6 || '------';
+  const f3 = resultDisplay?.f3 || '---';
+  const b3 = resultDisplay?.b3 || '---';
+  const t2 = resultDisplay?.t2 || '--';
+
+  const pinTotal = (pinSelection.hundreds?.length || 0) + (pinSelection.tens?.length || 0) + (pinSelection.units?.length || 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-900 to-emerald-950 text-white pb-24">
-      {/* Header */}
-      <div className="sticky top-0 z-30 bg-emerald-900/95 backdrop-blur border-b border-emerald-700/50">
-        <div className="flex items-center justify-between px-4 py-3">
-          <button onClick={() => navigate('/home')} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
-            <span className="material-icons text-xl">arrow_back</span>
-          </button>
-          <h1 className="text-lg font-bold">หวยไทย 1 นาที</h1>
-          <button onClick={openHistory} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
-            <span className="material-icons text-xl">history</span>
-          </button>
+    <div
+      className="flex flex-col h-screen w-full max-w-2xl mx-auto bg-[#050f08] relative overflow-hidden"
+      style={{ fontFamily: 'Prompt, sans-serif' }}
+    >
+      {/* ========== Header ========== */}
+      <header className="bg-[#021a0b] px-3 py-2 flex justify-between items-center shadow-md z-20">
+        <div className="flex items-center gap-2 w-1/3">
+          <span className="material-icons text-yellow-400 text-2xl">account_circle</span>
+          <span className="text-white font-bold text-sm truncate">{profile?.username || profile?.full_name || '...'}</span>
         </div>
-      </div>
-
-      {/* Status Bar */}
-      <div className="px-4 py-3 flex items-center justify-between bg-emerald-800/50">
-        <div className="text-sm">
-          <span className="text-emerald-300">งวดที่</span>{' '}
-          <span className="font-bold text-yellow-400">{drawId}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="material-icons text-sm text-emerald-300">schedule</span>
-          <span className={`font-mono text-xl font-bold ${countdown <= 10 ? 'text-red-400 animate-pulse' : 'text-yellow-400'}`}>
-            {countdown.toString().padStart(2, '0')}
-          </span>
-          <span className="text-xs text-emerald-300">วิ</span>
-        </div>
-        <div className="text-sm">
-          <span className="text-emerald-300">เครดิต</span>{' '}
-          <span className="font-bold text-yellow-400">{Number(balance).toFixed(0)}</span>
-        </div>
-      </div>
-
-      {/* Betting Closed Banner */}
-      {!bettingOpen && (
-        <div className="mx-4 mt-3 bg-red-600/80 rounded-2xl p-3 text-center font-bold animate-pulse">
-          ปิดรับแทงชั่วคราว — รอผลงวดหน้า
-        </div>
-      )}
-
-      {/* Result Table */}
-      {lastResult && (
-        <div className="mx-4 mt-4 bg-emerald-800/60 rounded-3xl p-4 space-y-3">
-          <h3 className="text-center text-sm text-emerald-300 font-bold">ผลงวดที่ {lastResult.draw_id}</h3>
-          <div className="text-center">
-            <p className="text-[10px] text-emerald-300/70 mb-1">รางวัลที่ 1</p>
-            <div className="flex justify-center gap-1.5">{renderDigits(lastResult.result_6d)}</div>
+        <div className="flex justify-center w-1/3">
+          <div className="w-12 h-12 rounded-full bg-[#004d25] flex items-center justify-center border-2 border-[#006828] shadow-lg">
+            <img src="https://img2.pic.in.th/pic/TH-LOTTO.md.png" alt="logo" className="w-10 h-10 object-contain" />
           </div>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div>
-              <p className="text-[10px] text-emerald-300/70">3 ตัวหน้า</p>
-              <p className="font-bold tracking-wider">{lastResult.result_3front || '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-emerald-300/70">3 ตัวท้าย</p>
-              <p className="font-bold tracking-wider">{lastResult.result_3back || '—'}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-emerald-300/70">2 ตัวบน</p>
-              <p className="font-bold tracking-wider">{lastResult.result_2top || '—'}</p>
+        </div>
+        <div className="flex justify-end w-1/3 gap-1">
+          <button
+            onClick={() => navigate('/home')}
+            className="bg-[#0e2415] border border-[#2e5c3e] text-yellow-400 text-xs px-2 py-1.5 rounded flex items-center gap-1 hover:bg-[#1a3a26]"
+            title="กลับหน้าแรก"
+          >
+            <span className="material-icons text-sm">arrow_back</span>
+          </button>
+          <button
+            onClick={openHistory}
+            className="bg-[#0e2415] border border-[#2e5c3e] text-yellow-400 text-xs px-3 py-1.5 rounded flex items-center gap-1 hover:bg-[#1a3a26]"
+          >
+            <span className="material-icons text-sm">history</span>
+            <span>ประวัติ</span>
+          </button>
+        </div>
+      </header>
+
+      {/* ========== Status Bar ========== */}
+      <div className="bg-black px-3 py-2 flex justify-between items-center border-b border-gray-800 text-white">
+        <div className="text-left">
+          <div className="text-[10px] text-gray-400">งวดที่</div>
+          <div className="text-2xl font-bold text-[#d32f2f] font-mono leading-none">{drawShort}</div>
+        </div>
+        <div className="text-center">
+          <div className="text-[10px] text-gray-400 mb-1">เวลาถอยหลัง</div>
+          <div className="flex items-center gap-1 justify-center">
+            <div className="bg-white text-[#d32f2f] rounded px-2 py-0.5 text-xl font-bold min-w-[40px] text-center">{timerMin}</div>
+            <span className="text-white font-bold text-xl">:</span>
+            <div
+              className={`bg-white text-[#d32f2f] rounded px-2 py-0.5 text-xl font-bold min-w-[40px] text-center ${countdown <= 5 ? 'animate-pulse' : ''}`}
+            >
+              {timerSec}
             </div>
           </div>
         </div>
-      )}
+        <div className="text-right">
+          <div className="text-[10px] text-gray-400">เครดิต</div>
+          <div
+            className={`text-2xl font-bold leading-none transition-all duration-300 ${balanceFlash ? 'text-green-400 scale-110' : 'text-yellow-400'}`}
+          >
+            ฿{fmt(balance)}
+          </div>
+        </div>
+      </div>
 
-      {/* Bet Tabs */}
-      <div className="px-4 mt-4">
-        <div className="flex overflow-x-auto gap-2 pb-2 no-scrollbar">
-          {BET_TABS.map(tab => (
+      {/* ========== Nav Bar (view past draws) ========== */}
+      <div className="bg-[#1a1a1a] py-1 px-2 flex justify-between items-center border-b border-black">
+        <button onClick={() => navigateDraw(-1)} className="text-gray-400 px-4 py-1 hover:text-white">
+          <span className="material-icons">chevron_left</span>
+        </button>
+        <div className="bg-[#2d2d2d] px-4 py-0.5 rounded-full border border-gray-600">
+          <span className="text-gray-300 text-xs font-mono">งวด {viewingDrawId}</span>
+        </div>
+        <button onClick={() => navigateDraw(1)} className="text-gray-400 px-4 py-1 hover:text-white">
+          <span className="material-icons">chevron_right</span>
+        </button>
+      </div>
+
+      {/* ========== Result Table ========== */}
+      <div className="bg-white shadow-md">
+        <ResultRow label="รางวัลที่ 1" value={prize6} color="#d32f2f" bigSize />
+        <ResultRow label="หน้า 3 ตัว" value={f3} color="#1976d2" />
+        <ResultRow label="ท้าย 3 ตัว" value={b3} color="#1976d2" />
+        <ResultRow label="2 ตัว" value={t2} color="#1976d2" noBorder />
+      </div>
+
+      {/* ========== Bet Section ========== */}
+      <main className="flex-1 flex flex-col bg-[#050f08] overflow-hidden">
+        {/* Tabs */}
+        <div className="flex overflow-x-auto whitespace-nowrap bg-[#021206] border-b border-green-900 p-0.5 gap-0.5 z-10 shrink-0"
+             style={{ scrollbarWidth: 'none' }}>
+          {BET_TABS.map((tab) => (
             <button
               key={tab.code}
-              onClick={() => { setActiveTab(tab.code); setInputNumber(''); setPinSelection({ hundreds: [], tens: [], units: [] }); }}
-              className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ${
+              onClick={() => selectTab(tab.code)}
+              className={`px-3 py-1.5 text-xs font-bold border-b-2 whitespace-nowrap transition-colors ${
                 activeTab === tab.code
-                  ? 'bg-yellow-400 text-emerald-900 shadow-lg shadow-yellow-400/30'
-                  : 'bg-emerald-800 text-emerald-200 hover:bg-emerald-700'
+                  ? 'text-yellow-400 border-yellow-400 bg-[#0e2415]'
+                  : 'text-gray-500 border-transparent'
               }`}
             >
               {tab.name}
             </button>
           ))}
         </div>
+
+        {/* Bet Area */}
+        <div
+          className="flex-1 overflow-y-auto p-2 pb-6"
+          style={{ opacity: bettingOpen ? 1 : 0.5, pointerEvents: bettingOpen ? 'auto' : 'none' }}
+        >
+          {!tabInfo?.positioned ? (
+            // ---- Non-positioned: input + numpad ----
+            <>
+              <div className="flex justify-center mb-3 mt-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={inputNumber}
+                  placeholder={'-'.repeat(tabInfo?.digits || 2)}
+                  className="bg-black border border-green-700 rounded-lg py-2 w-[85%] text-center text-2xl text-white font-mono tracking-[0.2em] placeholder-gray-600"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2 px-2 max-w-sm mx-auto">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+                  <NumpadBtn key={n} onClick={() => numPress(n)}>{n}</NumpadBtn>
+                ))}
+                <NumpadBtn onClick={() => numPress('del')} color="red">
+                  <span className="material-icons">backspace</span>
+                </NumpadBtn>
+                <NumpadBtn onClick={() => numPress(0)}>0</NumpadBtn>
+                <NumpadBtn onClick={manualSubmit} color="green">ตกลง</NumpadBtn>
+              </div>
+            </>
+          ) : (
+            // ---- Positioned (pin) ----
+            <>
+              <div className="text-center text-yellow-400 text-xs font-bold mb-2">
+                เลือกตัวเลข (สูงสุด 7 ตัว) — กดครบ 7 จะเด้งอัตโนมัติ
+              </div>
+              {tabInfo.positions.map((posKey) => (
+                <PinRow
+                  key={posKey}
+                  label={POS_LABEL[posKey]}
+                  selected={pinSelection[posKey] || []}
+                  onToggle={(d) => togglePin(posKey, d)}
+                />
+              ))}
+              <div className="px-2 pt-3">
+                <button
+                  onClick={() => confirmPin()}
+                  disabled={pinTotal === 0}
+                  className="w-full bg-gradient-to-b from-yellow-400 to-yellow-600 text-black font-bold py-3 rounded-lg border border-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform"
+                >
+                  <span className="material-icons align-middle mr-1">check_circle</span>
+                  ยืนยัน / ใส่ราคา ({pinTotal} ตัว)
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </main>
+
+      {/* ========== Footer (Logout) ========== */}
+      <div className="bg-[#020a05] p-2 flex justify-center border-t border-green-900">
+        <button
+          onClick={handleLogout}
+          className="text-xs text-red-400 hover:text-red-300 border border-red-900/50 bg-red-900/10 px-4 py-1 rounded-full"
+        >
+          ออกจากระบบ
+        </button>
       </div>
 
-      {/* Input Area */}
-      <div className="px-4 mt-3">
-        {currentTabInfo?.positioned ? (
-          /* Pin Selector */
-          <PinSelector
-            mode={activeTab}
-            selection={pinSelection}
-            onToggle={togglePinDigit}
-          />
-        ) : (
-          /* Numpad */
-          <div className="bg-emerald-800/60 rounded-3xl p-4">
-            <div className="flex items-center justify-center gap-2 mb-4 min-h-[48px]">
-              {inputNumber.length === 0 ? (
-                <span className="text-emerald-400/50 text-sm">ใส่เลข {currentTabInfo?.digits} หลัก</span>
-              ) : (
-                inputNumber.split('').map((d, i) => (
-                  <div key={i} className="w-10 h-10 bg-yellow-400 rounded-full flex items-center justify-center text-emerald-900 font-bold text-lg">{d}</div>
-                ))
-              )}
+      {/* ========== MODAL: Money Input ========== */}
+      {showMoneyModal && (
+        <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm bg-[#0a2012] border border-green-700 rounded-xl p-5 shadow-2xl animate-[popIn_0.3s_ease]">
+            <div className="text-center mb-4">
+              <h3 className="text-gray-300 text-sm">รายการที่เลือก</h3>
+              <div className="text-yellow-400 font-mono text-sm font-bold mt-1 break-all">
+                [{BET_NAME_BY_CODE[pendingBet?.type] || ''}] {pendingBet?.display}
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {['1','2','3','4','5','6','7','8','9','del','0','clear'].map(key => (
+            <div className="relative mb-4">
+              <input
+                type="tel"
+                inputMode="numeric"
+                value={amountInput}
+                onChange={(e) => setAmountInput(e.target.value.replace(/[^\d]/g, ''))}
+                className="w-full bg-black border border-green-600 rounded-lg py-3 text-center text-3xl text-white font-bold outline-none focus:border-yellow-500"
+                placeholder="ระบุเงิน (บาท)"
+                autoFocus
+              />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-xs">THB</div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mb-5">
+              {CHIPS.map((c) => (
                 <button
-                  key={key}
-                  onClick={() => handleNumpad(key)}
-                  className={`py-3 rounded-2xl font-bold text-lg active:scale-95 transition-transform ${
-                    key === 'del' ? 'bg-red-600/60 text-white text-sm' :
-                    key === 'clear' ? 'bg-gray-600/60 text-white text-sm' :
-                    'bg-emerald-700 text-white'
-                  }`}
+                  key={c}
+                  onClick={() => setAmountInput(String(c))}
+                  className="bg-[#1a3a26] text-yellow-400 border border-[#1e4528] py-2 rounded text-sm font-bold hover:bg-yellow-400 hover:text-black active:scale-95 transition"
                 >
-                  {key === 'del' ? '⌫' : key === 'clear' ? 'ล้าง' : key}
+                  {c}
                 </button>
               ))}
             </div>
-          </div>
-        )}
-      </div>
-
-      {/* Amount + Add to Cart */}
-      <div className="px-4 mt-3 flex items-center gap-2">
-        <button
-          onClick={() => setShowMoneyModal(true)}
-          className={`flex-1 py-3 rounded-2xl font-bold text-sm ${
-            amount > 0 ? 'bg-yellow-400 text-emerald-900' : 'bg-emerald-800 text-emerald-200'
-          }`}
-        >
-          {amount > 0 ? `฿${amount}` : 'ระบุจำนวนเงิน'}
-        </button>
-        <button
-          onClick={addToCart}
-          disabled={!bettingOpen}
-          className="px-6 py-3 rounded-2xl font-bold text-sm bg-emerald-600 text-white active:scale-95 transition-transform disabled:opacity-50"
-        >
-          เพิ่ม
-        </button>
-      </div>
-
-      {/* Cart */}
-      {cart.length > 0 && (
-        <div className="px-4 mt-3 space-y-2">
-          {cart.map((item, i) => (
-            <div key={i} className="bg-emerald-800/60 rounded-2xl p-3 flex items-center justify-between">
-              <div>
-                <span className="text-xs text-emerald-300">{item.label}</span>
-                <span className="ml-2 font-bold">{item.type.startsWith('pin_') ? 'ปักหลัก' : item.numbers}</span>
-                {item.combos > 1 && <span className="ml-1 text-xs text-yellow-400">×{item.combos}</span>}
-                <span className="ml-2 text-yellow-400 font-bold">฿{item.totalAmount}</span>
-              </div>
-              <button onClick={() => removeFromCart(i)} className="text-red-400 text-sm">✕</button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowMoneyModal(false)}
+                className="flex-1 bg-gray-700 text-white py-3 rounded-lg font-bold text-sm"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={submitBet}
+                disabled={submitting}
+                className="flex-1 bg-gradient-to-b from-yellow-400 to-yellow-600 text-black py-3 rounded-lg font-bold shadow-lg text-sm disabled:opacity-50"
+              >
+                {submitting ? 'ส่งโพย...' : 'แทงทันที'}
+              </button>
             </div>
-          ))}
-          <div className="flex items-center justify-between pt-2">
-            <span className="text-sm text-emerald-300">รวม: <span className="text-yellow-400 font-bold">฿{cart.reduce((s, i) => s + i.totalAmount, 0)}</span></span>
-            <button
-              onClick={submitBets}
-              disabled={!bettingOpen || submitting}
-              className="px-8 py-3 rounded-2xl font-bold bg-yellow-400 text-emerald-900 active:scale-95 transition-transform disabled:opacity-50"
-            >
-              {submitting ? 'กำลังส่ง...' : 'แทงเลย'}
-            </button>
           </div>
         </div>
       )}
 
-      {/* Money Modal */}
-      {showMoneyModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={() => setShowMoneyModal(false)}>
-          <div className="bg-emerald-900 w-full max-w-md rounded-t-3xl p-6" onClick={e => e.stopPropagation()}>
-            <h3 className="text-center font-bold mb-4">ระบุจำนวนเงิน</h3>
-            <div className="grid grid-cols-3 gap-2 mb-4">
-              {CHIPS.map(c => (
-                <button
-                  key={c}
-                  onClick={() => setAmount(c)}
-                  className={`py-3 rounded-2xl font-bold ${amount === c ? 'bg-yellow-400 text-emerald-900' : 'bg-emerald-800 text-white'}`}
-                >฿{c}</button>
-              ))}
+      {/* ========== MODAL: Result Popup ========== */}
+      {showResultModal && popupData && (
+        <div className="fixed inset-0 z-[80] bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm bg-[#002400] border border-[#0f4c25] rounded-xl shadow-2xl animate-[popIn_0.3s_ease] overflow-hidden">
+            <div className="flex justify-between items-center px-4 py-3 border-b border-[#1e572e]">
+              <div className="flex items-center gap-2">
+                <span className="material-icons text-yellow-400">emoji_events</span>
+                <span className="text-white font-bold">ผลรางวัล</span>
+              </div>
+              <button onClick={() => setShowResultModal(false)} className="text-gray-400 hover:text-white">
+                <span className="material-icons">close</span>
+              </button>
             </div>
-            <input
-              type="number"
-              value={amount || ''}
-              onChange={e => setAmount(Number(e.target.value) || 0)}
-              placeholder="หรือพิมพ์จำนวนเอง"
-              className="w-full bg-emerald-800 rounded-2xl px-4 py-3 text-center text-white placeholder-emerald-400/50 outline-none focus:ring-2 ring-yellow-400"
-            />
-            <button
-              onClick={() => setShowMoneyModal(false)}
-              className="w-full mt-3 py-3 rounded-2xl font-bold bg-yellow-400 text-emerald-900"
-            >ยืนยัน</button>
+            <div className="p-5 flex flex-col items-center">
+              <div className="text-gray-400 text-xs mb-2">งวดประจำวันที่ <span>{popupData.draw_id}</span></div>
+              <div className="w-full bg-white rounded-lg py-4 flex items-center justify-center mb-2 shadow-inner">
+                <div className="text-5xl font-bold text-[#d32f2f] tracking-[0.15em] font-mono">{popupData.result_6d}</div>
+              </div>
+              <div className="text-gray-500 text-[10px] mb-4">รางวัลที่ 1</div>
+              <div className="grid grid-cols-2 gap-3 w-full mb-5">
+                <PopupSubBox label="3 ตัวบน" value={popupData.result_3top} />
+                <PopupSubBox label="3 ตัวท้าย" value={popupData.result_3back} />
+                <PopupSubBox label="2 ตัวบน" value={popupData.result_2top} />
+                <PopupSubBox label="2 ตัวล่าง" value={popupData.result_2bottom} />
+              </div>
+              <div
+                className={`w-full rounded-lg py-3 px-3 text-center border ${
+                  !popupData.has_bet
+                    ? 'bg-[#0a2012] border-[#1e572e]'
+                    : popupData.total_win > 0
+                      ? 'bg-green-900/50 border-green-500 shadow-[0_0_10px_rgba(0,255,0,0.3)]'
+                      : 'bg-[#1a0505] border-red-900'
+                }`}
+              >
+                {!popupData.has_bet ? (
+                  <span className="text-gray-400 text-sm">คุณไม่ได้เดิมพันในรอบนี้</span>
+                ) : popupData.total_win > 0 ? (
+                  <span className="text-white text-sm">
+                    ยินดีด้วย! คุณถูกรางวัล{' '}
+                    <span className="text-yellow-400 font-bold">{fmt(popupData.total_win)}</span> บาท
+                  </span>
+                ) : (
+                  <span className="text-red-400 text-sm">เสียใจด้วย รอบนี้ไม่ถูกรางวัล</span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Result Popup */}
-      {showResultPopup && popupData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/70" onClick={() => setShowResultPopup(false)}>
-          <div className="bg-emerald-900 w-full max-w-sm rounded-3xl p-6 text-center" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold mb-2">ผลงวดที่ {popupData.draw_id}</h3>
-            <div className="flex justify-center gap-1.5 mb-3">{renderDigits(popupData.result_6d)}</div>
-            <div className="grid grid-cols-3 gap-2 text-center mb-4">
-              <div>
-                <p className="text-[10px] text-emerald-300/70">3 ตัวหน้า</p>
-                <p className="font-bold">{popupData.result_3front}</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-emerald-300/70">3 ตัวท้าย</p>
-                <p className="font-bold">{popupData.result_3back}</p>
-              </div>
-              <div>
-                <p className="text-[10px] text-emerald-300/70">2 ตัวบน</p>
-                <p className="font-bold">{popupData.result_2top}</p>
-              </div>
-            </div>
-            {popupData.total_win > 0 ? (
-              <div className="bg-yellow-400/20 rounded-2xl p-4 mb-4">
-                <p className="text-yellow-400 font-bold text-xl">🎉 ถูกรางวัล!</p>
-                <p className="text-yellow-300 text-2xl font-black">฿{popupData.total_win}</p>
-              </div>
-            ) : (
-              <div className="bg-emerald-800/60 rounded-2xl p-4 mb-4">
-                <p className="text-emerald-300">ไม่ถูกรางวัลในงวดนี้</p>
-              </div>
-            )}
-            <button
-              onClick={() => setShowResultPopup(false)}
-              className="w-full py-3 rounded-2xl font-bold bg-yellow-400 text-emerald-900"
-            >ปิด</button>
-          </div>
-        </div>
-      )}
-
-      {/* History Modal */}
+      {/* ========== MODAL: History ========== */}
       {showHistory && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60" onClick={() => setShowHistory(false)}>
-          <div className="bg-emerald-900 w-full max-w-md rounded-t-3xl p-6 max-h-[70vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <h3 className="text-center font-bold mb-4">ประวัติการแทง</h3>
-            {historyData.length === 0 ? (
-              <p className="text-center text-emerald-400/50">ยังไม่มีประวัติ</p>
-            ) : (
-              <div className="space-y-2">
-                {historyData.map((bet, i) => (
-                  <div key={i} className="bg-emerald-800/60 rounded-2xl p-3 flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-emerald-300">งวด {bet.draw_id} · {bet.bet_type}</p>
-                      <p className="font-bold">{bet.type?.startsWith('pin_') ? 'ปักหลัก' : bet.numbers}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm">฿{bet.amount}</p>
-                      <p className={`text-xs font-bold ${bet.status === 'WON' ? 'text-yellow-400' : bet.status === 'LOST' ? 'text-red-400' : 'text-emerald-300'}`}>
-                        {bet.status === 'WON' ? `+฿${bet.winnings}` : bet.status}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+        <div className="fixed inset-0 z-[70] bg-[#050f08] flex flex-col">
+          <div className="bg-[#021a0b] p-4 flex justify-between items-center border-b border-green-900">
+            <h2 className="text-white font-bold flex items-center gap-2">
+              <span className="material-icons text-yellow-400">history</span>
+              ประวัติการแทง
+            </h2>
             <button
               onClick={() => setShowHistory(false)}
-              className="w-full mt-4 py-3 rounded-2xl font-bold bg-emerald-800 text-white"
-            >ปิด</button>
+              className="w-8 h-8 flex items-center justify-center bg-gray-800 rounded-full text-white"
+            >
+              <span className="material-icons">close</span>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-[#050f08]">
+            {loadingHistory ? (
+              <div className="text-center text-gray-500 mt-10">กำลังโหลด...</div>
+            ) : historyData.length === 0 ? (
+              <div className="text-center text-gray-500 mt-10">ไม่มีประวัติ</div>
+            ) : (
+              historyData.map((b) => <HistoryItem key={b.id} bet={b} />)
+            )}
           </div>
         </div>
       )}
 
-      {/* Toast */}
+      {/* ========== Toast ========== */}
       {toast && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-emerald-800 text-white px-6 py-3 rounded-2xl shadow-xl font-bold text-sm animate-bounce">
-          {toast}
+        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/90 border border-green-500 text-white px-6 py-4 rounded-xl shadow-2xl z-[90] flex flex-col items-center min-w-[200px]">
+          <span
+            className={`material-icons text-4xl mb-2 ${toast.type === 'success' ? 'text-green-500' : 'text-red-500'}`}
+          >
+            {toast.type === 'success' ? 'check_circle' : 'error'}
+          </span>
+          <span className="font-bold text-center">{toast.text}</span>
         </div>
       )}
 
-      <BottomNav />
+      {/* Animation keyframe */}
+      <style>{`
+        @keyframes popIn {
+          from { transform: scale(0.9); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }
 
-/* Pin Selector Component */
-function PinSelector({ mode, selection, onToggle }) {
-  const positions = mode === 'pin_top'
-    ? [
-        { key: 'hundreds', label: 'หลักร้อย' },
-        { key: 'tens', label: 'หลักสิบ' },
-        { key: 'units', label: 'หลักหน่วย' },
-      ]
-    : [
-        { key: 'tens', label: 'หลักสิบ' },
-        { key: 'units', label: 'หลักหน่วย' },
-      ];
+// ============================================================
+// Sub-components
+// ============================================================
 
+function ResultRow({ label, value, color, bigSize = false, noBorder = false }) {
   return (
-    <div className="bg-emerald-800/60 rounded-3xl p-4 space-y-3">
-      {positions.map(pos => (
-        <div key={pos.key}>
-          <p className="text-xs text-emerald-300 mb-2 font-bold">{pos.label}</p>
-          <div className="grid grid-cols-5 gap-1.5">
-            {Array.from({ length: 10 }, (_, i) => i).map(digit => {
-              const selected = (selection[pos.key] || []).includes(digit);
-              return (
-                <button
-                  key={digit}
-                  onClick={() => onToggle(pos.key, digit)}
-                  className={`py-2 rounded-xl font-bold text-sm active:scale-95 transition-all ${
-                    selected ? 'bg-yellow-400 text-emerald-900' : 'bg-emerald-700 text-white'
-                  }`}
-                >
-                  {digit}
-                </button>
-              );
-            })}
-          </div>
+    <div className={`flex h-[56px] ${noBorder ? '' : 'border-b border-gray-200'}`}>
+      <div className="w-[35%] bg-[#e8f5e9] text-[#004d25] flex items-center justify-center text-sm font-semibold">
+        {label}
+      </div>
+      <div
+        className={`w-[65%] flex items-center justify-center font-bold font-mono ${bigSize ? 'text-3xl' : 'text-2xl'} tracking-[2px]`}
+        style={{ color }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function NumpadBtn({ children, onClick, color = 'default' }) {
+  const colorClass =
+    color === 'red'
+      ? 'text-red-400'
+      : color === 'green'
+        ? 'bg-[#004d25] border-green-500 text-white'
+        : 'text-white';
+  return (
+    <button
+      onClick={onClick}
+      className={`rounded-lg py-3 text-2xl font-bold border border-[#1e4528] shadow transition-transform active:scale-95 ${
+        color === 'green'
+          ? colorClass
+          : 'bg-gradient-to-b from-[#16301d] to-[#0f2214] ' + colorClass
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function PinRow({ label, selected, onToggle }) {
+  return (
+    <div className="mb-2 bg-[#0a2012] border border-[#1e4528] rounded-lg p-2">
+      <div className="text-yellow-500 text-xs font-bold mb-2 ml-1">{label}</div>
+      <div className="grid grid-cols-5 gap-1">
+        {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => {
+          const isActive = selected.includes(d);
+          return (
+            <button
+              key={d}
+              onClick={() => onToggle(d)}
+              className={`py-2 text-lg font-mono rounded transition ${
+                isActive
+                  ? 'bg-gradient-to-b from-yellow-400 to-yellow-600 text-black border border-white font-bold shadow-[0_0_8px_rgba(255,215,0,0.5)]'
+                  : 'bg-[#0f2214] border border-[#1e4528] text-gray-300'
+              }`}
+            >
+              {d}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PopupSubBox({ label, value }) {
+  return (
+    <div className="bg-[#011506] border border-[#1e572e] rounded-lg p-2 flex flex-col items-center">
+      <div className="text-gray-400 text-xs mb-1">{label}</div>
+      <div className="text-2xl font-bold text-yellow-400 font-mono">{value}</div>
+    </div>
+  );
+}
+
+function HistoryItem({ bet }) {
+  const typeName = BET_NAME_BY_CODE[bet.bet_type] || bet.bet_type;
+  let displayNum = bet.numbers;
+  if (bet.bet_type?.startsWith('pin_')) {
+    try {
+      const sel = JSON.parse(bet.numbers);
+      const parts = [];
+      if (sel.hundreds?.length) parts.push(`ร้อย: ${sel.hundreds.join(',')}`);
+      if (sel.tens?.length) parts.push(`สิบ: ${sel.tens.join(',')}`);
+      if (sel.units?.length) parts.push(`หน่วย: ${sel.units.join(',')}`);
+      displayNum = parts.join(' | ');
+    } catch (e) { /* fallback */ }
+  }
+  let statusNode;
+  let bgClass;
+  if (bet.status === 'WON') {
+    statusNode = (
+      <span className="text-green-400 font-bold text-xs">
+        <span className="material-icons align-middle text-sm">check_circle</span> ถูกรางวัล (+{fmt(bet.winnings)})
+      </span>
+    );
+    bgClass = 'border-green-800 bg-green-900/20';
+  } else if (bet.status === 'LOST') {
+    statusNode = (
+      <span className="text-red-400 text-xs">
+        <span className="material-icons align-middle text-sm">cancel</span> ไม่ถูกรางวัล
+      </span>
+    );
+    bgClass = 'border-red-900 bg-red-900/10';
+  } else {
+    statusNode = (
+      <span className="text-gray-400 text-xs">
+        <span className="material-icons align-middle text-sm">schedule</span> รอผล
+      </span>
+    );
+    bgClass = 'border-gray-700 bg-gray-800/30';
+  }
+  const dt = bet.created_at ? new Date(bet.created_at).toLocaleString('th-TH') : '';
+  return (
+    <div className={`rounded-lg border p-3 ${bgClass}`}>
+      <div className="flex justify-between items-start mb-1">
+        <div className="flex-1 min-w-0">
+          <div className="text-xs text-yellow-500 font-bold mb-1">{typeName}</div>
+          <div className="text-white text-base font-mono font-bold break-all leading-tight">{displayNum}</div>
+          <div className="text-[10px] text-gray-500 mt-1">งวด {bet.draw_id} | {dt}</div>
         </div>
-      ))}
-      <div className="text-center text-xs text-emerald-300/70">
-        เลือกแล้ว: {Object.values(selection).flat().length}/7 ตัว
+        <div className="text-right ml-2">
+          <div className="text-lg font-bold text-white mb-1">฿{fmt(bet.amount)}</div>
+          {statusNode}
+        </div>
       </div>
     </div>
   );
