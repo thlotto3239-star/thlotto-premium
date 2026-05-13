@@ -1,0 +1,30 @@
+# Cursor AI Rules — TH-LOTTO Premium
+
+🛑 **STOP — Read `README.md` first before any action**
+
+That file contains:
+- Iron rules (NO CODE WITHOUT APPROVAL)
+- Git safety procedure (checkpoint tag before edits)
+- Project URLs and structure
+- Document reading order
+
+## Critical 3 Rules
+
+1. **Before editing code:** create git tag + push GitHub
+2. **Before writing code:** summarize + get approval
+3. **After editing:** update CHANGELOG + PROJECT_STATUS + commit + push + deploy + verify
+
+## Read in order:
+1. `README.md`
+2. `AGENT_HANDOFF.md`
+3. `DEVELOPMENT_GUIDE.md`
+4. `PROJECT_STATUS.md`
+5. `docs/INSTANT_LOTTERY_PLAN.md` (for instant lottery feature)
+
+## Never:
+- Edit code without creating checkpoint tag first
+- Push directly to `main` (use branch + PR)
+- Modify main lottery system (`bets`, `lottery_markets`, `Betting.jsx`) unless requested
+- Confuse User App with Admin Panel (separate repos)
+
+Everything else: **see `README.md`**

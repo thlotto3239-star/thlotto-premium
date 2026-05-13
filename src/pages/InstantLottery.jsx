@@ -316,25 +316,25 @@ export default function InstantLottery() {
       {/* ========== Header ========== */}
       <header className="bg-[#021a0b] px-3 py-2 flex justify-between items-center shadow-md z-20">
         <div className="flex items-center gap-2 w-1/3">
-          <span className="material-icons text-yellow-400 text-2xl">account_circle</span>
+          <span className="material-icons text-[#D4AF37] text-2xl">account_circle</span>
           <span className="text-white font-bold text-sm truncate">{profile?.username || profile?.full_name || '...'}</span>
         </div>
         <div className="flex justify-center w-1/3">
-          <div className="w-12 h-12 rounded-full bg-[#004d25] flex items-center justify-center border-2 border-[#006828] shadow-lg">
-            <img src="https://img2.pic.in.th/pic/TH-LOTTO.md.png" alt="logo" className="w-10 h-10 object-contain" />
+          <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border-2 border-[#D4AF37] shadow-lg overflow-hidden">
+            <img src="https://flagcdn.com/w160/th.png" alt="ธงไทย" className="w-full h-full object-cover" />
           </div>
         </div>
         <div className="flex justify-end w-1/3 gap-1">
           <button
             onClick={() => navigate('/home')}
-            className="bg-[#0e2415] border border-[#2e5c3e] text-yellow-400 text-xs px-2 py-1.5 rounded flex items-center gap-1 hover:bg-[#1a3a26]"
+            className="bg-[#0e2415] border border-[#2e5c3e] text-[#D4AF37] text-xs px-2 py-1.5 rounded flex items-center gap-1 hover:bg-[#1a3a26]"
             title="กลับหน้าแรก"
           >
             <span className="material-icons text-sm">arrow_back</span>
           </button>
           <button
             onClick={openHistory}
-            className="bg-[#0e2415] border border-[#2e5c3e] text-yellow-400 text-xs px-3 py-1.5 rounded flex items-center gap-1 hover:bg-[#1a3a26]"
+            className="bg-[#0e2415] border border-[#2e5c3e] text-[#D4AF37] text-xs px-3 py-1.5 rounded flex items-center gap-1 hover:bg-[#1a3a26]"
           >
             <span className="material-icons text-sm">history</span>
             <span>ประวัติ</span>
@@ -363,7 +363,7 @@ export default function InstantLottery() {
         <div className="text-right">
           <div className="text-[10px] text-gray-400">เครดิต</div>
           <div
-            className={`text-2xl font-bold leading-none transition-all duration-300 ${balanceFlash ? 'text-green-400 scale-110' : 'text-yellow-400'}`}
+            className={`text-2xl font-bold leading-none transition-all duration-300 ${balanceFlash ? 'text-green-400 scale-110' : 'text-[#D4AF37]'}`}
           >
             ฿{fmt(balance)}
           </div>
@@ -393,22 +393,38 @@ export default function InstantLottery() {
 
       {/* ========== Bet Section ========== */}
       <main className="flex-1 flex flex-col bg-[#050f08] overflow-hidden">
-        {/* Tabs */}
-        <div className="flex overflow-x-auto whitespace-nowrap bg-[#021206] border-b border-green-900 p-0.5 gap-0.5 z-10 shrink-0"
-             style={{ scrollbarWidth: 'none' }}>
-          {BET_TABS.map((tab) => (
-            <button
-              key={tab.code}
-              onClick={() => selectTab(tab.code)}
-              className={`px-3 py-1.5 text-xs font-bold border-b-2 whitespace-nowrap transition-colors ${
-                activeTab === tab.code
-                  ? 'text-yellow-400 border-yellow-400 bg-[#0e2415]'
-                  : 'text-gray-500 border-transparent'
-              }`}
-            >
-              {tab.name}
-            </button>
-          ))}
+        {/* Tabs — 2 rows grid (5 + 4) */}
+        <div className="bg-[#0d4a0a] border-b border-[#137c10] p-1 z-10 shrink-0">
+          <div className="grid grid-cols-5 gap-1">
+            {BET_TABS.slice(0, 5).map((tab) => (
+              <button
+                key={tab.code}
+                onClick={() => selectTab(tab.code)}
+                className={`px-1 py-1.5 text-[11px] font-bold border-b-2 transition-colors rounded-t truncate ${
+                  activeTab === tab.code
+                    ? 'text-[#D4AF37] border-[#D4AF37] bg-[#064e3b]'
+                    : 'text-gray-400 border-transparent hover:text-gray-200'
+                }`}
+              >
+                {tab.name}
+              </button>
+            ))}
+          </div>
+          <div className="grid grid-cols-4 gap-1 mt-1">
+            {BET_TABS.slice(5).map((tab) => (
+              <button
+                key={tab.code}
+                onClick={() => selectTab(tab.code)}
+                className={`px-1 py-1.5 text-[11px] font-bold border-b-2 transition-colors rounded-t truncate ${
+                  activeTab === tab.code
+                    ? 'text-[#D4AF37] border-[#D4AF37] bg-[#064e3b]'
+                    : 'text-gray-400 border-transparent hover:text-gray-200'
+                }`}
+              >
+                {tab.name}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Bet Area */}
@@ -442,7 +458,7 @@ export default function InstantLottery() {
           ) : (
             // ---- Positioned (pin) ----
             <>
-              <div className="text-center text-yellow-400 text-xs font-bold mb-2">
+              <div className="text-center text-[#D4AF37] text-xs font-bold mb-2">
                 เลือกตัวเลข (สูงสุด 7 ตัว) — กดครบ 7 จะเด้งอัตโนมัติ
               </div>
               {tabInfo.positions.map((posKey) => (
@@ -457,7 +473,7 @@ export default function InstantLottery() {
                 <button
                   onClick={() => confirmPin()}
                   disabled={pinTotal === 0}
-                  className="w-full bg-gradient-to-b from-yellow-400 to-yellow-600 text-black font-bold py-3 rounded-lg border border-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform"
+                  className="w-full bg-gradient-to-b from-[#D4AF37] to-[#a8851e] text-black font-bold py-3 rounded-lg border border-white shadow-lg disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform"
                 >
                   <span className="material-icons align-middle mr-1">check_circle</span>
                   ยืนยัน / ใส่ราคา ({pinTotal} ตัว)
@@ -484,7 +500,7 @@ export default function InstantLottery() {
           <div className="w-full max-w-sm bg-[#0a2012] border border-green-700 rounded-xl p-5 shadow-2xl animate-[popIn_0.3s_ease]">
             <div className="text-center mb-4">
               <h3 className="text-gray-300 text-sm">รายการที่เลือก</h3>
-              <div className="text-yellow-400 font-mono text-sm font-bold mt-1 break-all">
+              <div className="text-[#D4AF37] font-mono text-sm font-bold mt-1 break-all">
                 [{BET_NAME_BY_CODE[pendingBet?.type] || ''}] {pendingBet?.display}
               </div>
             </div>
@@ -494,7 +510,7 @@ export default function InstantLottery() {
                 inputMode="numeric"
                 value={amountInput}
                 onChange={(e) => setAmountInput(e.target.value.replace(/[^\d]/g, ''))}
-                className="w-full bg-black border border-green-600 rounded-lg py-3 text-center text-3xl text-white font-bold outline-none focus:border-yellow-500"
+                className="w-full bg-black border border-green-600 rounded-lg py-3 text-center text-3xl text-white font-bold outline-none focus:border-[#D4AF37]"
                 placeholder="ระบุเงิน (บาท)"
                 autoFocus
               />
@@ -505,7 +521,7 @@ export default function InstantLottery() {
                 <button
                   key={c}
                   onClick={() => setAmountInput(String(c))}
-                  className="bg-[#1a3a26] text-yellow-400 border border-[#1e4528] py-2 rounded text-sm font-bold hover:bg-yellow-400 hover:text-black active:scale-95 transition"
+                  className="bg-[#1a3a26] text-[#D4AF37] border border-[#1e4528] py-2 rounded text-sm font-bold hover:bg-[#D4AF37] hover:text-black active:scale-95 transition"
                 >
                   {c}
                 </button>
@@ -521,7 +537,7 @@ export default function InstantLottery() {
               <button
                 onClick={submitBet}
                 disabled={submitting}
-                className="flex-1 bg-gradient-to-b from-yellow-400 to-yellow-600 text-black py-3 rounded-lg font-bold shadow-lg text-sm disabled:opacity-50"
+                className="flex-1 bg-gradient-to-b from-[#D4AF37] to-[#a8851e] text-black py-3 rounded-lg font-bold shadow-lg text-sm disabled:opacity-50"
               >
                 {submitting ? 'ส่งโพย...' : 'แทงทันที'}
               </button>
@@ -536,7 +552,7 @@ export default function InstantLottery() {
           <div className="w-full max-w-sm bg-[#002400] border border-[#0f4c25] rounded-xl shadow-2xl animate-[popIn_0.3s_ease] overflow-hidden">
             <div className="flex justify-between items-center px-4 py-3 border-b border-[#1e572e]">
               <div className="flex items-center gap-2">
-                <span className="material-icons text-yellow-400">emoji_events</span>
+                <span className="material-icons text-[#D4AF37]">emoji_events</span>
                 <span className="text-white font-bold">ผลรางวัล</span>
               </div>
               <button onClick={() => setShowResultModal(false)} className="text-gray-400 hover:text-white">
@@ -569,7 +585,7 @@ export default function InstantLottery() {
                 ) : popupData.total_win > 0 ? (
                   <span className="text-white text-sm">
                     ยินดีด้วย! คุณถูกรางวัล{' '}
-                    <span className="text-yellow-400 font-bold">{fmt(popupData.total_win)}</span> บาท
+                    <span className="text-[#D4AF37] font-bold">{fmt(popupData.total_win)}</span> บาท
                   </span>
                 ) : (
                   <span className="text-red-400 text-sm">เสียใจด้วย รอบนี้ไม่ถูกรางวัล</span>
@@ -585,7 +601,7 @@ export default function InstantLottery() {
         <div className="fixed inset-0 z-[70] bg-[#050f08] flex flex-col">
           <div className="bg-[#021a0b] p-4 flex justify-between items-center border-b border-green-900">
             <h2 className="text-white font-bold flex items-center gap-2">
-              <span className="material-icons text-yellow-400">history</span>
+              <span className="material-icons text-[#D4AF37]">history</span>
               ประวัติการแทง
             </h2>
             <button
@@ -674,7 +690,7 @@ function NumpadBtn({ children, onClick, color = 'default' }) {
 function PinRow({ label, selected, onToggle }) {
   return (
     <div className="mb-2 bg-[#0a2012] border border-[#1e4528] rounded-lg p-2">
-      <div className="text-yellow-500 text-xs font-bold mb-2 ml-1">{label}</div>
+      <div className="text-[#D4AF37] text-xs font-bold mb-2 ml-1">{label}</div>
       <div className="grid grid-cols-5 gap-1">
         {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => {
           const isActive = selected.includes(d);
@@ -684,7 +700,7 @@ function PinRow({ label, selected, onToggle }) {
               onClick={() => onToggle(d)}
               className={`py-2 text-lg font-mono rounded transition ${
                 isActive
-                  ? 'bg-gradient-to-b from-yellow-400 to-yellow-600 text-black border border-white font-bold shadow-[0_0_8px_rgba(255,215,0,0.5)]'
+                  ? 'bg-gradient-to-b from-[#D4AF37] to-[#a8851e] text-black border border-white font-bold shadow-[0_0_8px_rgba(255,215,0,0.5)]'
                   : 'bg-[#0f2214] border border-[#1e4528] text-gray-300'
               }`}
             >
@@ -701,7 +717,7 @@ function PopupSubBox({ label, value }) {
   return (
     <div className="bg-[#011506] border border-[#1e572e] rounded-lg p-2 flex flex-col items-center">
       <div className="text-gray-400 text-xs mb-1">{label}</div>
-      <div className="text-2xl font-bold text-yellow-400 font-mono">{value}</div>
+      <div className="text-2xl font-bold text-[#D4AF37] font-mono">{value}</div>
     </div>
   );
 }
@@ -748,7 +764,7 @@ function HistoryItem({ bet }) {
     <div className={`rounded-lg border p-3 ${bgClass}`}>
       <div className="flex justify-between items-start mb-1">
         <div className="flex-1 min-w-0">
-          <div className="text-xs text-yellow-500 font-bold mb-1">{typeName}</div>
+          <div className="text-xs text-[#D4AF37] font-bold mb-1">{typeName}</div>
           <div className="text-white text-base font-mono font-bold break-all leading-tight">{displayNum}</div>
           <div className="text-[10px] text-gray-500 mt-1">งวด {bet.draw_id} | {dt}</div>
         </div>

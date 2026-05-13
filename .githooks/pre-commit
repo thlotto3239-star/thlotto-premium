@@ -1,0 +1,16 @@
+#!/bin/sh
+# TH-LOTTO Premium — Auto Checkpoint Pre-Commit Hook
+# Creates a safety tag for every commit so any change can be rolled back.
+#
+# Enable once: git config core.hooksPath .githooks
+
+ts=$(date +%Y%m%d-%H%M%S)
+tag="auto-checkpoint-$ts"
+
+# Create lightweight tag pointing at HEAD before this commit lands
+git tag "$tag" 2>/dev/null
+
+echo "[pre-commit] Created safety tag: $tag"
+echo "[pre-commit] Rollback if needed: git reset --hard $tag"
+
+exit 0

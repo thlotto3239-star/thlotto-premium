@@ -4,6 +4,52 @@
 
 ---
 
+## [1.5.4] — 2026-05-13
+
+### 🎰 Instant Lottery (หวยไทย 1 นาที) — Rebuild & UI Refinement
+
+#### 🐛 แก้บั๊ก Backend (Supabase RPC)
+- **`fn_check_instant_win`** — แก้ตำแหน่งเลขที่เทียบให้ตรงตามแผน:
+  - `3top`: เคยเทียบหลัก 1-3 → แก้เป็นหลัก 4-6
+  - `3toad`: เคยเทียบหลัก 1-3 sorted → แก้เป็นหลัก 4-6 sorted
+  - `pin_top`: เคยใช้ 3 หลักหน้า → แก้เป็น 3 หลักท้าย (`hundreds`/`tens`/`units` → position 4/5/6)
+  - Pin logic: เคย AND-all → แก้เป็น OR per-position
+- **`fn_settle_instant_draw`** — pin payout แก้จาก amount เต็ม → `amount × rate × ตำแหน่งที่ถูก`
+- **`fn_place_instant_bet`** — แก้การหักเงิน pin จาก `amount × combinations` → `amount × จำนวนเลข`
+- Migration: `20260513032530_fix_instant_lottery_win_logic`
+
+#### 🎨 Frontend Rewrite (`InstantLottery.jsx`)
+- **Rewrite ทั้งไฟล์** จาก cart-system UI → auto-popup single-bet UX (763 บรรทัด)
+- ลบ "ระบุจำนวนเงิน + เพิ่ม" ของเดิม → กรอกเลขครบ → modal ใส่เงินเด้งอัตโนมัติ
+- ซ่อน BottomNav ในหน้านี้ (เกมแบบ fullscreen)
+- **Logo** → เปลี่ยนเป็น **ธงไทยวงกลม** (`flagcdn.com/w160/th.png`) แทน logo TH-LOTTO
+- **Tabs** → grid 2 แถว (5 บน + 4 ล่าง) แทน scroll แนวนอน 1 แถว
+- **สี** → ใช้ brand gold premium `#D4AF37` แทน `text-yellow-400/500` ทุกที่ (consistent)
+
+#### 🐛 แก้บั๊กรูปแตกใน Home
+- **`trending_items.image_url`** ของ "หวยไทย 1 นาที" — URL `pic.in.th/secure-sv1/-1-Violet-and-Yellow-Casino-Night-Party-Neon...` หายจาก CDN แล้ว
+- แก้เป็น `https://flagcdn.com/w160/th.png` (CDN เสถียร + ตรงกับชื่อ "หวยไทย")
+- Migration: `fix_trending_items_thai_lotto_image`
+
+#### 📚 AI-Proof Onboarding (เอกสารกันงงข้ามเซสชัน)
+- **เพิ่ม 5 ไฟล์ใหม่** เพื่อให้ AI ทุกตัวเข้าใจตรงกัน ไม่ว่าจะเป็น Claude / Cursor / Copilot / Windsurf:
+  - `CLAUDE.md` — Claude Code rules → ชี้กลับ README
+  - `.cursorrules` — Cursor AI rules → ชี้กลับ README
+  - `.github/copilot-instructions.md` — GitHub Copilot rules → ชี้กลับ README
+  - `docs/INSTANT_LOTTERY_PLAN.md` — แผนหวย 1 นาทีฉบับสมบูรณ์ (4 ส่วน + 9 bet types + 9 steps)
+  - `docs/INSTANT_LOTTERY_HISTORY.md` — chat log วันที่ 12 พ.ค. ฉบับเต็ม (กันลืม)
+- **Rewrite `README.md`** เป็น **STOP-AND-READ** กระชับ — กฎเหล็ก 5 ข้อ + 5-line system prompt + ลำดับเอกสาร
+- **เพิ่ม `.githooks/pre-commit`** — auto-tag ทุก commit (`auto-checkpoint-YYYYMMDD-HHMMSS`) → rollback ได้เสมอ
+- **Enable `git config core.hooksPath .githooks`** ในโปรเจกต์
+
+#### 🛡️ Safety Tags (จาก checkpoint workflow)
+- `stable-2026-05-13-pre-rebuild` ← production point (rollback ได้)
+- `checkpoint-2026-05-13-1249` ← หลัง rewrite InstantLottery.jsx
+- `pre-ui-refinement-20260513-1337` ← ก่อน UI 3 จุด
+- `pre-onboarding-setup-20260513-1404` ← ก่อนตั้ง AI-proof onboarding
+
+---
+
 ## [1.5.3] — 2026-05-11
 
 ### 🔧 แก้ไข
