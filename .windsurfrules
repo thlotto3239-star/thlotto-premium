@@ -1,10 +1,24 @@
 # TH-LOTTO Project Rules (Auto-loaded)
 
+## 🔴 STOP — Read AGENT_HANDOFF.md FIRST
+Before doing ANYTHING, read `AGENT_HANDOFF.md` — it has all URLs, architecture, and known bugs.
+DO NOT ask the user for GitHub URL, repo info, or project structure. It's all there.
+
 ## MANDATORY: Read these files FIRST before ANY action
-1. Read DEVELOPMENT_GUIDE.md
-2. Read PROJECT_STATUS.md
-3. Read CHANGELOG.md
-4. Read DEPLOY_MAP.md
+1. Read AGENT_HANDOFF.md (quick start + all URLs)
+2. Read DEVELOPMENT_GUIDE.md
+3. Read PROJECT_STATUS.md
+4. Read CHANGELOG.md
+
+## 🔴 BEFORE editing code (NO EXCEPTIONS)
+Run workflow `/checkpoint` first. This creates a safety tag + push to GitHub.
+If you skip this and something breaks, you cannot rollback. THIS IS NOT OPTIONAL.
+
+## 🔴 NO CODE WITHOUT APPROVAL
+- Analyze first, summarize understanding, ask "ok to proceed?" — THEN write code
+- Exception: Safe read-only operations (git fetch, git log, SQL SELECT) — just do it
+- Exception: Creating safety checkpoints — just do it
+- Exception: Editing documentation files (CHANGELOG, PROJECT_STATUS) after work — just do it
 
 ## Project Structure (DO NOT CONFUSE)
 - User App: repo thlotto3239-star/thlotto-premium | branch main | https://th-lotto-app.vercel.app
