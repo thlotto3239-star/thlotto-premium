@@ -1,8 +1,8 @@
 # TH LOTTO PREMIUM — Project Status & AI Handoff Document
-> อัพเดทล่าสุด: 2026-05-14 | เวอร์ชัน: 1.5.5
+> อัพเดทล่าสุด: 2026-05-14 | เวอร์ชัน: 1.5.6
 > ⚠️ เอกสารนี้ต้องอัพเดทด้วยทุกครั้งที่มีการเปลี่ยนแปลงระบบ
 >
-> **🎰 v1.5.5 ครั้งนี้:** Instant Lottery (หวย 1 นาที) — fix frontend bugs (balanceFlash, history, logout)
+> **🎰 v1.5.6 ครั้งนี้:** Instant Lottery (หวย 1 นาที) — ลบปุ่มออกจากระบบออกจากหน้า
 > ดูรายละเอียดเต็ม: `CHANGELOG.md`
 
 ---

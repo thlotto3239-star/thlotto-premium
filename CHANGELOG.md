@@ -4,6 +4,16 @@
 
 ---
 
+## [1.5.6] — 2026-05-14
+
+### 🎨 Instant Lottery — ลบปุ่มออกจากระบบ
+
+#### InstantLottery.jsx
+- **ลบปุ่มออกจากระบบ** ออกจากหน้าหวยไทย 1 นาที (ตามเอกสาร AGENT_HANDOFF.md)
+- **ลบ handleLogout function** ออกเพราะไม่มีปุ่มใช้แล้ว
+
+---
+
 ## [1.5.5] — 2026-05-14
 
 ### 🐛 แก้บั๊ก Instant Lottery Frontend
