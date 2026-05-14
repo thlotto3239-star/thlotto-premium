@@ -74,8 +74,7 @@ const Results = () => {
             {/* ── GOV CARD ── */}
             {govRow && (
               <section className="mb-8">
-                <div className="bg-[#064e3b] rounded-[2.5rem] overflow-hidden text-white border border-emerald-900/10">
-                  <div className="p-6">
+                <div className="rounded-[2.5rem] p-6 text-white" style={{ background: 'linear-gradient(135deg, rgb(22, 68, 30) 0%, rgb(13, 121, 4) 100%)' }}>
                     <div className="flex justify-between items-center mb-4">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center overflow-hidden shrink-0">
