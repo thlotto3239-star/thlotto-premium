@@ -1,8 +1,8 @@
 # TH LOTTO PREMIUM — Project Status & AI Handoff Document
-> อัพเดทล่าสุด: 2026-05-14 | เวอร์ชัน: 1.5.7
+> อัพเดทล่าสุด: 2026-05-14 | เวอร์ชัน: 1.5.8
 > ⚠️ เอกสารนี้ต้องอัพเดทด้วยทุกครั้งที่มีการเปลี่ยนแปลงระบบ
 >
-> **🎰 v1.5.7 ครั้งนี้:** Results Page — อัพเดทดีไซน์การ์ดหวยสลากกินแบ่งรัฐบาลให้เหมือนหน้าโฮม
+> **🔧 v1.5.8 ครั้งนี้:** Project Protection — สร้าง PROJECT_GUIDE.md, อัพเดท .windsurfrules, แก้ .vercel/project.json, Deploy ให้ถูกต้อง
 > ดูรายละเอียดเต็ม: `CHANGELOG.md`
 
 ---

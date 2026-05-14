@@ -4,6 +4,18 @@
 
 ---
 
+## [1.5.8] — 2026-05-14
+
+### 🔧 Project Protection — ป้องกันโปรเจค
+- สร้าง PROJECT_GUIDE.md เพื่อป้องกันโปรเจค
+- อัพเดท .windsurfrules ให้บังคับให้อ่าน PROJECT_GUIDE.md ก่อนทำงาน
+- อัพเดทข้อมูลโปรเจคล่าสุด (Repo, Branch, Live URL, Local, Vercel Project)
+- แก้ .vercel/project.json ให้ชี้ไป project ที่ถูกต้อง (th-lottie-app)
+- สร้าง script check-vercel-config.js เพื่อตรวจสอบ .vercel/project.json
+- Deploy ให้ถูกต้อง (https://th-lotto-app.vercel.app)
+
+---
+
 ## [1.5.7] — 2026-05-14
 
 ### 🎨 Results Page — อัพเดทดีไซน์การ์ดหวยสลากกินแบ่งรัฐบาล
