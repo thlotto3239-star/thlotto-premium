@@ -294,11 +294,6 @@ export default function InstantLottery() {
     }
   };
 
-  // ---- Logout ----
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/login');
-  };
 
   // ============================================================
   // RENDER
@@ -512,15 +507,6 @@ export default function InstantLottery() {
         </div>
       </main>
 
-      {/* ========== Footer (Logout) ========== */}
-      <div className="bg-[#020a05] p-2 flex justify-center border-t border-green-900">
-        <button
-          onClick={handleLogout}
-          className="text-xs text-red-400 hover:text-red-300 border border-red-900/50 bg-red-900/10 px-4 py-1 rounded-full"
-        >
-          ออกจากระบบ
-        </button>
-      </div>
 
       {/* ========== MODAL: Money Input ========== */}
       {showMoneyModal && (
