@@ -5,10 +5,11 @@ Before doing ANYTHING, read `AGENT_HANDOFF.md` — it has all URLs, architecture
 DO NOT ask the user for GitHub URL, repo info, or project structure. It's all there.
 
 ## MANDATORY: Read these files FIRST before ANY action
-1. Read AGENT_HANDOFF.md (quick start + all URLs)
-2. Read DEVELOPMENT_GUIDE.md
-3. Read PROJECT_STATUS.md
-4. Read CHANGELOG.md
+1. Read PROJECT_GUIDE.md (MOST IMPORTANT - project protection)
+2. Read AGENT_HANDOFF.md (quick start + all URLs)
+3. Read DEVELOPMENT_GUIDE.md
+4. Read PROJECT_STATUS.md
+5. Read CHANGELOG.md
 
 ## 🔴 BEFORE editing code (NO EXCEPTIONS)
 Run workflow `/checkpoint` first. This creates a safety tag + push to GitHub.
@@ -28,9 +29,12 @@ If you skip this and something breaks, you cannot rollback. THIS IS NOT OPTIONAL
 
 ## BEFORE editing code
 1. Verify correct repo (User App vs Admin Panel)
-2. Read the ORIGINAL code first - preserve working logic
-3. Compare frontend field names with RPC/DB column names
-4. commit checkpoint before making changes
+2. Check .vercel/project.json is correct BEFORE deploy
+   - User App: must point to "th-lottie-app" (prj_tJriP88kWcWOSUQOo8E0UrwSJb7v)
+   - Admin Panel: must point to "thlotto-admin" (prj_qcbZ2uJ6PACcOUQIXiw6mt8ZP75N)
+3. Read the ORIGINAL code first - preserve working logic
+4. Compare frontend field names with RPC/DB column names
+5. commit checkpoint before making changes
 
 ## AFTER editing code
 1. git add + commit (describe changes clearly)
