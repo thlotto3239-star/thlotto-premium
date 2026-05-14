@@ -19,12 +19,14 @@
 - **Live URL**: https://th-lotto-app.vercel.app
 - **Local**: c:\Users\armyn\.windsurf\worktrees\thlotto-app-main\thlotto-app-main-9738fbe1
 - **Download**: D:\TH-LOTTO-Projects\thlotto-premium
+- **Vercel Project**: th-lottie-app (prj_tJriP88kWcWOSUQOo8E0UrwSJb7v)
 
 ### Admin Panel (หน้าแอดมิน)
 - **Repo**: https://github.com/thlotto3239-star/TH-LOTTO-Admin-push
 - **Branch**: master (ไม่ใช่ main)
 - **Live URL**: https://th-lotto-admin.vercel.app
 - **Local**: D:\TH-LOTTO-Projects\thlotto-admin
+- **Vercel Project**: thlotto-admin (prj_qcbZ2uJ6PACcOUQIXiw6mt8ZP75N)
 
 ---
 
@@ -181,4 +183,8 @@ npx vercel --prod --yes
 
 ---
 
-**อัพเดทล่าสุด: 2026-05-14**
+**อัพเดทล่าสุด: 2026-05-14 (19:59)**
+- ✅ สร้าง PROJECT_GUIDE.md
+- ✅ อัพเดท .windsurfrules ให้บังคับให้อ่าน PROJECT_GUIDE.md
+- ✅ อัพเดทข้อมูลโปรเจคล่าสุด (Repo, Branch, Live URL, Local, Vercel Project)
+- ✅ Deploy ทั้ง 2 ฝั่ง (GitHub + Vercel)
