@@ -163,7 +163,10 @@ export const AuthProvider = ({ children }) => {
     return { data, error };
   };
 
-  const signOut = () => supabase.auth.signOut();
+  const signOut = async () => {
+    localStorage.removeItem('thlotto_session_expiry');
+    await supabase.auth.signOut();
+  };
 
   return (
     <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut, refreshProfile: () => fetchProfile(user?.id) }}>

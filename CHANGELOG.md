@@ -4,6 +4,23 @@
 
 ---
 
+## [1.5.5] — 2026-05-14
+
+### 🐛 แก้บั๊ก Instant Lottery Frontend
+
+#### InstantLottery.jsx
+- **`balanceFlash`** — แก้ logic ให้ flash เฉพาะเมื่อ balance เพิ่มขึ้น (ไม่ flash เมื่อ balance ลดลง)
+- เพิ่ม check `isIncrease = balance > prevBalanceRef.current` ก่อน flash
+
+#### AuthContext.jsx
+- **`signOut`** — เพิ่ม `localStorage.removeItem('thlotto_session_expiry')` เพื่อลบ session expiry เมื่อออกจากระบบ
+
+#### Supabase RPC
+- **`fn_get_instant_bets`** — แก้ SQL error: `ORDER BY` อยู่ใน subquery เพื่อแก้ปัญหา GROUP BY clause
+- Migration: `fix_fn_get_instant_bets_order_by`
+
+---
+
 ## [1.5.4] — 2026-05-13
 
 ### 🎰 Instant Lottery (หวยไทย 1 นาที) — Rebuild & UI Refinement

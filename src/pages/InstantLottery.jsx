@@ -102,10 +102,15 @@ export default function InstantLottery() {
   // Balance flash when changed
   useEffect(() => {
     if (prevBalanceRef.current !== balance) {
-      setBalanceFlash(true);
-      const t = setTimeout(() => setBalanceFlash(false), 800);
-      prevBalanceRef.current = balance;
-      return () => clearTimeout(t);
+      const isIncrease = balance > prevBalanceRef.current;
+      if (isIncrease) {
+        setBalanceFlash(true);
+        const t = setTimeout(() => setBalanceFlash(false), 800);
+        prevBalanceRef.current = balance;
+        return () => clearTimeout(t);
+      } else {
+        prevBalanceRef.current = balance;
+      }
     }
   }, [balance]);
 

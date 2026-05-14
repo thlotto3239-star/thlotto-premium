@@ -1,9 +1,9 @@
 # TH LOTTO PREMIUM — Project Status & AI Handoff Document
-> อัพเดทล่าสุด: 2026-05-13 | เวอร์ชัน: 1.5.4
+> อัพเดทล่าสุด: 2026-05-14 | เวอร์ชัน: 1.5.5
 > ⚠️ เอกสารนี้ต้องอัพเดทด้วยทุกครั้งที่มีการเปลี่ยนแปลงระบบ
 >
-> **🎰 v1.5.4 ครั้งนี้:** Instant Lottery (หวย 1 นาที) — fix backend bugs + rewrite frontend UI + ตั้ง AI-Proof Onboarding system
-> ดูรายละเอียดเต็ม: `CHANGELOG.md`, `docs/INSTANT_LOTTERY_PLAN.md`, `docs/INSTANT_LOTTERY_HISTORY.md`
+> **🎰 v1.5.5 ครั้งนี้:** Instant Lottery (หวย 1 นาที) — fix frontend bugs (balanceFlash, history, logout)
+> ดูรายละเอียดเต็ม: `CHANGELOG.md`
 
 ---
 
@@ -100,6 +100,13 @@ vercel deploy --prod --yes
 | `fn_import_csv_result` | import ผลจาก Google Sheets CSV | Edge Function |
 | `apply_promotion` | ใช้โปรโมชั่น (ต่อ deposit) | เรียกใน admin_approve_deposit |
 | `check_login_rate_limit` | ตรวจ rate limit login | User App |
+| `fn_get_instant_bets` | ดึงประวัติการแทงหวย 1 นาที | InstantLottery |
+| `fn_place_instant_bet` | แทงหวย 1 นาที | InstantLottery |
+| `fn_instant_draw` | สุ่มผลหวย 1 นาที | pg_cron jobid 14 |
+| `fn_settle_instant_draw` | คำนวณผล+จ่ายรางวัลหวย 1 นาที | pg_cron jobid 14 |
+| `fn_check_instant_win` | ตรวจว่าถูกรางวัลหวย 1 นาที | fn_settle_instant_draw |
+| `fn_get_instant_result` | ดึงผลรางวัลหวย 1 นาที | InstantLottery |
+| `fn_get_instant_popup` | ดึงข้อมูล popup หวย 1 นาที | InstantLottery |
 
 ---
 
