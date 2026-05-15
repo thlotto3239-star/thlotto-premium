@@ -1,8 +1,8 @@
 # TH LOTTO PREMIUM — Project Status & AI Handoff Document
-> อัพเดทล่าสุด: 2026-05-14 | เวอร์ชัน: 1.5.8
+> อัพเดทล่าสุด: 2026-05-15 | เวอร์ชัน: 1.5.9
 > ⚠️ เอกสารนี้ต้องอัพเดทด้วยทุกครั้งที่มีการเปลี่ยนแปลงระบบ
 >
-> **🔧 v1.5.8 ครั้งนี้:** Project Protection — สร้าง PROJECT_GUIDE.md, อัพเดท .windsurfrules, แก้ .vercel/project.json, Deploy ให้ถูกต้อง
+> **🎨 v1.5.9 ครั้งนี้:** Instant Lottery — เปลี่ยน Label ใน Popup และหน้าแทง, เปลี่ยน Logic การคำนวณ result_2bottom
 > ดูรายละเอียดเต็ม: `CHANGELOG.md`
 
 ---
