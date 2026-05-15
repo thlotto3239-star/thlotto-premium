@@ -8,9 +8,9 @@ import { useAuth } from '../AuthContext';
 // ============================================================
 
 const BET_TABS = [
-  { code: '2top',      name: '2 ตัวบน',    digits: 2, positioned: false },
-  { code: '2bottom',   name: '2 ตัวล่าง',   digits: 2, positioned: false },
-  { code: '3top',      name: '3 ตัวบน',    digits: 3, positioned: false },
+  { code: '2top',      name: '2 ตัว',    digits: 2, positioned: false },
+  { code: '2bottom',   name: '2 ตัวร่าง',   digits: 2, positioned: false },
+  { code: '3top',      name: '3 ตัวหน้า',    digits: 3, positioned: false },
   { code: '3toad',     name: '3 ตัวโต๊ด',   digits: 3, positioned: false },
   { code: '3front',    name: '3 ตัวหน้า',   digits: 3, positioned: false },
   { code: '3back',     name: '3 ตัวท้าย',   digits: 3, positioned: false },
@@ -580,10 +580,10 @@ export default function InstantLottery() {
               </div>
               <div className="text-gray-500 text-[10px] mb-4">รางวัลที่ 1</div>
               <div className="grid grid-cols-2 gap-3 w-full mb-5">
-                <PopupSubBox label="3 ตัวบน" value={popupData.result_3top} />
+                <PopupSubBox label="3 ตัวหน้า" value={popupData.result_3top} />
                 <PopupSubBox label="3 ตัวท้าย" value={popupData.result_3back} />
-                <PopupSubBox label="2 ตัวบน" value={popupData.result_2top} />
-                <PopupSubBox label="2 ตัวล่าง" value={popupData.result_2bottom} />
+                <PopupSubBox label="2 ตัว" value={popupData.result_2top} />
+                <PopupSubBox label="2 ตัวร่าง" value={popupData.result_2bottom} />
               </div>
               <div
                 className={`w-full rounded-lg py-3 px-3 text-center border ${
