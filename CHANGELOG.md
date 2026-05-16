@@ -4,6 +4,17 @@
 
 ---
 
+## [1.6.0] — 2026-05-16
+
+### Removed - ลบไฟล์ขยะ
+- ลบ vercel_deployments.txt - ไฟล์ deployment history เก่าที่ไม่ได้ใช้
+- ลบ dist/ - โฟลเดอร์ build output เก่าที่ไม่ได้ใช้
+
+### Changed
+- เคลียร์ไฟล์ขยะให้โปรเจคสะอาดและเป็นระเบียบ
+
+---
+
 ## [1.5.9] — 2026-05-15
 
 ### 🎨 Instant Lottery — เปลี่ยน Label ใน Popup และหน้าแทง
