@@ -4,6 +4,17 @@
 
 ---
 
+## [1.6.0] — 2026-05-22
+
+### 🔧 Documentation Update - บังคับอ่านเอกสารก่อนทำงาน
+- อัพเดท PROJECT_GUIDE.md - เพิ่มกฎเหล็ก (ตรวจสอบสถานะล่าสุด, วิเคราะห์ก่อนทำงาน)
+- อัพเดท PROJECT_GUIDE.md - เพิ่ม Vercel Project ID สำหรับการตรวจสอบก่อน deploy
+- อัพเดท PROJECT_GUIDE.md - อัพเดทขั้นตอนการทำงานให้ชัดเจนขึ้น (8 ขั้นตอน)
+- อัพเดท PROJECT_STATUS.md - อัพเดท version เป็น v1.6.0
+- อัพเดท PROJECT_STATUS.md - เพิ่ม column Vercel Project ID
+
+---
+
 ## [1.5.8] — 2026-05-14
 
 ### 🔧 Project Protection — ป้องกันโปรเจค

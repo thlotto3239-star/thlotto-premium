@@ -1,8 +1,8 @@
 # TH LOTTO PREMIUM — Project Status & AI Handoff Document
-> อัพเดทล่าสุด: 2026-05-14 | เวอร์ชัน: 1.5.8
+> อัพเดทล่าสุด: 2026-05-22 | เวอร์ชัน: 1.6.0
 > ⚠️ เอกสารนี้ต้องอัพเดทด้วยทุกครั้งที่มีการเปลี่ยนแปลงระบบ
 >
-> **🔧 v1.5.8 ครั้งนี้:** Project Protection — สร้าง PROJECT_GUIDE.md, อัพเดท .windsurfrules, แก้ .vercel/project.json, Deploy ให้ถูกต้อง
+> **🔧 v1.6.0 ครั้งนี้:** Update documentation with GitHub links, Live URLs, and Vercel Project IDs - บังคับให้อ่านเอกสารก่อนทำงาน
 > ดูรายละเอียดเต็ม: `CHANGELOG.md`
 
 ---
@@ -11,11 +11,11 @@
 
 ระบบแทงหวยออนไลน์ครบวงจร — ฝาก/ถอน, แทงหวย, วงล้อโชคดี, Affiliate
 
-| ส่วน | เทคโนโลยี | URL Live | Git Repo |
-|------|-----------|----------|----------|
-| **User App** | React + Vite + TailwindCSS | https://th-lotto-app.vercel.app | `thlotto3239-star/thlotto-premium` (branch: `main`) |
-| **Admin Panel** | React + TailwindCSS | https://th-lotto-admin.vercel.app | `thlotto3239-star/TH-LOTTO-Admin-push` (branch: `master`) |
-| **Backend** | Supabase (PostgreSQL + Auth + Storage + Edge Functions + Realtime) | — | — |
+| ส่วน | เทคโนโลยี | URL Live | Git Repo | Vercel Project |
+|------|-----------|----------|----------|---------------|
+| **User App** | React + Vite + TailwindCSS | https://th-lotto-app.vercel.app | `thlotto3239-star/thlotto-premium` (branch: `main`) | th-lotto-app (prj_tJriP88kWcWOSUQOo8E0UrwSJb7v) |
+| **Admin Panel** | React + TailwindCSS | https://th-lotto-admin.vercel.app | `thlotto3239-star/TH-LOTTO-Admin-push` (branch: `master`) | th-lotto-admin (prj_Un7pZtGDhtaxXOGaOXDajtLDpPWM) |
+| **Backend** | Supabase (PostgreSQL + Auth + Storage + Edge Functions + Realtime) | — | — | — |
 
 **Local paths:**
 - User App: `c:\Users\armyn\Downloads\thlotto-app-main\thlotto-app-main`
