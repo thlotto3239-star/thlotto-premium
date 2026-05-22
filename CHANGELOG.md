@@ -13,6 +13,28 @@
 - อัพเดท PROJECT_STATUS.md - อัพเดท version เป็น v1.6.0
 - อัพเดท PROJECT_STATUS.md - เพิ่ม column Vercel Project ID
 
+### Removed - ลบไฟล์ขยะ
+- ลบ vercel_deployments.txt - ไฟล์ deployment history เก่าที่ไม่ได้ใช้
+- ลบ dist/ - โฟลเดอร์ build output เก่าที่ไม่ได้ใช้
+
+### Changed
+- เคลียร์ไฟล์ขยะให้โปรเจคสะอาดและเป็นระเบียบ
+
+---
+
+## [1.5.9] — 2026-05-15
+
+### 🎨 Instant Lottery — เปลี่ยน Label ใน Popup และหน้าแทง
+
+#### InstantLottery.jsx
+- **เปลี่ยน Label ใน Popup** — "3 ตัวบน" → "3 ตัวหน้า", "2 ตัวบน" → "2 ตัว", "2 ตัวล่าง" → "2 ตัวร่าง"
+- **เปลี่ยน Label ในหน้าแทง (BET_TABS)** — "2 ตัวบน" → "2 ตัว", "2 ตัวล่าง" → "2 ตัวร่าง", "3 ตัวบน" → "3 ตัวหน้า"
+
+#### Supabase RPC
+- **`fn_get_instant_popup`** — เปลี่ยน Logic การคำนวณ result_2bottom ให้สุ่มเลข 2 หลักจากชุด 6 หลัก แต่ไม่ซ้ำกับ result_2top
+- Migration: `update_fn_get_instant_popup_result_2bottom`
+>>>>>>> 9562605e254e48084504768922458890b5e00e0c
+
 ---
 
 ## [1.5.8] — 2026-05-14
