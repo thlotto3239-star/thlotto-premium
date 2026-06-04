@@ -172,16 +172,16 @@ const Results = () => {
                   <div className="h-px bg-white/10 mb-5"></div>
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div>
-                      <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวบน</p>
+                      <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวหน้า</p>
+                      <div className="text-base font-bold">{pending(govRow) ? 'xxx' : (govRow.result_3front || 'xxx')}</div>
+                    </div>
+                    <div>
+                      <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวท้าย</p>
                       <div className="text-base font-bold">{pending(govRow) ? 'xxx' : (govRow.result_3top || 'xxx')}</div>
                     </div>
                     <div>
                       <p className="text-white/60 text-[9px] font-medium mb-1">2 ตัวล่าง</p>
                       <div className="text-xl font-bold">{pending(govRow) ? 'xx' : (govRow.result_2bottom || govRow.result_2top || 'xx')}</div>
-                    </div>
-                    <div>
-                      <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวหน้า</p>
-                      <div className="text-base font-bold">{pending(govRow) ? 'xxx' : (govRow.result_3front || 'xxx')}</div>
                     </div>
                   </div>
                 </div>
@@ -315,16 +315,16 @@ const Results = () => {
                           <div className="h-px bg-white/10 mb-3"></div>
                           <div className="grid grid-cols-3 gap-2 text-center">
                             <div>
-                              <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวบน</p>
+                              <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวหน้า</p>
+                              <div className="text-sm sm:text-base font-bold">{r.result_3front || '—'}</div>
+                            </div>
+                            <div>
+                              <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวท้าย</p>
                               <div className="text-sm sm:text-base font-bold">{r.result_3top || '—'}</div>
                             </div>
                             <div>
                               <p className="text-white/60 text-[9px] font-medium mb-1">2 ตัวล่าง</p>
                               <div className="text-base sm:text-xl font-bold">{r.result_2bottom || r.result_2top || '—'}</div>
-                            </div>
-                            <div>
-                              <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวหน้า</p>
-                              <div className="text-sm sm:text-base font-bold">{r.result_3front || '—'}</div>
                             </div>
                           </div>
                         </div>
