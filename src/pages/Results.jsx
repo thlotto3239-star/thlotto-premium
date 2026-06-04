@@ -136,24 +136,24 @@ const Results = () => {
             {/* ── GOV CARD ── */}
             {govRow && (
               <section className="mb-8">
-                <div className="rounded-[2.5rem] p-6 text-white" style={{ background: 'linear-gradient(135deg, rgb(22, 68, 30) 0%, rgb(13, 121, 4) 100%)' }}>
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center overflow-hidden shrink-0">
+                <div className="rounded-[2.5rem] p-5 sm:p-6 text-white" style={{ background: 'linear-gradient(135deg, rgb(22, 68, 30) 0%, rgb(13, 121, 4) 100%)' }}>
+                  <div className="flex justify-between items-start gap-2 mb-4">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 flex items-center justify-center overflow-hidden shrink-0">
                         <img alt="Government" className="w-full h-full object-cover" src={govRow.logo_url || 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Seal_of_the_Government_Lottery_Office.png/240px-Seal_of_the_Government_Lottery_Office.png'} />
                       </div>
-                      <div className="min-w-0">
-                        <h2 className="text-lg font-bold">สลากกินแบ่งรัฐบาล</h2>
-                        <p className="text-white/70 text-[10px] font-medium truncate">
+                      <div className="min-w-0 flex-1">
+                        <h2 className="text-sm sm:text-lg font-bold leading-tight truncate">สลากกินแบ่งรัฐบาล</h2>
+                        <p className="text-white/70 text-[10px] font-medium truncate mt-0.5">
                           {govRow.has_draw_today ? `วันนี้ ออกผล ${fmtTime(govRow.draw_time)}` : fmtDate(govRow.draw_date)}
                         </p>
                       </div>
                     </div>
-                    <div className={`px-3 py-1 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0 ml-2 ${
+                    <div className={`px-2 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-bold whitespace-nowrap shrink-0 ${
                       !govRow.has_draw_today ? 'bg-blue-400/30 text-white' :
                       pending(govRow) ? 'bg-red-500 text-white' : 'bg-green-400 text-white'
                     }`}>
-                      {!govRow.has_draw_today ? 'งวดล่าสุด' : pending(govRow) ? 'รอประกาศผล' : 'ประกาศผลแล้ว'}
+                      {!govRow.has_draw_today ? 'งวดล่าสุด' : pending(govRow) ? 'รอผล' : 'ออกแล้ว'}
                     </div>
                   </div>
                   <div className="mb-6 text-center">
@@ -194,14 +194,14 @@ const Results = () => {
                 <h3 className="text-base font-bold text-slate-900 mb-4">หวยต่างประเทศ</h3>
                 <div className="space-y-3">
                   {foreignRows.map((r) => (
-                    <div key={r.code} className="bg-white p-4 rounded-2xl border border-slate-100">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-10 h-10 rounded-full overflow-hidden flex items-center justify-center bg-slate-50 shrink-0">
+                    <div key={r.code} className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-100">
+                      <div className="flex items-start justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden flex items-center justify-center bg-slate-50 shrink-0">
                             {r.logo_url ? <img alt={r.name} className="w-full h-full object-cover" src={r.logo_url} /> : <span className="material-symbols-outlined text-slate-400 text-lg">flag</span>}
                           </div>
-                          <div className="min-w-0">
-                            <h4 className="font-bold text-slate-900 text-sm whitespace-nowrap truncate">{r.name}</h4>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-bold text-slate-900 text-xs sm:text-sm truncate">{r.name}</h4>
                             <SubDate row={r} />
                           </div>
                         </div>
@@ -238,15 +238,15 @@ const Results = () => {
                 <div className="grid grid-cols-1 gap-3">
                   {stockRows.map((r) => (
                     <div key={r.code} className="bg-white p-3 rounded-2xl border border-slate-100 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         {r.logo_url ? <img alt={r.name} className="w-8 h-8 rounded-full object-cover shrink-0" src={r.logo_url} />
                           : <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-slate-400 text-sm">show_chart</span></div>}
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-slate-900 text-xs whitespace-nowrap truncate">{r.name}</h4>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-bold text-slate-900 text-xs truncate">{r.name}</h4>
                           <SubDate row={r} />
                         </div>
                       </div>
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
                         <div className="text-right">
                           <p className="text-[7px] text-slate-400 font-bold uppercase">3 ตัว</p>
                           <p className="text-xs font-bold text-slate-800">{pending(r) ? 'xxx' : (r.result_3top || 'xxx')}</p>
