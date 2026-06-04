@@ -286,6 +286,52 @@ const Results = () => {
                 <div className="grid grid-cols-1 gap-3">
                   {history.filter(r => r.draw_date === date).map((r, i) => {
                     const cat = r.lottery_markets?.category;
+
+                    // ── TH_GOV: ใช้ design เดียวกับการ์ดหน้าหลัก ──
+                    if (cat === 'GOV') {
+                      return (
+                        <div key={i} className="rounded-[2rem] p-5 text-white" style={{ background: 'linear-gradient(135deg, rgb(22, 68, 30) 0%, rgb(13, 121, 4) 100%)' }}>
+                          <div className="flex items-center gap-2.5 mb-4">
+                            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center overflow-hidden shrink-0">
+                              {r.lottery_markets?.logo_url
+                                ? <img alt="" className="w-full h-full object-cover" src={r.lottery_markets.logo_url} />
+                                : <div className="w-full h-full bg-white/10"></div>}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="text-sm font-bold leading-tight truncate">{r.lottery_markets?.name}</h4>
+                              <p className="text-white/70 text-[10px] font-medium truncate mt-0.5">{fmtDate(date)}</p>
+                            </div>
+                          </div>
+                          {r.result_main && (
+                            <div className="mb-4 text-center">
+                              <p className="text-white/80 text-[10px] font-medium mb-2">รางวัลที่ 1</p>
+                              <div className="flex justify-center gap-1">
+                                {r.result_main.split('').map((d, idx) => (
+                                  <span key={idx} className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center text-[#064e3b] font-bold text-base sm:text-xl">{d}</span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          <div className="h-px bg-white/10 mb-3"></div>
+                          <div className="grid grid-cols-3 gap-2 text-center">
+                            <div>
+                              <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวบน</p>
+                              <div className="text-sm sm:text-base font-bold">{r.result_3top || '—'}</div>
+                            </div>
+                            <div>
+                              <p className="text-white/60 text-[9px] font-medium mb-1">2 ตัวล่าง</p>
+                              <div className="text-base sm:text-xl font-bold">{r.result_2bottom || r.result_2top || '—'}</div>
+                            </div>
+                            <div>
+                              <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวหน้า</p>
+                              <div className="text-sm sm:text-base font-bold">{r.result_3front || '—'}</div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // ── ตลาดอื่นๆ: ใช้แบบเดิม ──
                     return (
                       <div key={i} className="bg-white p-4 rounded-2xl border border-slate-100">
                         <div className="flex items-center gap-3 mb-3">
@@ -297,15 +343,8 @@ const Results = () => {
                             <p className="text-[9px] text-slate-400 font-mono">{r.lottery_markets?.code}</p>
                           </div>
                         </div>
-                        {/* แสดงครบทุกช่องตามค่าจริง ถ้าไม่มี = ไม่แสดงช่อง */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                          {cat === 'GOV' && r.result_main && (
-                            <div className="text-center bg-gradient-to-br from-emerald-50 to-emerald-100 p-2 rounded-xl col-span-2 sm:col-span-3 border border-emerald-200">
-                              <p className="text-[8px] text-emerald-700 font-bold uppercase">รางวัลที่ 1</p>
-                              <p className="text-lg font-black text-emerald-900 tracking-widest">{r.result_main}</p>
-                            </div>
-                          )}
-                          {cat !== 'GOV' && r.result_main && r.result_main !== r.result_3top && (
+                          {r.result_main && r.result_main !== r.result_3top && (
                             <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
                               <p className="text-[8px] text-slate-400 font-bold uppercase">รางวัล</p>
                               <p className="text-sm font-bold text-slate-800">{r.result_main}</p>
