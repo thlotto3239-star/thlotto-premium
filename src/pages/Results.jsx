@@ -284,56 +284,82 @@ const Results = () => {
                   {fmtDate(date)}
                 </h3>
                 <div className="grid grid-cols-1 gap-3">
-                  {history.filter(r => r.draw_date === date).map((r, i) => {
+                  {history.filter(r => r.draw_date === date)
+                    .sort((a, b) => {
+                      // จัดลำดับ: รัฐบาล → ลาว → ฮานอย/มาเลย์ → หุ้น
+                      const order = (r) => {
+                        const c = r.lottery_markets?.code;
+                        if (c === 'TH_GOV') return 0;
+                        if (c === 'LAO') return 1;
+                        if (c?.startsWith('HANOI')) return 2;
+                        if (c === 'MALAY') return 3;
+                        return 4;
+                      };
+                      return order(a) - order(b);
+                    })
+                    .map((r, i) => {
                     const cat = r.lottery_markets?.category;
 
-                    // ── TH_GOV: ใช้ design เดียวกับการ์ดหน้าหลัก ──
+                    // ── TH_GOV: ใช้ design เดียวกับการ์ดหน้าหลัก + watermark ──
                     if (cat === 'GOV') {
                       return (
-                        <div key={i} className="rounded-[2rem] p-5 text-white" style={{ background: 'linear-gradient(135deg, rgb(22, 68, 30) 0%, rgb(13, 121, 4) 100%)' }}>
-                          <div className="flex items-center gap-2.5 mb-4">
-                            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center overflow-hidden shrink-0">
-                              {r.lottery_markets?.logo_url
-                                ? <img alt="" className="w-full h-full object-cover" src={r.lottery_markets.logo_url} />
-                                : <div className="w-full h-full bg-white/10"></div>}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-sm font-bold leading-tight truncate">{r.lottery_markets?.name}</h4>
-                              <p className="text-white/70 text-[10px] font-medium truncate mt-0.5">{fmtDate(date)}</p>
-                            </div>
-                          </div>
-                          {r.result_main && (
-                            <div className="mb-4 text-center">
-                              <p className="text-white/80 text-[10px] font-medium mb-2">รางวัลที่ 1</p>
-                              <div className="flex justify-center gap-1">
-                                {r.result_main.split('').map((d, idx) => (
-                                  <span key={idx} className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center text-[#064e3b] font-bold text-base sm:text-xl">{d}</span>
-                                ))}
+                        <div key={i} className="relative rounded-[2rem] p-5 text-white overflow-hidden" style={{ background: 'linear-gradient(135deg, rgb(22, 68, 30) 0%, rgb(13, 121, 4) 100%)' }}>
+                          {/* Watermark logo */}
+                          {r.lottery_markets?.logo_url && (
+                            <img src={r.lottery_markets.logo_url} alt=""
+                              className="absolute -right-8 -bottom-8 w-48 h-48 object-contain pointer-events-none opacity-10 select-none"/>
+                          )}
+                          <div className="relative z-10">
+                            <div className="flex items-center gap-2.5 mb-4">
+                              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center overflow-hidden shrink-0">
+                                {r.lottery_markets?.logo_url
+                                  ? <img alt="" className="w-full h-full object-cover" src={r.lottery_markets.logo_url} />
+                                  : <div className="w-full h-full bg-white/10"></div>}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-sm font-bold leading-tight truncate">{r.lottery_markets?.name}</h4>
+                                <p className="text-white/70 text-[10px] font-medium truncate mt-0.5">{fmtDate(date)}</p>
                               </div>
                             </div>
-                          )}
-                          <div className="h-px bg-white/10 mb-3"></div>
-                          <div className="grid grid-cols-3 gap-2 text-center">
-                            <div>
-                              <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวหน้า</p>
-                              <div className="text-sm sm:text-base font-bold">{r.result_3front || '—'}</div>
-                            </div>
-                            <div>
-                              <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวท้าย</p>
-                              <div className="text-sm sm:text-base font-bold">{r.result_3top || '—'}</div>
-                            </div>
-                            <div>
-                              <p className="text-white/60 text-[9px] font-medium mb-1">2 ตัวล่าง</p>
-                              <div className="text-base sm:text-xl font-bold">{r.result_2bottom || r.result_2top || '—'}</div>
+                            {r.result_main && (
+                              <div className="mb-4 text-center">
+                                <p className="text-white/80 text-[10px] font-medium mb-2">รางวัลที่ 1</p>
+                                <div className="flex justify-center gap-1">
+                                  {r.result_main.split('').map((d, idx) => (
+                                    <span key={idx} className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center text-[#064e3b] font-bold text-base sm:text-xl">{d}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            <div className="h-px bg-white/10 mb-3"></div>
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                              <div>
+                                <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวหน้า</p>
+                                <div className="text-sm sm:text-base font-bold">{r.result_3front || '—'}</div>
+                              </div>
+                              <div>
+                                <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวท้าย</p>
+                                <div className="text-sm sm:text-base font-bold">{r.result_3top || '—'}</div>
+                              </div>
+                              <div>
+                                <p className="text-white/60 text-[9px] font-medium mb-1">2 ตัวล่าง</p>
+                                <div className="text-base sm:text-xl font-bold">{r.result_2bottom || r.result_2top || '—'}</div>
+                              </div>
                             </div>
                           </div>
                         </div>
                       );
                     }
 
-                    // ── ตลาดอื่นๆ: ใช้แบบเดิม ──
+                    // ── ตลาดอื่นๆ: การ์ดขาว + watermark โลโก้ ──
                     return (
-                      <div key={i} className="bg-white p-4 rounded-2xl border border-slate-100">
+                      <div key={i} className="relative bg-white p-4 rounded-2xl border border-slate-100 overflow-hidden">
+                        {/* Watermark logo */}
+                        {r.lottery_markets?.logo_url && (
+                          <img src={r.lottery_markets.logo_url} alt=""
+                            className="absolute -right-6 -bottom-6 w-40 h-40 object-contain pointer-events-none opacity-[0.07] select-none"/>
+                        )}
+                        <div className="relative z-10">
                         <div className="flex items-center gap-3 mb-3">
                           {r.lottery_markets?.logo_url
                             ? <img alt="" className="w-10 h-10 rounded-full object-cover shrink-0" src={r.lottery_markets.logo_url} />
@@ -380,6 +406,7 @@ const Results = () => {
                               <p className="text-sm font-bold text-primary">{r.result_2bottom}</p>
                             </div>
                           )}
+                        </div>
                         </div>
                       </div>
                     );
