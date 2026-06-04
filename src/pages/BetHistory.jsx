@@ -221,7 +221,7 @@ const BetHistory = () => {
                     <div>
                       <p className="font-extrabold text-slate-900 text-sm leading-tight">{bet.market?.name || 'หวย'}</p>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        {new Date(bet.created_at).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}{' • '}
+                        {new Date(bet.created_at).toLocaleDateString('th-TH-u-ca-buddhist', { day: '2-digit', month: 'short', year: '2-digit' })}{' • '}
                         {new Date(bet.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>

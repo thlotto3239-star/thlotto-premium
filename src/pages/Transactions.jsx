@@ -170,7 +170,7 @@ const Transactions = () => {
         <div className="px-4 mb-6">
           <div className="bg-white rounded-2xl p-6 border border-slate-100 relative overflow-hidden">
             <div className="flex justify-between items-center mb-4">
-              <p className="text-slate-500 text-sm font-medium">สรุปรายการ{new Date().toLocaleDateString('th-TH', { month: 'long' })}</p>
+              <p className="text-slate-500 text-sm font-medium">สรุปรายการ{new Date().toLocaleDateString('th-TH-u-ca-buddhist', { month: 'long' })}</p>
               <span className="material-symbols-outlined text-[#1a7e2a]/60 text-lg">calendar_month</span>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -219,7 +219,7 @@ const Transactions = () => {
                     )}
                     <div className="flex justify-between items-center mt-3">
                       <p className="text-xs text-slate-400">
-                        {new Date(t.created_at).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })},{' '}
+                        {new Date(t.created_at).toLocaleDateString('th-TH-u-ca-buddhist', { day: '2-digit', month: 'short', year: '2-digit' })},{' '}
                         {new Date(t.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
                       </p>
                       <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${getStatusStyle(t.status)}`}>

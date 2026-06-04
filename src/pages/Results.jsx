@@ -9,7 +9,8 @@ const fmtDate = (dateStr) => {
   if (!dateStr) return '';
   try {
     const dt = new Date(dateStr + 'T00:00:00');
-    return dt.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+    // Buddhist calendar (พ.ศ.)
+    return dt.toLocaleDateString('th-TH-u-ca-buddhist', { year: 'numeric', month: 'long', day: 'numeric' });
   } catch { return dateStr; }
 };
 

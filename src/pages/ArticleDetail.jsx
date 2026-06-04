@@ -40,7 +40,7 @@ const ArticleDetail = () => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' });
+    return new Date(dateStr).toLocaleDateString('th-TH-u-ca-buddhist', { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
   if (loading) {
@@ -128,7 +128,7 @@ const ArticleDetail = () => {
                     <span className="text-[10px] text-primary font-bold mb-1">{r.category}</span>
                     <p className="text-sm font-bold line-clamp-2 text-slate-800">{r.title}</p>
                     <p className="text-[10px] text-slate-400 mt-1">
-                      {new Date(r.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {new Date(r.created_at).toLocaleDateString('th-TH-u-ca-buddhist', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                   </div>
                 </div>

@@ -74,7 +74,7 @@ const Wallet = () => {
   );
 
   const memberSince = profile?.created_at
-    ? new Date(profile.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })
+    ? new Date(profile.created_at).toLocaleDateString('th-TH-u-ca-buddhist', { day: 'numeric', month: 'short', year: 'numeric' })
     : null;
 
   return (
@@ -262,7 +262,7 @@ const Wallet = () => {
                         <p className="font-bold text-sm">{tx.note || getTypeThai(tx.type)}</p>
                         <div className="flex items-center gap-2 mt-0.5">
                           <span className="text-[10px] text-slate-400">
-                            {new Date(tx.created_at).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })} • {new Date(tx.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(tx.created_at).toLocaleDateString('th-TH-u-ca-buddhist', { day: '2-digit', month: 'short', year: '2-digit' })} • {new Date(tx.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusBadge}`}>{statusText}</span>
                         </div>

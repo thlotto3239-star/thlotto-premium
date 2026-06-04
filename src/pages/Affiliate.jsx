@@ -207,7 +207,7 @@ const Affiliate = () => {
                   <div className="flex-1 min-w-0">
                     <h4 className="font-bold text-slate-900 text-[15px] truncate">{act.name}</h4>
                     <p className="text-xs text-slate-400 font-medium mt-0.5">
-                      {act.sub} • {new Date(act.created_at).toLocaleDateString('th-TH')}
+                      {act.sub} • {new Date(act.created_at).toLocaleDateString('th-TH-u-ca-buddhist')}
                     </p>
                   </div>
                   <div className="text-right">
