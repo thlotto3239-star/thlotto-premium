@@ -2,9 +2,10 @@ import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
 import { ModalProvider } from './contexts/ModalContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 import ProtectedRoute from './ProtectedRoute';
 import NotificationPopup from './components/NotificationPopup';
-import RealtimeNotification from './components/RealtimeNotification';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Lazy-loaded pages — โหลดเฉพาะหน้าที่ผู้ใช้เปิด
 const Home               = lazy(() => import('./pages/Home'));
@@ -53,10 +54,11 @@ const RootRedirect = () => {
 
 function App() {
   return (
+    <ErrorBoundary>
+    <SettingsProvider>
     <AuthProvider>
       <ModalProvider>
         <NotificationPopup />
-        <RealtimeNotification />
         <Router>
           <Suspense fallback={<PageLoader />}>
           <Routes>
@@ -102,6 +104,8 @@ function App() {
         </Router>
       </ModalProvider>
     </AuthProvider>
+    </SettingsProvider>
+    </ErrorBoundary>
   );
 }
 

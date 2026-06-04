@@ -110,6 +110,20 @@ const Betting = () => {
     if (!url) return null;
     const muteParam = muted ? '1' : '0';
     const base = `autoplay=1&mute=${muteParam}&rel=0&modestbranding=1&playsinline=1`;
+    
+    // Facebook video or live embed
+    if (url.includes('facebook.com/plugins/video.php')) {
+      const u = new URL(url);
+      u.searchParams.set('autoplay', 'true');
+      u.searchParams.set('mute', muted ? 'true' : 'false');
+      return u.toString();
+    }
+    if (url.includes('facebook.com') || url.includes('fb.watch')) {
+      const encodedUrl = encodeURIComponent(url);
+      const muteFbParam = muted ? 'true' : 'false';
+      return `https://www.facebook.com/plugins/video.php?href=${encodedUrl}&show_text=0&t=0&autoplay=true&mute=${muteFbParam}`;
+    }
+
     // YouTube embed already
     if (url.includes('youtube.com/embed/')) {
       const u = new URL(url);

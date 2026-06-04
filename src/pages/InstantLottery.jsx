@@ -36,6 +36,7 @@ export default function InstantLottery() {
   const [activeTab, setActiveTab] = useState('2top');
   const [inputNumber, setInputNumber] = useState('');
   const [pinSelection, setPinSelection] = useState({ hundreds: [], tens: [], units: [] });
+  const [logoUrl, setLogoUrl] = useState('https://flagcdn.com/w160/th.png');
 
   const [drawId, setDrawId] = useState(() => Math.floor(Date.now() / 60000));
   const [viewingDrawId, setViewingDrawId] = useState(() => Math.floor(Date.now() / 60000) - 1);
@@ -97,6 +98,24 @@ export default function InstantLottery() {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const fetchLogo = async () => {
+      try {
+        const { data } = await supabase
+          .from('settings')
+          .select('value')
+          .eq('key', 'instant_logo_url')
+          .maybeSingle();
+        if (data?.value) {
+          setLogoUrl(data.value);
+        }
+      } catch (err) {
+        console.error('Error fetching logo:', err);
+      }
+    };
+    fetchLogo();
   }, []);
 
   // Balance flash when changed
@@ -327,7 +346,7 @@ export default function InstantLottery() {
         </div>
         <div className="flex justify-center w-1/3">
           <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center border-2 border-[#D4AF37] shadow-lg overflow-hidden">
-            <img src="https://flagcdn.com/w160/th.png" alt="ธงไทย" className="w-full h-full object-cover" />
+            <img src={logoUrl} alt="ธงไทย" className="w-full h-full object-cover" />
           </div>
         </div>
         <div className="flex justify-end w-1/3 gap-1">

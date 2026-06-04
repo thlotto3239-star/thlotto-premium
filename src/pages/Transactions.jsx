@@ -112,7 +112,7 @@ const Transactions = () => {
     switch (type) {
       case 'DEPOSIT': return 'เติมเงินผ่าน QR Code';
       case 'WITHDRAW': return 'ถอนเงินเข้าธนาคาร';
-      case 'WIN': return 'รับรางวัลสลากกินแบ่ง';
+      case 'WIN': return 'รับรางวัล';
       case 'PAYOUT': return 'จ่ายรางวัล';
       case 'BET': return 'แทงหวย';
       case 'BONUS': return 'โบนัส';
@@ -207,7 +207,7 @@ const Transactions = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
-                      <h4 className="font-semibold text-slate-800 truncate">{getTypeLabel(t.type)}</h4>
+                      <h4 className="font-semibold text-slate-800 truncate">{t.note || getTypeLabel(t.type)}</h4>
                       <p className={`font-bold text-sm ${
                         isIncome(t.type) ? 'text-[#1a7e2a]' : 'text-slate-800'
                       }`}>

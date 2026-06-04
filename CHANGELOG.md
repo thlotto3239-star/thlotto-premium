@@ -33,7 +33,6 @@
 #### Supabase RPC
 - **`fn_get_instant_popup`** — เปลี่ยน Logic การคำนวณ result_2bottom ให้สุ่มเลข 2 หลักจากชุด 6 หลัก แต่ไม่ซ้ำกับ result_2top
 - Migration: `update_fn_get_instant_popup_result_2bottom`
->>>>>>> 9562605e254e48084504768922458890b5e00e0c
 
 ---
 

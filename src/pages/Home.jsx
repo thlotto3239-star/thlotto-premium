@@ -3,17 +3,7 @@ import { supabase } from '../supabaseClient';
 import { Link, useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
 import AppHeader from '../components/AppHeader';
-
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT6H6WWef9PagUoZE5wOGcOcUgkz0OVhCVR4hV-EvPgVrG2532EPd3cNJzjfyyoIfvdzAek-nFNVvNp/pub?gid=36966565&single=true&output=csv';
-
-const parseCSV = (text) => {
-  const lines = text.trim().split('\n');
-  if (lines.length < 2) return [];
-  return lines.slice(1).map(line => {
-    const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-    return { code: cols[0], name: cols[1], date: cols[2], main: cols[3], top3: cols[4], col6: cols[5], bot2: cols[6], logo: cols[7] };
-  }).filter(r => r.code);
-};
+import logger from '../services/logger';
 
 const isPending = (v) => {
   if (!v) return true;
@@ -38,6 +28,7 @@ const Home = () => {
   const [articles, setArticles] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [trending, setTrending] = useState([]);
+  const [instantCfg, setInstantCfg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [luckyWheelBanner, setLuckyWheelBanner] = useState('');
   const [timeLeft, setTimeLeft] = useState({});
@@ -54,7 +45,7 @@ const Home = () => {
         // 1+2. Fetch markets with accurate countdown from draw_schedules
         const { data: marketsData } = await supabase.rpc('get_markets_with_countdown');
         const drawData = (marketsData || []).filter(m => m.is_open);
-        const popularData = (marketsData || []).slice(0, 8);
+        const popularData = (marketsData || []).filter(m => m.show_in_popular);
 
         // 3. Fetch Banners (sliders)
         const { data: bannerData } = await supabase
@@ -100,13 +91,31 @@ const Home = () => {
           .single();
         if (wheelData?.value) setLuckyWheelBanner(wheelData.value);
 
+        // 9. หวย 1 นาที — config การแสดงผล (ตาม toggle ที่แอดมินตั้ง)
+        const { data: instSettings } = await supabase
+          .from('settings')
+          .select('key, value')
+          .in('key', ['instant_name', 'instant_logo_url', 'instant_show_popular', 'instant_show_trending']);
+        const instMap = {};
+        (instSettings || []).forEach(s => { instMap[s.key] = s.value; });
+        setInstantCfg({
+          name: instMap.instant_name || 'หวยไทย 1 นาที',
+          logo_url: instMap.instant_logo_url || '',
+          show_popular: instMap.instant_show_popular === 'true',
+          show_trending: instMap.instant_show_trending !== 'false',
+        });
+
         setDraws(drawData || []);
         setPopularLotteries(popularData || []);
         setBanners(bannerData || []);
         setPromotions(promoData || []);
         setArticles(articleData || []);
         setAnnouncements(announcementData || []);
-        setTrending(trendingData || []);
+        // trending = รายการจาก trending_items + หวยหลักที่แอดมินเปิด show_in_trending
+        const trendingMarkets = (marketsData || [])
+          .filter(m => m.show_in_trending)
+          .map(m => ({ id: m.id, title: m.name, code: m.code, image_url: m.logo_url, link: `/betting?draw=${m.id}`, is_market: true }));
+        setTrending([...(trendingData || []), ...trendingMarkets]);
 
         // Initialize countdowns from accurate next_close_time
         const initialTimeLeft = {};
@@ -191,15 +200,29 @@ const Home = () => {
   };
 
   useEffect(() => {
-    const fetchGov = () => {
-      fetch(CSV_URL)
-        .then(r => r.text())
-        .then(text => {
-          const rows = parseCSV(text);
-          const gov = rows.find(r => r.code === 'TH_GOV' || r.name?.includes('รัฐบาล'));
-          if (gov) { console.log('GOV ROW:', gov); setGovResult(gov); }
-        })
-        .catch(err => console.error('CSV fetch error:', err));
+    const fetchGov = async () => {
+      try {
+        const { data, error } = await supabase.rpc('get_today_results');
+        if (error) throw error;
+        // Find TH_GOV market results
+        const gov = (data || []).find(r => r.code === 'TH_GOV' || r.name?.includes('รัฐบาล'));
+        if (gov) {
+          // Map database field names to the ones expected by Home.jsx UI
+          const mappedGov = {
+            code: gov.code,
+            name: gov.name,
+            date: gov.draw_date,
+            main: gov.result_main || 'xxxxxx',
+            top3: gov.result_3front || 'xxx',
+            col6: gov.result_3bottom || 'xxx',
+            bot2: gov.result_2bottom || 'xx',
+            logo: gov.logo_url
+          };
+          setGovResult(mappedGov);
+        }
+      } catch (err) {
+        logger.error('Error fetching government results via RPC:', err);
+      }
     };
     fetchGov();
     const interval = setInterval(fetchGov, 60000);
@@ -321,23 +344,47 @@ const Home = () => {
                   <div className="h-3 w-16 bg-gray-100 rounded animate-pulse" />
                 </div>
               ))
-            ) : popularLotteries.length > 0 ? popularLotteries.map((lottery) => (
-              <div key={lottery.id} className="min-w-[120px] flex flex-col items-center">
-                <div className="w-16 h-16 rounded-full overflow-hidden mb-3 border border-gray-100 shrink-0">
-                  <img alt={lottery.name} className="w-full h-full object-cover" src={lottery.logo_url} />
-                </div>
-                <h3 className="font-bold text-sm mb-1 text-center whitespace-nowrap truncate w-full">{lottery.name}</h3>
-                <div className="flex items-center gap-1 text-accent-red text-[11px] font-bold mb-3">
-                  <span className="material-icons text-[12px]">schedule</span>
-                  <span>{formatTime(timeLeft[lottery.id] || 0)}</span>
-                </div>
-                <button
-                  onClick={() => navigate(`/betting?draw=${lottery.id}`)}
-                  className="w-full text-white py-2 rounded-full text-[11px] font-bold active:scale-95 transition-transform"
-                  style={{ background: 'linear-gradient(to bottom, rgb(22, 68, 30), rgb(13, 121, 4))' }}
-                >แทงเลย</button>
-              </div>
-            )) : (
+            ) : (popularLotteries.length > 0 || instantCfg?.show_popular) ? (
+              <>
+                {/* การ์ดหวย 1 นาที (แสดงเมื่อแอดมินเปิด toggle ยอดนิยม) */}
+                {instantCfg?.show_popular && (
+                  <div className="min-w-[120px] flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-full overflow-hidden mb-3 border border-gray-100 shrink-0 bg-primary/10 flex items-center justify-center">
+                      {instantCfg.logo_url
+                        ? <img alt={instantCfg.name} className="w-full h-full object-cover" src={instantCfg.logo_url} />
+                        : <span className="material-icons text-primary text-3xl">timer</span>}
+                    </div>
+                    <h3 className="font-bold text-sm mb-1 text-center whitespace-nowrap truncate w-full">{instantCfg.name}</h3>
+                    <div className="flex items-center gap-1 text-accent-red text-[11px] font-bold mb-3">
+                      <span className="material-icons text-[12px]">bolt</span>
+                      <span>ทุก 1 นาที</span>
+                    </div>
+                    <button
+                      onClick={() => navigate('/instant-lottery')}
+                      className="w-full text-white py-2 rounded-full text-[11px] font-bold active:scale-95 transition-transform"
+                      style={{ background: 'linear-gradient(to bottom, rgb(22, 68, 30), rgb(13, 121, 4))' }}
+                    >แทงเลย</button>
+                  </div>
+                )}
+                {popularLotteries.map((lottery) => (
+                  <div key={lottery.id} className="min-w-[120px] flex flex-col items-center">
+                    <div className="w-16 h-16 rounded-full overflow-hidden mb-3 border border-gray-100 shrink-0">
+                      <img alt={lottery.name} className="w-full h-full object-cover" src={lottery.logo_url} />
+                    </div>
+                    <h3 className="font-bold text-sm mb-1 text-center whitespace-nowrap truncate w-full">{lottery.name}</h3>
+                    <div className="flex items-center gap-1 text-accent-red text-[11px] font-bold mb-3">
+                      <span className="material-icons text-[12px]">schedule</span>
+                      <span>{formatTime(timeLeft[lottery.id] || 0)}</span>
+                    </div>
+                    <button
+                      onClick={() => navigate(`/betting?draw=${lottery.id}`)}
+                      className="w-full text-white py-2 rounded-full text-[11px] font-bold active:scale-95 transition-transform"
+                      style={{ background: 'linear-gradient(to bottom, rgb(22, 68, 30), rgb(13, 121, 4))' }}
+                    >แทงเลย</button>
+                  </div>
+                ))}
+              </>
+            ) : (
               <p className="text-gray-400 text-xs py-4 italic">ไม่มีหวยยอดนิยมในขณะนี้</p>
             )}
           </div>
@@ -350,7 +397,32 @@ const Home = () => {
             <h2 className="text-lg font-bold">มาแรง</h2>
           </div>
           <div className="space-y-3">
-            {trending.length > 0 ? trending.map((item) => (
+            {/* การ์ดหวย 1 นาที (แสดงเมื่อแอดมินเปิด toggle มาแรง) */}
+            {instantCfg?.show_trending && (
+              <div
+                className="bg-white rounded-3xl overflow-hidden border border-gray-50 flex items-center p-4 gap-4 cursor-pointer active:scale-[0.98] transition-all"
+                onClick={() => navigate('/instant-lottery')}
+              >
+                <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-primary/10 flex items-center justify-center">
+                  {instantCfg.logo_url
+                    ? <img src={instantCfg.logo_url} alt={instantCfg.name} className="w-full h-full object-cover" />
+                    : <span className="material-icons text-primary text-5xl">timer</span>}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-bold text-md">{instantCfg.name}</h4>
+                    <span className="bg-accent-red text-white text-[8px] px-2 py-0.5 rounded-full font-bold">HOT</span>
+                  </div>
+                  <p className="text-xs text-slate-400 whitespace-nowrap">ออกผลทุก 1 นาที ตลอด 24 ชั่วโมง</p>
+                  <button
+                    className="text-white px-5 py-1.5 rounded-full text-[11px] font-bold mt-3"
+                    style={{ background: 'linear-gradient(to bottom, rgb(22, 68, 30), rgb(13, 121, 4))' }}
+                  >เล่นเลย</button>
+                </div>
+              </div>
+            )}
+            {/* รายการมาแรงอื่นๆ จาก trending_items (กรองหวย 1 นาทีออก — toggle ควบคุมแยก) */}
+            {trending.filter(item => item.link !== '/instant-lottery').map((item) => (
               <div
                 key={item.id}
                 className="bg-white rounded-3xl overflow-hidden border border-gray-50 flex items-center p-4 gap-4 cursor-pointer active:scale-[0.98] transition-all"
@@ -374,26 +446,10 @@ const Home = () => {
                   >เล่นเลย</button>
                 </div>
               </div>
-            )) : (
-              <div
-                className="bg-white rounded-3xl overflow-hidden border border-gray-50 flex items-center p-4 gap-4 cursor-pointer active:scale-[0.98] transition-all"
-                onClick={() => navigate('/lottery-list')}
-              >
-                <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-primary/10 flex items-center justify-center">
-                  <span className="material-icons text-primary text-5xl">timer</span>
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-bold text-md">หวยไทย 1 นาที</h4>
-                    <span className="bg-primary text-white text-[8px] px-2 py-0.5 rounded-full font-bold">HOT</span>
-                  </div>
-                  <p className="text-xs text-slate-400 whitespace-nowrap">ออกผลทุก 1 นาที ตลอด 24 ชั่วโมง</p>
-                  <button
-                    className="text-white px-5 py-1.5 rounded-full text-[11px] font-bold mt-3"
-                    style={{ background: 'linear-gradient(to bottom, rgb(22, 68, 30), rgb(13, 121, 4))' }}
-                  >เล่นเลย</button>
-                </div>
-              </div>
+            ))}
+            {/* ไม่มีรายการเลย */}
+            {!instantCfg?.show_trending && trending.length === 0 && (
+              <p className="text-gray-400 text-xs py-4 italic text-center">ไม่มีรายการมาแรงในขณะนี้</p>
             )}
           </div>
         </section>
@@ -498,7 +554,7 @@ const Home = () => {
                   <p className="text-2xl font-black text-accent-red leading-tight">{item.value}</p>
                   <p className="text-[9px] text-gray-400 font-bold mb-3">บาทละ</p>
                   <div className="flex items-center gap-1.5">
-                    <img className="w-3.5 h-3.5" src="https://lh3.googleusercontent.com/aida/ADBb0ugEuF0yZYDIuP2IxcB73hvCJ3cGYsYKqG7u62YBmKlm1J8jLS0ZM4B_WRTHk50p1CD5RZNeieJpib5low97oRcWDf3OVg24UI0GJeoQnIQgAbrhdze2PtU_8J2QY_ijiHirVH470MHPj1nmh9ip8UgAoizlVElm3b6CgfuGXiz__WHJ50Isr4rAmsn4DunYzNT4yfl7PsHvwsTiueDqOzggsVrCZra0S9zhSvgP74XVzz6S1wKpaMaapxPnz4AUWrbTtKVWmjQp" alt="logo" />
+                    <img className="w-3.5 h-3.5 rounded-full" src="https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png" alt="TH-LOTTO" />
                     <span className="text-[8px] font-black text-emerald-treasury">TH-LOTTO</span>
                   </div>
                 </div>
