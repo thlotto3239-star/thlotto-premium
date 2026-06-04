@@ -278,79 +278,30 @@ const Results = () => {
                 <p className="text-sm">ยังไม่มีผลรางวัลย้อนหลัง</p>
               </div>
             ) : (() => {
-              // แยกหวยรัฐบาลออกมาแสดงบนสุด (ครั้งเดียว — งวดล่าสุด)
-              const govLatest = history.find(r => r.lottery_markets?.code === 'TH_GOV');
-              const historyExcludeGov = history.filter(r => r.lottery_markets?.code !== 'TH_GOV');
-              const datesExcludeGov = [...new Set(historyExcludeGov.map(r => r.draw_date))];
+              // จัดลำดับ: รัฐบาล(0) → ลาว(1) → ฮานอย(2) → มาเลย์(3) → หุ้น(4)
+              const sortOrder = (r) => {
+                const c = r.lottery_markets?.code;
+                if (c === 'TH_GOV') return 0;
+                if (c === 'LAO') return 1;
+                if (c?.startsWith('HANOI')) return 2;
+                if (c === 'MALAY') return 3;
+                return 4;
+              };
 
               return <>
-                {/* ── หวยรัฐบาล — บนสุดเสมอ ── */}
-                {govLatest && (
-                  <div>
-                    <h3 className="text-sm font-bold text-slate-600 mb-3 flex items-center gap-2">
-                      <span className="w-1 h-4 bg-emerald-700 rounded-full"></span>
-                      หวยรัฐบาล (งวดล่าสุด)
-                    </h3>
-                    <div className="relative rounded-[2rem] p-5 text-white overflow-hidden" style={{ background: 'linear-gradient(135deg, rgb(22, 68, 30) 0%, rgb(13, 121, 4) 100%)' }}>
-                      {govLatest.lottery_markets?.logo_url && (
-                        <img src={govLatest.lottery_markets.logo_url} alt=""
-                          className="absolute -right-8 -bottom-8 w-48 h-48 object-contain pointer-events-none opacity-10 select-none"/>
-                      )}
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-2.5 mb-4">
-                          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center overflow-hidden shrink-0">
-                            {govLatest.lottery_markets?.logo_url && <img alt="" className="w-full h-full object-cover" src={govLatest.lottery_markets.logo_url} />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-bold leading-tight truncate">{govLatest.lottery_markets?.name}</h4>
-                            <p className="text-white/70 text-[10px] font-medium truncate mt-0.5">{fmtDate(govLatest.draw_date)}</p>
-                          </div>
-                        </div>
-                        {govLatest.result_main && (
-                          <div className="mb-4 text-center">
-                            <p className="text-white/80 text-[10px] font-medium mb-2">รางวัลที่ 1</p>
-                            <div className="flex justify-center gap-1">
-                              {govLatest.result_main.split('').map((d, idx) => (
-                                <span key={idx} className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center text-[#064e3b] font-bold text-base sm:text-xl">{d}</span>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        <div className="h-px bg-white/10 mb-3"></div>
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                          <div><p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวหน้า</p><div className="text-sm sm:text-base font-bold">{govLatest.result_3front || '—'}</div></div>
-                          <div><p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวท้าย</p><div className="text-sm sm:text-base font-bold">{govLatest.result_3top || '—'}</div></div>
-                          <div><p className="text-white/60 text-[9px] font-medium mb-1">2 ตัวล่าง</p><div className="text-base sm:text-xl font-bold">{govLatest.result_2bottom || govLatest.result_2top || '—'}</div></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* ── ตลาดอื่นๆ เรียงตามวัน ── */}
-                {datesExcludeGov.map(date => (
+                {/* ── เรียงตามวัน → ในแต่ละวันเรียงตามลำดับ ── */}
+                {historyDates.map(date => (
               <div key={date}>
                 <h3 className="text-sm font-bold text-slate-600 mb-3 flex items-center gap-2">
                   <span className="w-1 h-4 bg-primary rounded-full"></span>
                   {fmtDate(date)}
                 </h3>
                 <div className="grid grid-cols-1 gap-3">
-                  {historyExcludeGov.filter(r => r.draw_date === date)
-                    .sort((a, b) => {
-                      // จัดลำดับ: ลาว → ฮานอย/มาเลย์ → หุ้น
-                      const order = (r) => {
-                        const c = r.lottery_markets?.code;
-                        if (c === 'LAO') return 1;
-                        if (c?.startsWith('HANOI')) return 2;
-                        if (c === 'MALAY') return 3;
-                        return 4;
-                      };
-                      return order(a) - order(b);
-                    })
+                  {history.filter(r => r.draw_date === date)
+                    .sort((a, b) => sortOrder(a) - sortOrder(b))
                     .map((r, i) => {
                     const cat = r.lottery_markets?.category;
 
-                    // (TH_GOV ถูกแสดงไปแล้วบนสุด)
                     if (cat === 'GOV') {
                       return (
                         <div key={i} className="relative rounded-[2rem] p-5 text-white overflow-hidden" style={{ background: 'linear-gradient(135deg, rgb(22, 68, 30) 0%, rgb(13, 121, 4) 100%)' }}>
