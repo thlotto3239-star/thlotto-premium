@@ -4,6 +4,7 @@ import BottomNav from '../components/BottomNav';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
 import { useModal } from '../contexts/ModalContext';
+import BankSelector from '../components/BankSelector';
 
 const EditProfile = () => {
   const { profile, user, signOut, refreshProfile } = useAuth();
@@ -14,6 +15,9 @@ const EditProfile = () => {
   const avatarInputRef = useRef(null);
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
+    bank_name: profile?.bank_name || '',
+    bank_account_number: profile?.bank_account_number || '',
+    bank_account_name: profile?.bank_account_name || '',
   });
   const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.phone}`;
 
@@ -64,6 +68,9 @@ const EditProfile = () => {
         .from('profiles')
         .update({
           full_name: formData.full_name,
+          bank_name: formData.bank_name || null,
+          bank_account_number: formData.bank_account_number || null,
+          bank_account_name: formData.bank_account_name || null,
         })
         .eq('id', profile.id);
 
@@ -177,6 +184,46 @@ const EditProfile = () => {
                   <span className="font-medium">{user?.email || '—'}</span>
                   <span className="ml-auto material-symbols-outlined text-zinc-300">lock</span>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bank Account Section */}
+          <div className="bg-white p-6 rounded-2xl border border-zinc-100">
+            <h3 className="text-emerald-700 font-extrabold mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
+              <span className="material-symbols-outlined text-[20px]">account_balance</span>
+              บัญชีธนาคาร (สำหรับถอนเงิน)
+            </h3>
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-zinc-700 px-1 uppercase tracking-wide">ธนาคาร</label>
+                <BankSelector
+                  value={formData.bank_name}
+                  onChange={(code) => setFormData({ ...formData, bank_name: code })}
+                  placeholder="เลือกธนาคารของคุณ"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-zinc-700 px-1 uppercase tracking-wide" htmlFor="bank_account_number">เลขที่บัญชี</label>
+                <input
+                  id="bank_account_number"
+                  type="text"
+                  value={formData.bank_account_number}
+                  onChange={(e) => setFormData({ ...formData, bank_account_number: e.target.value.replace(/[^0-9-]/g, '') })}
+                  placeholder="xxx-x-xxxxx-x"
+                  className="w-full px-4 py-4 bg-white border border-zinc-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all outline-none font-mono tracking-wider"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-zinc-700 px-1 uppercase tracking-wide" htmlFor="bank_account_name">ชื่อบัญชี</label>
+                <input
+                  id="bank_account_name"
+                  type="text"
+                  value={formData.bank_account_name}
+                  onChange={(e) => setFormData({ ...formData, bank_account_name: e.target.value })}
+                  placeholder="ชื่อ-นามสกุลผู้ถือบัญชี"
+                  className="w-full px-4 py-4 bg-white border border-zinc-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all outline-none font-medium"
+                />
               </div>
             </div>
           </div>

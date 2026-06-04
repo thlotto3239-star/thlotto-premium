@@ -3,6 +3,7 @@ import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { useModal } from '../contexts/ModalContext';
+import BankBadge from '../components/BankBadge';
 
 const Withdrawal = () => {
   const { profile, refreshProfile } = useAuth();
@@ -165,14 +166,13 @@ const Withdrawal = () => {
         {/* Bank Details */}
         <section className="mb-6">
           <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest px-1 mb-3">บัญชีรับเงินของคุณ</p>
-          <div className="flex items-center gap-4 bg-white p-4 rounded-2xl border border-slate-100">
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center shrink-0 font-extrabold text-lg border-2 border-white shadow ${getBankColor(userProfile?.bank_name)}`}>
-              {bankShortName(userProfile?.bank_name)}
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <p className="text-slate-900 font-extrabold text-base truncate">{userProfile?.bank_name || 'ไม่พบข้อมูล'}</p>
-              <p className="text-slate-400 font-body tabular-nums text-sm tracking-widest">{userProfile?.bank_account_number || 'xxx-x-xxxxx-x'}</p>
-            </div>
+          <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-slate-100">
+            <BankBadge
+              code={userProfile?.bank_name}
+              accountNumber={userProfile?.bank_account_number}
+              size="lg"
+              className="flex-1"
+            />
             <div className="text-primary">
               <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
             </div>

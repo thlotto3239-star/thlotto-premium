@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import BankBadge from '../components/BankBadge';
 
 const Deposit = () => {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ const Deposit = () => {
   const isPromoDeposit = !!promoCode;
   const [minDeposit, setMinDeposit] = useState(100);
   const [bankSettings, setBankSettings] = useState({
-    bank_name: 'ธนาคารกสิกรไทย (KBank)',
+    bank_code: 'KBANK',
     bank_account_name: 'บจก. ทีเอช-ลอตโต พรีเมียม',
     bank_account_number: '123-x-xxxxx-x',
   });
@@ -21,12 +22,12 @@ const Deposit = () => {
       const { data, error } = await supabase
         .from('settings')
         .select('key, value')
-        .in('key', ['company_bank_name', 'company_bank_account_name', 'company_bank_account_number', 'min_deposit']);
+        .in('key', ['company_bank_code', 'company_bank_account_name', 'company_bank_account_number', 'min_deposit']);
       if (data && !error) {
         const map = {};
         data.forEach(row => { map[row.key] = row.value; });
         setBankSettings(prev => ({
-          bank_name: map['company_bank_name'] || prev.bank_name,
+          bank_code: map['company_bank_code'] || prev.bank_code,
           bank_account_name: map['company_bank_account_name'] || prev.bank_account_name,
           bank_account_number: map['company_bank_account_number'] || prev.bank_account_number,
         }));
@@ -82,17 +83,12 @@ const Deposit = () => {
         {isPromoDeposit &&
         <section className="mb-8">
           <div className="bg-white rounded-[1.75rem] p-6 border border-slate-100" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
-            <div className="flex items-center gap-4 mb-5">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center overflow-hidden border border-primary/5">
-                <div
-                  className="w-full h-full bg-cover bg-center"
-                  style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuBMSZQCiTuQu46dtDzVAhRus0mqsbN2OZw2_LsG1Vk_bj2FF4sQb3MX6sUssTtvQWaCQrMLg4yKJsgUK_rnzrdKy8QeOn6P8he1RSOV2F7rl04oiygOOO9W2xLPMKmlbixcovuYMxfOeJUMb5_sFmyzDUYE9eGwbUf_RZF8ouTXZcMVTZ0srXABJ7hlZ7hJIfDPrc2lsJVaw2Eaqab_Wbh_U7_o5We8yu-f5OqrVIiNCM2HqjLjbobOo8BdR9-v7XKGQQgfc1WQSQ')" }}
-                ></div>
-              </div>
-              <div>
-                <p className="text-slate-400 text-sm font-medium">{bankSettings.bank_name}</p>
-                <p className="text-slate-900 text-base font-extrabold leading-tight">{bankSettings.bank_account_name}</p>
-              </div>
+            <div className="mb-5">
+              <BankBadge
+                code={bankSettings.bank_code}
+                accountName={bankSettings.bank_account_name}
+                size="lg"
+              />
             </div>
             <div className="flex items-center justify-between bg-slate-50 rounded-2xl p-4 border border-slate-100">
               <div>
