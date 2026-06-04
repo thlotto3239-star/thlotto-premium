@@ -57,7 +57,7 @@ const Results = () => {
     const since = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
     const { data } = await supabase
       .from('lottery_results')
-      .select('draw_date, result_main, result_3top, result_2top, result_2bottom, status, lottery_markets(name, code, category, logo_url)')
+      .select('draw_date, result_main, result_3top, result_3front, result_3bottom, result_2top, result_2bottom, status, lottery_markets(name, code, category, logo_url)')
       .gte('draw_date', since)
       .in('status', ['ANNOUNCED', 'SETTLED'])
       .order('draw_date', { ascending: false })
@@ -282,29 +282,68 @@ const Results = () => {
                   <span className="w-1 h-4 bg-primary rounded-full"></span>
                   {fmtDate(date)}
                 </h3>
-                <div className="grid grid-cols-1 gap-2">
-                  {history.filter(r => r.draw_date === date).map((r, i) => (
-                    <div key={i} className="bg-white p-3 rounded-2xl border border-slate-100 flex items-center justify-between">
-                      <div className="flex items-center gap-3 min-w-0">
-                        {r.lottery_markets?.logo_url ? <img alt="" className="w-8 h-8 rounded-full object-cover shrink-0" src={r.lottery_markets.logo_url} />
-                          : <div className="w-8 h-8 rounded-full bg-slate-100 shrink-0"></div>}
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-slate-900 text-xs truncate">{r.lottery_markets?.name}</h4>
-                          <p className="text-[8px] text-slate-400 font-mono">{r.lottery_markets?.code}</p>
+                <div className="grid grid-cols-1 gap-3">
+                  {history.filter(r => r.draw_date === date).map((r, i) => {
+                    const cat = r.lottery_markets?.category;
+                    return (
+                      <div key={i} className="bg-white p-4 rounded-2xl border border-slate-100">
+                        <div className="flex items-center gap-3 mb-3">
+                          {r.lottery_markets?.logo_url
+                            ? <img alt="" className="w-10 h-10 rounded-full object-cover shrink-0" src={r.lottery_markets.logo_url} />
+                            : <div className="w-10 h-10 rounded-full bg-slate-100 shrink-0"></div>}
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-bold text-slate-900 text-sm truncate">{r.lottery_markets?.name}</h4>
+                            <p className="text-[9px] text-slate-400 font-mono">{r.lottery_markets?.code}</p>
+                          </div>
+                        </div>
+                        {/* แสดงครบทุกช่องตามค่าจริง ถ้าไม่มี = ไม่แสดงช่อง */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {cat === 'GOV' && r.result_main && (
+                            <div className="text-center bg-gradient-to-br from-emerald-50 to-emerald-100 p-2 rounded-xl col-span-2 sm:col-span-3 border border-emerald-200">
+                              <p className="text-[8px] text-emerald-700 font-bold uppercase">รางวัลที่ 1</p>
+                              <p className="text-lg font-black text-emerald-900 tracking-widest">{r.result_main}</p>
+                            </div>
+                          )}
+                          {cat !== 'GOV' && r.result_main && r.result_main !== r.result_3top && (
+                            <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <p className="text-[8px] text-slate-400 font-bold uppercase">รางวัล</p>
+                              <p className="text-sm font-bold text-slate-800">{r.result_main}</p>
+                            </div>
+                          )}
+                          {r.result_3top && (
+                            <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <p className="text-[8px] text-slate-400 font-bold uppercase">3 ตัวบน</p>
+                              <p className="text-sm font-bold text-slate-800">{r.result_3top}</p>
+                            </div>
+                          )}
+                          {r.result_3front && (
+                            <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <p className="text-[8px] text-slate-400 font-bold uppercase">3 ตัวหน้า</p>
+                              <p className="text-sm font-bold text-slate-800">{r.result_3front}</p>
+                            </div>
+                          )}
+                          {r.result_3bottom && (
+                            <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <p className="text-[8px] text-slate-400 font-bold uppercase">3 ตัวล่าง</p>
+                              <p className="text-sm font-bold text-slate-800">{r.result_3bottom}</p>
+                            </div>
+                          )}
+                          {r.result_2top && (
+                            <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
+                              <p className="text-[8px] text-slate-400 font-bold uppercase">2 ตัวบน</p>
+                              <p className="text-sm font-bold text-slate-800">{r.result_2top}</p>
+                            </div>
+                          )}
+                          {r.result_2bottom && (
+                            <div className="text-center bg-primary/5 p-2 rounded-xl border border-primary/10">
+                              <p className="text-[8px] text-primary font-bold uppercase">2 ตัวล่าง</p>
+                              <p className="text-sm font-bold text-primary">{r.result_2bottom}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="flex gap-4 text-right">
-                        <div>
-                          <p className="text-[7px] text-slate-400 font-bold">3 ตัว</p>
-                          <p className="text-xs font-bold text-slate-800">{r.result_3top || '-'}</p>
-                        </div>
-                        <div>
-                          <p className="text-[7px] text-primary font-bold">2 ตัว</p>
-                          <p className="text-xs font-bold text-primary">{r.result_2top || '-'}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
