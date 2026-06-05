@@ -42,6 +42,17 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
+  /* ป้องกันตัวหนังสือตก — สถานะ, ชื่อ, badge */
+  span[class*="badge"], span[class*="status"], span[class*="tag"] {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* รูปภาพสไลเดอร์ + banner — สัดส่วนคงที่ */
+  img[class*="slider"], img[class*="banner"] {
+    border-radius: 0.75rem; /* rounded-xl */
+    object-fit: cover;
+  }
 }
 
 @layer utilities {

@@ -421,7 +421,7 @@ const Home = () => {
             {/* การ์ดหวย 1 นาที (แสดงเมื่อแอดมินเปิด toggle มาแรง) */}
             {instantCfg?.show_trending && (
               <div
-                className="bg-white rounded-3xl overflow-hidden border border-gray-50 flex items-center p-4 gap-4 cursor-pointer active:scale-[0.98] transition-all"
+                className="bg-white rounded-xl overflow-hidden border border-gray-50 flex items-center p-4 gap-4 cursor-pointer active:scale-[0.98] transition-all"
                 onClick={() => navigate('/instant-lottery')}
               >
                 <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-primary/10 flex items-center justify-center">
@@ -446,7 +446,7 @@ const Home = () => {
             {trending.filter(item => item.link !== '/instant-lottery').map((item) => (
               <div
                 key={item.id}
-                className="bg-white rounded-3xl overflow-hidden border border-gray-50 flex items-center p-4 gap-4 cursor-pointer active:scale-[0.98] transition-all"
+                className="bg-white rounded-xl overflow-hidden border border-gray-50 flex items-center p-4 gap-4 cursor-pointer active:scale-[0.98] transition-all"
                 onClick={() => navigate(item.link || '/lottery-list')}
               >
                 <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-primary/10 flex items-center justify-center">
@@ -487,7 +487,7 @@ const Home = () => {
               <span className="material-icons text-[14px]">chevron_right</span>
             </Link>
           </div>
-          <div ref={promoSliderRef} className="rounded-3xl overflow-hidden flex no-scrollbar snap-x snap-mandatory overflow-x-auto" id="promo-slider">
+          <div ref={promoSliderRef} className="rounded-xl overflow-hidden flex no-scrollbar snap-x snap-mandatory overflow-x-auto" id="promo-slider">
             {promotions.length > 0 ? promotions.map((promo) => (
               <div key={promo.id} className="min-w-full relative snap-center flex-shrink-0 cursor-pointer" onClick={() => setSelectedPromo(promo)}>
                 {promo.image_url ? (
@@ -586,7 +586,7 @@ const Home = () => {
 
         {/* Lucky Wheel Banner */}
         <section>
-          <div className="relative rounded-3xl overflow-hidden h-44 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate('/lucky-wheel')}>
+          <div className="relative rounded-xl overflow-hidden h-44 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate('/lucky-wheel')}>
             <img alt="Lucky Wheel" className="absolute inset-0 w-full h-full object-cover" src={luckyWheelBanner || 'https://placehold.co/800x400/1a7e2a/white?text=Lucky+Wheel'} />
             <div className="absolute inset-0 bg-black/10"></div>
             <div className="absolute bottom-4 right-6">
@@ -611,7 +611,7 @@ const Home = () => {
             </Link>
           </div>
           {articles.length > 0 ? articles.map((article) => (
-            <div key={article.id} onClick={() => navigate(`/articles/${article.id}`)} className="bg-white rounded-3xl overflow-hidden border border-gray-50 group mb-4 cursor-pointer active:scale-[0.98] transition-all">
+            <div key={article.id} onClick={() => navigate(`/articles/${article.id}`)} className="bg-white rounded-xl overflow-hidden border border-gray-50 group mb-4 cursor-pointer active:scale-[0.98] transition-all">
               <div className="h-44 relative">
                 <img alt={article.title} className="w-full h-full object-cover" src={article.image_url || 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&auto=format&fit=crop'} />
                 <div className="absolute top-4 left-4">
@@ -627,7 +627,7 @@ const Home = () => {
               </div>
             </div>
           )) : (
-            <div className="bg-white rounded-3xl overflow-hidden border border-gray-50 group">
+            <div className="bg-white rounded-xl overflow-hidden border border-gray-50 group">
               <div className="h-44 relative">
                 <img alt="News" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcxihAZw-dkDidV--5la9GBHlrPK0Pc3wOHcbDeloFUkGCMVE7i-1DDPJfrPGq52WodowfWE4uUikQGLoT5GdcUVJs4xGeP-yy4j7knWToBPN0iRE0vRDXKOtQZYQFEnG12ZJPVluLDBVZgSmJSIr0hRGkKTEjeJb5DNMR9ULeg2x0UaEZcjuAtGVCoOhKACACS9XNfl9RhqV9iJICPX9Xrt3S5MgcpDiHUqtTCo9MkinUYkX43Q-iEzF7yHHc0NEeM1FpJCv2ZA" />
                 <div className="absolute top-4 left-4">
