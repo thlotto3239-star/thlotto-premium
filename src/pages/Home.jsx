@@ -35,6 +35,8 @@ const Home = () => {
   const [_currentBanner, setCurrentBanner] = useState(0);
   const [selectedPromo, setSelectedPromo] = useState(null);
   const [_currentPromo, setCurrentPromo] = useState(0);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupData, setPopupData] = useState(null);
   const promoSliderRef = useRef(null);
   const bannerSliderRef = useRef(null);
 
@@ -90,6 +92,25 @@ const Home = () => {
           .eq('key', 'lucky_wheel_banner_url')
           .single();
         if (wheelData?.value) setLuckyWheelBanner(wheelData.value);
+
+        // 10. Fetch Popup โฆษณา
+        const { data: popupSettings } = await supabase
+          .from('settings')
+          .select('key, value')
+          .in('key', ['popup_enabled', 'popup_title', 'popup_description', 'popup_image_url']);
+        const popupMap = {};
+        (popupSettings || []).forEach(s => { popupMap[s.key] = s.value; });
+        if (popupMap.popup_enabled?.toUpperCase() === 'TRUE' && (popupMap.popup_title || popupMap.popup_image_url)) {
+          const dismissed = localStorage.getItem('popup_dismissed');
+          if (!dismissed) {
+            setPopupData({
+              title: popupMap.popup_title || '',
+              description: popupMap.popup_description || '',
+              image_url: popupMap.popup_image_url || '',
+            });
+            setShowPopup(true);
+          }
+        }
 
         // 9. หวย 1 นาที — config การแสดงผล (ตาม toggle ที่แอดมินตั้ง)
         const { data: instSettings } = await supabase
@@ -664,6 +685,38 @@ const Home = () => {
       )}
 
       <BottomNav />
+
+      {/* ════════════ Popup โฆษณา ════════════ */}
+      {showPopup && popupData && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 px-6" style={{ backdropFilter: 'blur(4px)' }}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-in fade-in zoom-in-95">
+            {popupData.image_url && (
+              <img src={popupData.image_url} alt="โฆษณา" className="w-full aspect-square object-cover"/>
+            )}
+            <div className="p-5 space-y-2">
+              {popupData.title && <h3 className="font-bold text-slate-800 text-base truncate">{popupData.title}</h3>}
+              {popupData.description && <p className="text-slate-500 text-sm line-clamp-3">{popupData.description}</p>}
+              <div className="flex gap-2 pt-3">
+                <button
+                  onClick={() => setShowPopup(false)}
+                  className="flex-1 py-2.5 bg-primary text-white text-sm font-bold rounded-xl active:scale-95 transition"
+                >
+                  ปิด
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.setItem('popup_dismissed', '1');
+                    setShowPopup(false);
+                  }}
+                  className="flex-1 py-2.5 bg-slate-100 text-slate-500 text-sm font-bold rounded-xl active:scale-95 transition"
+                >
+                  ไม่แสดงอีก
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
