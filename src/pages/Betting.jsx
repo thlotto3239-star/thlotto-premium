@@ -5,12 +5,17 @@ import { useAuth } from '../AuthContext';
 import { useModal } from '../contexts/ModalContext';
 
 const DEFAULT_RATES = {
-  '4TOP': 6000, '3TOP': 900, '3TODE': 150, '3FRONT': 450,
+  '6DIGIT': 2000000, '4TOP': 6000, '3TOP': 900, '3TODE': 150, '3FRONT': 450,
   '3BOTTOM': 450, '2TOP': 95, '2BOTTOM': 95, 'RUN_UP': 3.2, 'RUN_DOWN': 4.2
 };
 
+// ตามมาตรฐานหวยออนไลน์ไทย:
+// - หวยรัฐบาล: 6DIGIT, 3TOP, 3TODE, 3FRONT, 3BOTTOM, 2TOP, 2BOTTOM, RUN_UP, RUN_DOWN
+// - หวยลาว/ฮานอย/มาเลย์ (4 หลัก): 4TOP, 3TOP, 3TODE, 2TOP, 2BOTTOM, RUN_UP, RUN_DOWN
+// - หวยหุ้น (3 หลัก): 3TOP, 3TODE, 2TOP, 2BOTTOM, RUN_UP, RUN_DOWN
 const BASE_CATEGORIES = [
-  { name: '4 ตัวบน', code: '4TOP', limit: 4, span: 'full' },
+  { name: '6 ตัวตรง', code: '6DIGIT', limit: 6, span: 'full' },
+  { name: '4 ตัวตรง', code: '4TOP', limit: 4, span: 'full' },
   { name: '3 ตัวบน', code: '3TOP', limit: 3, span: 'half', active: true },
   { name: '3 ตัวโต๊ด', code: '3TODE', limit: 3, span: 'half' },
   { name: '3 ตัวหน้า', code: '3FRONT', limit: 3, span: 'half' },
@@ -372,121 +377,62 @@ const Betting = () => {
         <main className="flex-1 px-4 flex flex-col gap-5 pb-[240px]">
 
           {/* Category Selection */}
-          <div className="space-y-4">
-            <h2 className="text-sm font-black text-slate-800 pl-1 border-l-4 border-primary ml-1">เลือกประเภทการแทง</h2>
-            <div className="flex flex-col gap-3">
+          {(() => {
+            // Helper: render row ของปุ่ม — ข้ามที่ไม่มีใน categories ของ market นี้
+            const renderRow = (codes, opts = {}) => {
+              const available = codes.map(c => categories.find(cat => cat.code === c)).filter(Boolean);
+              if (available.length === 0) return null;
+              const cols = opts.fullWidth ? 1 : Math.min(available.length, 2);
+              const colsClass = cols === 1 ? 'grid-cols-1' : 'grid-cols-2';
+              return (
+                <div className={`grid ${colsClass} gap-2`}>
+                  {available.map(cat => {
+                    const isActive = currentCategory === cat.code;
+                    const dashed = opts.dashed;
+                    const fullW = opts.fullWidth;
+                    return (
+                      <button
+                        key={cat.code}
+                        onClick={() => handleCategoryChange(cat)}
+                        className={`flex flex-col items-center justify-center ${fullW ? 'p-3.5' : 'p-3'} rounded-2xl transition-all active:scale-95 ${
+                          isActive
+                            ? 'text-white ring-1 ring-primary/30'
+                            : dashed
+                              ? 'bg-white border-2 border-dashed border-slate-200 text-slate-600'
+                              : 'bg-white border border-slate-100 text-slate-700'
+                        }`}
+                        style={isActive ? { background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' } : {}}
+                      >
+                        <span className={`${fullW ? 'text-sm' : 'text-xs'} font-black ${dashed ? 'uppercase tracking-wide' : ''}`}>{cat.name}</span>
+                        <span className={`${fullW ? 'text-[10px]' : 'text-[9px]'} font-medium ${isActive ? 'text-white/70' : 'text-slate-400'}`}>
+                          บาทละ {cat.rate?.toLocaleString()}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            };
 
-              {/* 4 ตัวบน — full width */}
-              <div className="grid grid-cols-1">
-                <button
-                  onClick={() => handleCategoryChange(categories.find(c => c.code === '4TOP'))}
-                  className={`flex flex-col items-center justify-center p-3.5 rounded-2xl transition-all active:scale-95 ${
-                    currentCategory === '4TOP'
-                      ? 'text-white ring-1 ring-primary/30'
-                      : 'bg-white border border-slate-100 text-slate-700'
-                  }`}
-                  style={currentCategory === '4TOP' ? { background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' } : {}}
-                >
-                  <span className="text-sm font-black">4 ตัวบน</span>
-                  <span className={`text-[10px] font-medium ${currentCategory === '4TOP' ? 'text-white/70' : 'text-slate-400'}`}>
-                    บาทละ {categories.find(c => c.code === '4TOP')?.rate?.toLocaleString()}
-                  </span>
-                </button>
+            return (
+              <div className="space-y-4">
+                <h2 className="text-sm font-black text-slate-800 pl-1 border-l-4 border-primary ml-1">เลือกประเภทการแทง</h2>
+                <div className="flex flex-col gap-3">
+                  {/* แถวบนสุด: 6 ตัวตรง หรือ 4 ตัวตรง (รัฐบาล / ลาว-ฮานอย-มาเลย์) */}
+                  {renderRow(['6DIGIT'], { fullWidth: true })}
+                  {renderRow(['4TOP'], { fullWidth: true })}
+                  {/* 3 บน / 3 โต๊ด */}
+                  {renderRow(['3TOP', '3TODE'])}
+                  {/* 3 หน้า / 3 ล่าง (เฉพาะรัฐบาล + ลาว) */}
+                  {renderRow(['3FRONT', '3BOTTOM'])}
+                  {/* 2 บน / 2 ล่าง */}
+                  {renderRow(['2TOP', '2BOTTOM'])}
+                  {/* วิ่งบน / วิ่งล่าง */}
+                  {renderRow(['RUN_UP', 'RUN_DOWN'], { dashed: true })}
+                </div>
               </div>
-
-              {/* 3 top / 3 tode */}
-              <div className="grid grid-cols-2 gap-2">
-                {['3TOP', '3TODE'].map(code => {
-                  const cat = categories.find(c => c.code === code);
-                  const isActive = currentCategory === code;
-                  return (
-                    <button
-                      key={code}
-                      onClick={() => handleCategoryChange(cat)}
-                      className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all active:scale-95 ${
-                        isActive
-                          ? 'text-white ring-1 ring-primary/30'
-                          : 'bg-white border border-slate-100 text-slate-700'
-                      }`}
-                      style={isActive ? { background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' } : {}}
-                    >
-                      <span className="text-xs font-black">{cat?.name}</span>
-                      <span className={`text-[9px] font-medium ${isActive ? 'text-white/70' : 'text-slate-400'}`}>บาทละ {cat?.rate?.toLocaleString()}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* 3 front / 3 bottom */}
-              <div className="grid grid-cols-2 gap-2">
-                {['3FRONT', '3BOTTOM'].map(code => {
-                  const cat = categories.find(c => c.code === code);
-                  const isActive = currentCategory === code;
-                  return (
-                    <button
-                      key={code}
-                      onClick={() => handleCategoryChange(cat)}
-                      className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all active:scale-95 ${
-                        isActive
-                          ? 'text-white ring-1 ring-primary/30'
-                          : 'bg-white border border-slate-100 text-slate-700'
-                      }`}
-                      style={isActive ? { background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' } : {}}
-                    >
-                      <span className="text-xs font-black">{cat?.name}</span>
-                      <span className={`text-[9px] font-medium ${isActive ? 'text-white/70' : 'text-slate-400'}`}>บาทละ {cat?.rate?.toLocaleString()}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* 2 top / 2 bottom */}
-              <div className="grid grid-cols-2 gap-2">
-                {['2TOP', '2BOTTOM'].map(code => {
-                  const cat = categories.find(c => c.code === code);
-                  const isActive = currentCategory === code;
-                  return (
-                    <button
-                      key={code}
-                      onClick={() => handleCategoryChange(cat)}
-                      className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all active:scale-95 ${
-                        isActive
-                          ? 'text-white ring-1 ring-primary/30'
-                          : 'bg-white border border-slate-100 text-slate-700'
-                      }`}
-                      style={isActive ? { background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' } : {}}
-                    >
-                      <span className="text-xs font-black">{cat?.name}</span>
-                      <span className={`text-[9px] font-medium ${isActive ? 'text-white/70' : 'text-slate-400'}`}>บาทละ {cat?.rate?.toLocaleString()}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* วิ่งบน / วิ่งล่าง — dashed */}
-              <div className="grid grid-cols-2 gap-2">
-                {['RUN_UP', 'RUN_DOWN'].map(code => {
-                  const cat = categories.find(c => c.code === code);
-                  const isActive = currentCategory === code;
-                  return (
-                    <button
-                      key={code}
-                      onClick={() => handleCategoryChange(cat)}
-                      className={`flex flex-col items-center justify-center p-3 rounded-2xl transition-all active:scale-95 ${
-                        isActive
-                          ? 'text-white ring-1 ring-primary/30'
-                          : 'bg-white border-2 border-dashed border-slate-200 text-slate-600'
-                      }`}
-                      style={isActive ? { background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' } : {}}
-                    >
-                      <span className="text-xs font-black uppercase tracking-wide">{cat?.name}</span>
-                      <span className={`text-[9px] font-medium ${isActive ? 'text-white/70' : 'text-slate-400'}`}>บาทละ {cat?.rate?.toLocaleString()}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* Number Display */}
           <div
