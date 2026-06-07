@@ -274,11 +274,19 @@ export default function InstantLottery() {
     if (!pendingBet) return;
     setSubmitting(true);
     try {
+      // pin bets: amount = ราคาต่อตัว × จำนวนตัวที่เลือก
+      const isPinBet = pendingBet.type.startsWith('pin_');
+      let totalAmount = amt;
+      if (isPinBet) {
+        const numObj = JSON.parse(pendingBet.numbers);
+        const picks = (numObj.hundreds?.length || 0) + (numObj.tens?.length || 0) + (numObj.units?.length || 0);
+        totalAmount = amt * picks;
+      }
       const { data, error } = await supabase.rpc('fn_place_instant_bet', {
         p_draw_id: drawId,
         p_bet_type: pendingBet.type,
         p_numbers: pendingBet.numbers,
-        p_amount: amt,
+        p_amount: totalAmount,
       });
       if (error) throw error;
       if (data?.ok) {
@@ -536,6 +544,18 @@ export default function InstantLottery() {
               <div className="text-[#D4AF37] font-mono text-sm font-bold mt-1 break-all">
                 [{BET_NAME_BY_CODE[pendingBet?.type] || ''}] {pendingBet?.display}
               </div>
+              {pendingBet?.type?.startsWith('pin_') && (() => {
+                const numObj = JSON.parse(pendingBet.numbers || '{}');
+                const picks = (numObj.hundreds?.length || 0) + (numObj.tens?.length || 0) + (numObj.units?.length || 0);
+                const perPick = parseFloat(amountInput) || 0;
+                const total = perPick * picks;
+                return picks > 0 ? (
+                  <div className="mt-2 text-xs text-gray-400">
+                    <span className="text-white">{picks} ตัว</span>
+                    {perPick > 0 && <span className="text-[#D4AF37] ml-1">× {perPick} = <span className="text-green-400 font-bold">฿{total} รวม</span></span>}
+                  </div>
+                ) : null;
+              })()}
             </div>
             <div className="relative mb-4">
               <input
@@ -544,7 +564,7 @@ export default function InstantLottery() {
                 value={amountInput}
                 onChange={(e) => setAmountInput(e.target.value.replace(/[^\d]/g, ''))}
                 className="w-full bg-black border border-green-600 rounded-lg py-3 text-center text-3xl text-white font-bold outline-none focus:border-[#D4AF37]"
-                placeholder="ระบุเงิน (บาท)"
+                placeholder={pendingBet?.type?.startsWith('pin_') ? 'ราคาต่อตัว (บาท)' : 'ระบุเงิน (บาท)'}
                 autoFocus
               />
               <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 text-xs">THB</div>
