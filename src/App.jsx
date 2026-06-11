@@ -6,6 +6,7 @@ import { SettingsProvider } from './contexts/SettingsContext';
 import ProtectedRoute from './ProtectedRoute';
 import NotificationPopup from './components/NotificationPopup';
 import ErrorBoundary from './components/ErrorBoundary';
+import SiteGuard from './components/SiteGuard';
 
 // Lazy-loaded pages — โหลดเฉพาะหน้าที่ผู้ใช้เปิด
 const Home               = lazy(() => import('./pages/Home'));
@@ -57,6 +58,7 @@ function App() {
     <ErrorBoundary>
     <SettingsProvider>
     <AuthProvider>
+      <SiteGuard>
       <ModalProvider>
         <NotificationPopup />
         <Router>
@@ -103,6 +105,7 @@ function App() {
         </Suspense>
         </Router>
       </ModalProvider>
+      </SiteGuard>
     </AuthProvider>
     </SettingsProvider>
     </ErrorBoundary>

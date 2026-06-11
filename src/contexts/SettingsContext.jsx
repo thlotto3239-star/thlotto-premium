@@ -60,7 +60,8 @@ export function SettingsProvider({ children }) {
       // 2. Fetch from database for normal users
       const fetchSettings = async () => {
         const { data } = await supabase.from('settings').select('key,value').in('key', [
-          'site_name', 'site_logo_url', 'site_primary_color'
+          'site_name', 'site_logo_url', 'site_primary_color',
+          'site_enabled', 'maintenance_mode'
         ]);
         const map = {};
         data?.forEach(s => { map[s.key] = s.value });
