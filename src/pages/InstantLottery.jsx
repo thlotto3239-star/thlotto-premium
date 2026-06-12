@@ -799,14 +799,14 @@ function HistoryItem({ bet }) {
   }
   let statusNode;
   let bgClass;
-  if (bet.status === 'WON') {
+  if (bet.status === 'WIN') {
     statusNode = (
       <span className="text-green-400 font-bold text-xs">
         <span className="material-icons align-middle text-sm">check_circle</span> ถูกรางวัล (+{fmt(bet.winnings)})
       </span>
     );
     bgClass = 'border-green-800 bg-green-900/20';
-  } else if (bet.status === 'LOST') {
+  } else if (bet.status === 'LOSE') {
     statusNode = (
       <span className="text-red-400 text-xs">
         <span className="material-icons align-middle text-sm">cancel</span> ไม่ถูกรางวัล
