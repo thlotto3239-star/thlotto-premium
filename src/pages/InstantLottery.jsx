@@ -321,6 +321,21 @@ export default function InstantLottery() {
     }
   };
 
+  // Realtime: อัปเดตประวัติอัตโนมัติเมื่อ bet status เปลี่ยน (WIN/LOSE)
+  useEffect(() => {
+    if (!showHistory || !user?.id) return;
+    const channel = supabase
+      .channel('instant-bets-history')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'instant_bets', filter: `user_id=eq.${user.id}` }, (payload) => {
+        setHistoryData(prev => prev.map(b => b.id === payload.new.id ? { ...b, ...payload.new } : b));
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'instant_bets', filter: `user_id=eq.${user.id}` }, (payload) => {
+        setHistoryData(prev => [payload.new, ...prev]);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [showHistory, user?.id]);
+
 
   // ============================================================
   // RENDER
