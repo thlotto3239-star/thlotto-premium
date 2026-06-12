@@ -82,10 +82,14 @@ export default function InstantLottery() {
         const finishedDraw = prevDrawIdRef.current;
         resetBetUI();
         setShowMoneyModal(false);
-        // Wait 3s for server to generate result, then show popup
+        // Wait 3s for server to settle + generate result, then show popup + refresh history
         setTimeout(() => {
           setViewingDrawId(finishedDraw);
           fetchAndShowPopup(finishedDraw);
+          // Re-fetch history so WIN/LOSE status updates immediately
+          supabase.rpc('fn_get_instant_bets').then(({ data }) => {
+            if (data?.bets) setHistoryData(data.bets);
+          });
         }, 3000);
       }
       prevDrawIdRef.current = newDrawId;
@@ -321,9 +325,9 @@ export default function InstantLottery() {
     }
   };
 
-  // Realtime: อัปเดตประวัติอัตโนมัติเมื่อ bet status เปลี่ยน (WIN/LOSE)
+  // Realtime: อัปเดตประวัติอัตโนมัติเมื่อ bet status เปลี่ยน (WIN/LOSE) — ทำงานตลอดไม่ใช่แค่ตอนเปิด modal
   useEffect(() => {
-    if (!showHistory || !user?.id) return;
+    if (!user?.id) return;
     const channel = supabase
       .channel('instant-bets-history')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'instant_bets', filter: `user_id=eq.${user.id}` }, (payload) => {
@@ -334,7 +338,7 @@ export default function InstantLottery() {
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [showHistory, user?.id]);
+  }, [user?.id]);
 
 
   // ============================================================
