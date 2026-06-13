@@ -118,7 +118,7 @@ const UploadSlip = () => {
         <div className="flex items-center justify-between p-4 pt-6">
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-50 transition-colors"
+            className="flex items-center justify-center w-11 h-11 rounded-full hover:bg-slate-50 transition-colors"
           >
             <span className="material-symbols-outlined text-slate-900">arrow_back_ios_new</span>
           </button>
@@ -230,7 +230,7 @@ const UploadSlip = () => {
       {/* Footer Action */}
       <footer className="p-6 pb-10 flex flex-col gap-4 bg-white">
         <div className="text-center">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-300">EMERALD TREASURY PREMIUM SERVICE</p>
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-300">EMERALD TREASURY PREMIUM SERVICE</p>
         </div>
         <button
           onClick={handleSubmit}
@@ -252,7 +252,7 @@ const UploadSlip = () => {
         </button>
         <div className="flex justify-center items-center gap-1.5 opacity-60">
           <span className="material-symbols-outlined text-slate-400" style={{ fontSize: '14px' }}>verified_user</span>
-          <span className="text-[11px] text-slate-400">ธุรกรรมปลอดภัยและถูกเข้ารหัส</span>
+          <span className="text-xs text-slate-400">ธุรกรรมปลอดภัยและถูกเข้ารหัส</span>
         </div>
       </footer>
     </div>

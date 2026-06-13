@@ -191,7 +191,7 @@ export default function WheelAdmin() {
                 <span className="text-xs font-medium text-slate-500 tracking-wider uppercase">รวมเปอร์เซ็นต์</span>
                 <div className="text-right">
                   <span className={`text-xl font-bold ${probOk ? 'text-emerald-700' : 'text-amber-600'}`}>{totalProb.toFixed(2)}%</span>
-                  {!probOk && <p className="text-[10px] text-amber-500 mt-0.5">ควรรวมเท่ากับ 100%</p>}
+                  {!probOk && <p className="text-xs text-amber-500 mt-0.5">ควรรวมเท่ากับ 100%</p>}
                 </div>
               </div>
             </div>
@@ -204,14 +204,14 @@ export default function WheelAdmin() {
                 const pct = totalProb > 0 ? (prob / totalProb * 100) : 0;
                 return (
                   <div key={p.slot_index} className="flex items-center gap-3">
-                    <div className="w-16 text-[11px] font-semibold text-right text-slate-600 shrink-0 truncate">{current(p, 'name')}</div>
+                    <div className="w-16 text-xs font-semibold text-right text-slate-600 shrink-0 truncate">{current(p, 'name')}</div>
                     <div className="flex-1 bg-slate-100 rounded-full h-5 overflow-hidden">
                       <div className="h-full rounded-full flex items-center px-2 transition-all duration-300"
                         style={{ width: `${Math.max(pct, 3)}%`, background: current(p, 'color') }}>
-                        <span className="text-white text-[9px] font-black whitespace-nowrap">{prob.toFixed(1)}%</span>
+                        <span className="text-white text-xs font-black whitespace-nowrap">{prob.toFixed(1)}%</span>
                       </div>
                     </div>
-                    <div className="w-12 text-[10px] text-slate-400 shrink-0 text-right">฿{current(p, 'amount')}</div>
+                    <div className="w-12 text-xs text-slate-400 shrink-0 text-right">฿{current(p, 'amount')}</div>
                   </div>
                 );
               })}
@@ -241,25 +241,25 @@ export default function WheelAdmin() {
                       <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-r-full" style={{ background: current(slot, 'color') }} />
                       <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full ml-2">
                         <div>
-                          <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">ชื่อรางวัล</p>
+                          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">ชื่อรางวัล</p>
                           <p className="font-semibold text-sm text-slate-800 mt-0.5">{current(slot, 'name')}</p>
                         </div>
                         <div>
-                          <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">จำนวน / มูลค่า</p>
+                          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider">จำนวน / มูลค่า</p>
                           <p className="font-semibold text-sm text-slate-800 mt-0.5">฿ {Number(current(slot, 'amount')).toLocaleString()}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4 shrink-0">
                         <div className="text-right">
                           <p className="font-bold text-emerald-700">{prob.toFixed(2)}%</p>
-                          <p className="text-[9px] text-slate-400 uppercase tracking-wider">โอกาสชนะ</p>
+                          <p className="text-xs text-slate-400 uppercase tracking-wider">โอกาสชนะ</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <input type="color" className="w-7 h-7 rounded-full border-0 p-0 cursor-pointer"
                             value={current(slot, 'color')}
                             onClick={e => e.stopPropagation()}
                             onChange={e => setField(i, 'color', e.target.value)} />
-                          <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${current(slot, 'is_active') ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-400'}`}>
+                          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${current(slot, 'is_active') ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-400'}`}>
                             {current(slot, 'is_active') ? 'เปิด' : 'ปิด'}
                           </span>
                           <span className="material-symbols-outlined text-slate-400 text-lg transition-transform" style={{ transform: isActive ? 'rotate(180deg)' : '' }}>
@@ -274,24 +274,24 @@ export default function WheelAdmin() {
                       <div className="px-5 pb-5 pt-4 border-t border-slate-100 space-y-4 bg-white/50">
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1.5">ชื่อรางวัล</label>
+                            <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1.5">ชื่อรางวัล</label>
                             <input className="w-full bg-white border-none rounded-full px-4 py-2.5 text-sm text-slate-800 shadow-inner focus:ring-2 focus:ring-emerald-200"
                               value={current(slot, 'name')} onChange={e => setField(i, 'name', e.target.value)} />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1.5">จำนวนเงินที่จ่าย (฿)</label>
+                            <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1.5">จำนวนเงินที่จ่าย (฿)</label>
                             <input type="number" min="0" step="1"
                               className="w-full bg-white border-none rounded-full px-4 py-2.5 text-sm text-slate-800 shadow-inner focus:ring-2 focus:ring-emerald-200"
                               value={current(slot, 'amount')} onChange={e => setField(i, 'amount', e.target.value)} />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1.5">โอกาสชนะ (%)</label>
+                            <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1.5">โอกาสชนะ (%)</label>
                             <input type="number" min="0.1" max="99" step="0.5"
                               className="w-full bg-white border-none rounded-full px-4 py-2.5 text-sm text-slate-800 shadow-inner focus:ring-2 focus:ring-emerald-200"
                               value={current(slot, 'probability')} onChange={e => setField(i, 'probability', e.target.value)} />
                           </div>
                           <div>
-                            <label className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1.5">สถานะ</label>
+                            <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1.5">สถานะ</label>
                             <select className="w-full bg-white border-none rounded-full px-4 py-2.5 text-sm text-slate-800 shadow-inner focus:ring-2 focus:ring-emerald-200"
                               value={current(slot, 'is_active') ? 'true' : 'false'}
                               onChange={e => setField(i, 'is_active', e.target.value === 'true')}>
@@ -303,7 +303,7 @@ export default function WheelAdmin() {
 
                         {/* Color presets */}
                         <div>
-                          <label className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-2">สี Preset</label>
+                          <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">สี Preset</label>
                           <div className="flex flex-wrap gap-2">
                             {PRESET_COLORS.map(([c, h], pi) => (
                               <button key={pi} onClick={() => { setField(i, 'color', c); setField(i, 'hi_color', h); }}
@@ -334,7 +334,7 @@ export default function WheelAdmin() {
         {/* Spin Settings */}
         <div className="bg-white rounded-3xl p-6 shadow-[0_20px_50px_rgba(6,78,59,0.05)] border border-white/50">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-50 flex items-center justify-center">
               <span className="material-symbols-outlined text-emerald-700">settings</span>
             </div>
             <div>
@@ -354,7 +354,7 @@ export default function WheelAdmin() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-700">{label}</p>
-                  <p className="text-[10px] text-slate-400">{desc}</p>
+                  <p className="text-xs text-slate-400">{desc}</p>
                 </div>
                 <div className="flex gap-2 shrink-0">
                   <input type="number" min="0"
@@ -374,7 +374,7 @@ export default function WheelAdmin() {
         {/* Banner Image Management */}
         <div className="bg-white rounded-3xl p-6 shadow-[0_20px_50px_rgba(6,78,59,0.05)] border border-white/50">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-50 flex items-center justify-center">
               <span className="material-symbols-outlined text-emerald-700">image</span>
             </div>
             <div>
@@ -390,7 +390,7 @@ export default function WheelAdmin() {
                 <img src={bannerUrl} alt="Lucky Wheel Banner" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                 <div className="absolute bottom-3 right-3">
-                  <span className="bg-white/90 backdrop-blur-sm text-emerald-700 text-[10px] font-bold px-3 py-1.5 rounded-full shadow-sm">
+                  <span className="bg-white/90 backdrop-blur-sm text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
                     ภาพปัจจุบัน
                   </span>
                 </div>
@@ -405,7 +405,7 @@ export default function WheelAdmin() {
 
           {/* URL Input */}
           <div className="mb-4">
-            <label className="block text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1.5">URL ภาพปก</label>
+            <label className="block text-xs font-medium text-slate-400 uppercase tracking-wider mb-1.5">URL ภาพปก</label>
             <div className="flex gap-2">
               <input type="text"
                 className="flex-1 bg-slate-50 border-none rounded-full px-4 py-2.5 text-sm shadow-inner focus:ring-2 focus:ring-emerald-200"
@@ -413,7 +413,7 @@ export default function WheelAdmin() {
                 value={bannerUrl}
                 onChange={e => setBannerUrl(e.target.value)} />
               <button onClick={saveBannerUrl}
-                className="w-10 h-10 bg-emerald-900 text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-md shrink-0">
+                className="w-11 h-11 bg-emerald-900 text-white rounded-full flex items-center justify-center hover:scale-105 active:scale-95 transition-transform shadow-md shrink-0">
                 <span className="material-symbols-outlined text-[16px]">save</span>
               </button>
             </div>
@@ -432,7 +432,7 @@ export default function WheelAdmin() {
                 <span className="material-symbols-outlined text-slate-400 text-2xl">cloud_upload</span>
                 <div className="text-center">
                   <p className="text-sm text-slate-600 font-medium">คลิกเพื่ออัพโหลดภาพใหม่</p>
-                  <p className="text-[10px] text-slate-400 mt-0.5">JPG, PNG, WebP — สูงสุด 5MB — แนะนำ 800x400 px</p>
+                  <p className="text-xs text-slate-400 mt-0.5">JPG, PNG, WebP — สูงสุด 5MB — แนะนำ 800x400 px</p>
                 </div>
               </>
             )}

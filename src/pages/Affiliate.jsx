@@ -99,13 +99,13 @@ const Affiliate = () => {
     <div className="bg-white min-h-screen text-slate-900 pb-32">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-6 h-16 flex items-center justify-between">
-        <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-700">
+        <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-50 text-slate-700">
           <span className="material-symbols-outlined text-[20px]">arrow_back_ios_new</span>
         </button>
         <h1 className="text-lg font-extrabold text-slate-900 tracking-tight">ระบบแนะนำเพื่อน</h1>
         <button
           onClick={() => showInfo('วิธีการใช้งาน', 'รับคอมมิชชั่น 8% จากทุกยอดเดิมพันของเพื่อนที่คุณแนะนำ\n\nสะสมได้ไม่จำกัด แล้วกด "โอนรายได้เข้ากระเป๋า" เพื่อรับเงิน')}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-700"
+          className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-50 text-slate-700"
         >
           <span className="material-symbols-outlined text-[20px]">info</span>
         </button>
@@ -120,9 +120,9 @@ const Affiliate = () => {
               <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center">
                 <span className="material-symbols-outlined text-emerald-300 text-base" style={{ fontVariationSettings: "'FILL' 1" }}>group</span>
               </div>
-              <span className="text-white/60 text-[10px] font-bold uppercase tracking-[0.2em]">Affiliate Dashboard</span>
+              <span className="text-white/60 text-xs font-bold uppercase tracking-[0.2em]">Affiliate Dashboard</span>
             </div>
-            <p className="text-white/50 text-[10px] font-bold uppercase tracking-widest mb-1">รายได้สะสมทั้งหมด</p>
+            <p className="text-white/50 text-xs font-bold uppercase tracking-widest mb-1">รายได้สะสมทั้งหมด</p>
             <p className="text-4xl font-extrabold text-white mb-1">
               ฿{(profile?.commission_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </p>
@@ -147,12 +147,12 @@ const Affiliate = () => {
         {/* Referral Link */}
         <div className="bg-white rounded-[2rem] p-6 border border-slate-100 mb-6" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.04)' }}>
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-2xl bg-primary/5 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-2xl bg-primary/5 flex items-center justify-center">
               <span className="material-symbols-outlined text-primary text-xl">link</span>
             </div>
             <div>
               <h3 className="font-extrabold text-slate-900 text-sm">ลิงก์แนะนำของคุณ</h3>
-              <p className="text-[10px] text-slate-400 font-medium">แชร์เพื่อรับรายได้ตลอดชีพ</p>
+              <p className="text-xs text-slate-400 font-medium">แชร์เพื่อรับรายได้ตลอดชีพ</p>
             </div>
           </div>
           <div className="flex items-center gap-2 bg-slate-50 p-2 pl-4 rounded-2xl border border-slate-100">
@@ -168,11 +168,11 @@ const Affiliate = () => {
           </div>
           <div className="flex items-center gap-3 mt-4">
             <div className="flex-1 bg-slate-50 rounded-xl p-3 border border-slate-100 text-center">
-              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">เพื่อนทั้งหมด</p>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">เพื่อนทั้งหมด</p>
               <p className="text-lg font-extrabold text-slate-900">{referrals.length} <span className="text-xs text-slate-400 font-medium">คน</span></p>
             </div>
             <div className="flex-1 bg-primary/5 rounded-xl p-3 border border-primary/10 text-center">
-              <p className="text-[9px] text-primary font-bold uppercase tracking-widest">รหัสของคุณ</p>
+              <p className="text-xs text-primary font-bold uppercase tracking-widest">รหัสของคุณ</p>
               <p className="text-lg font-extrabold text-primary">{profile?.member_id || '------'}</p>
             </div>
           </div>
@@ -182,7 +182,7 @@ const Affiliate = () => {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-extrabold text-slate-900">กิจกรรมล่าสุด</h3>
-            <span className="text-[10px] font-bold text-primary uppercase tracking-widest bg-primary/5 px-3 py-1 rounded-full">
+            <span className="text-xs font-bold text-primary uppercase tracking-widest bg-primary/5 px-3 py-1 rounded-full">
               {referrals.length} Friends
             </span>
           </div>

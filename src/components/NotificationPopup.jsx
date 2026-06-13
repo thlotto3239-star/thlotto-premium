@@ -173,7 +173,7 @@ function SinglePopup({ notif, onDismiss }) {
               style={{ width: `${progress}%`, transitionDuration: '50ms' }}
             />
           </div>
-          <p className="text-center text-[10px] text-slate-400 mt-1">ปิดอัตโนมัติใน {Math.ceil((progress / 100) * (AUTO_DISMISS_MS / 1000))} วินาที</p>
+          <p className="text-center text-xs text-slate-400 mt-1">ปิดอัตโนมัติใน {Math.ceil((progress / 100) * (AUTO_DISMISS_MS / 1000))} วินาที</p>
         </div>
       </div>
     </div>

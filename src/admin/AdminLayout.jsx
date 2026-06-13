@@ -58,7 +58,7 @@ export default function AdminLayout() {
         <nav className="flex-1 overflow-y-auto py-3 text-sm">
           {NAV.map(group => (
             <div key={group.section} className="mb-3">
-              <div className="px-4 py-1 text-[11px] uppercase tracking-wider text-slate-500">{group.section}</div>
+              <div className="px-4 py-1 text-xs uppercase tracking-wider text-slate-500">{group.section}</div>
               {group.items.map(it => {
                 const Icon = it.icon;
                 return (

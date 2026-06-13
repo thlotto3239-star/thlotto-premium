@@ -46,7 +46,7 @@ const WithdrawalConfirm = () => {
            </h1>
            <div className="flex items-center justify-center gap-2 mb-6 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
               <ShieldCheck size={18} className="text-primary" />
-              <p className="text-primary font-black text-[11px] uppercase tracking-[0.3em]">Processing Secure Transaction</p>
+              <p className="text-primary font-black text-xs uppercase tracking-[0.3em]">Processing Secure Transaction</p>
            </div>
            <p className="text-gray-400 text-sm font-medium leading-relaxed max-w-[300px] mx-auto animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
              ระบบกำลังดำเนินการตรวจสอบข้อมูล <br /> 
@@ -57,17 +57,17 @@ const WithdrawalConfirm = () => {
         {/* Detail Grid */}
         <div className="grid grid-cols-2 gap-4 mb-12 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] p-6 border border-white/50 shadow-sm text-left">
-              <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center text-primary mb-4">
+              <div className="w-11 h-11 rounded-xl bg-primary/5 flex items-center justify-center text-primary mb-4">
                  <Wallet size={20} />
               </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">ยอดเงินที่ถอน</p>
+              <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">ยอดเงินที่ถอน</p>
               <p className="text-xl font-display font-black text-gray-900">฿{Number(withdrawalAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
            </div>
            <div className="bg-white/70 backdrop-blur-xl rounded-[2rem] p-6 border border-white/50 shadow-sm text-left">
-              <div className="w-10 h-10 rounded-xl bg-accent-gold/5 flex items-center justify-center text-accent-gold mb-4">
+              <div className="w-11 h-11 rounded-xl bg-accent-gold/5 flex items-center justify-center text-accent-gold mb-4">
                  <Building2 size={20} />
               </div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">บัญชีรับเงิน</p>
+              <p className="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">บัญชีรับเงิน</p>
               <p className="text-lg font-display font-black text-gray-900 truncate">{bankName}</p>
            </div>
         </div>
@@ -94,7 +94,7 @@ const WithdrawalConfirm = () => {
 
       {/* Footer Branding */}
       <footer className="absolute bottom-12 text-center opacity-30">
-         <p className="text-[10px] font-black uppercase tracking-[0.5em] text-gray-400 mb-2">Powered by TH-LOTTO Infinity</p>
+         <p className="text-xs font-black uppercase tracking-[0.5em] text-gray-400 mb-2">Powered by TH-LOTTO Infinity</p>
          <div className="flex justify-center gap-4">
             <div className="w-1 h-1 bg-primary rounded-full"></div>
             <div className="w-1 h-1 bg-primary rounded-full"></div>

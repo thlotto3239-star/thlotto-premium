@@ -6,7 +6,7 @@ const fmt = (n) => Number(n || 0).toLocaleString('th-TH', { maximumFractionDigit
 
 const StatCard = ({ icon: Icon, label, value, suffix, color = 'emerald' }) => (
   <div className="bg-white rounded-xl border p-4 flex items-center gap-3 shadow-sm">
-    <div className={`w-10 h-10 rounded-lg bg-${color}-50 text-${color}-600 flex items-center justify-center`}>
+    <div className={`w-11 h-11 rounded-lg bg-${color}-50 text-${color}-600 flex items-center justify-center`}>
       <Icon size={20}/>
     </div>
     <div className="min-w-0">

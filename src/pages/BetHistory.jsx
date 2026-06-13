@@ -119,13 +119,13 @@ const BetHistory = () => {
     <div className="bg-slate-50 min-h-screen text-slate-900 flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 px-6 h-16 flex items-center justify-between">
-        <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 transition-colors">
+        <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-slate-50 transition-colors">
           <span className="material-symbols-outlined text-slate-600 text-[20px]">arrow_back_ios_new</span>
         </button>
         <h1 className="text-lg font-extrabold text-slate-900 tracking-tight">ประวัติโพย</h1>
         <button
           onClick={() => dateInputRef.current?.click()}
-          className={`w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 transition-colors ${filterDate ? 'text-primary' : ''}`}
+          className={`w-11 h-11 flex items-center justify-center rounded-full hover:bg-slate-50 transition-colors ${filterDate ? 'text-primary' : ''}`}
         >
           <span className={`material-symbols-outlined text-[20px] ${filterDate ? 'text-primary' : 'text-slate-600'}`}>calendar_today</span>
         </button>
@@ -219,14 +219,14 @@ const BetHistory = () => {
                       )}
                     </div>
                     <div>
-                      <p className="font-extrabold text-slate-900 text-sm leading-tight">{bet.market?.name || 'หวย'}</p>
+                      <p className="font-extrabold text-slate-900 text-sm leading-tight truncate">{bet.market?.name || 'หวย'}</p>
                       <p className="text-xs text-slate-400 mt-0.5">
                         {new Date(bet.created_at).toLocaleDateString('th-TH-u-ca-buddhist', { day: '2-digit', month: 'short', year: '2-digit' })}{' • '}
                         {new Date(bet.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
                       </p>
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1 ${getBadgeStyle(bet.status)}`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider flex items-center gap-1 ${getBadgeStyle(bet.status)}`}>
                     {bet.status === 'WON' && <span className="material-symbols-outlined text-[12px]" style={{ fontVariationSettings: "'FILL' 1" }}>emoji_events</span>}
                     {getStatusText(bet.status)}
                   </span>
@@ -238,24 +238,24 @@ const BetHistory = () => {
                 {/* Card Bottom */}
                 <div className="flex justify-between items-end">
                   <div className="space-y-0.5">
-                    <p className="text-[10px] text-slate-400 uppercase font-bold">เลข • {BET_TYPE_LABEL[bet.bet_type] || bet.bet_type}</p>
+                    <p className="text-xs text-slate-400 uppercase font-bold">เลข • {BET_TYPE_LABEL[bet.bet_type] || bet.bet_type}</p>
                     <p className="text-lg font-extrabold text-slate-900 tracking-widest">{bet.numbers}</p>
-                    <p className="text-[10px] text-slate-400 font-medium">ยอดแทง ฿{Number(bet.amount).toLocaleString()}</p>
+                    <p className="text-xs text-slate-400 font-medium">ยอดแทง ฿{Number(bet.amount).toLocaleString()}</p>
                   </div>
                   <div className="text-right space-y-0.5">
                     {bet.status === 'WON' ? (
                       <>
-                        <p className="text-[10px] text-primary uppercase font-extrabold tracking-tighter">เงินรางวัลรวม</p>
+                        <p className="text-xs text-primary uppercase font-extrabold tracking-tighter">เงินรางวัลรวม</p>
                         <p className="text-xl font-extrabold text-primary">฿{Number(bet.payout_amount || 0).toLocaleString()}</p>
                       </>
                     ) : bet.status === 'PENDING' ? (
                       <>
-                        <p className="text-[10px] text-slate-400 uppercase font-bold">รางวัลสูงสุดที่อาจได้</p>
+                        <p className="text-xs text-slate-400 uppercase font-bold">รางวัลสูงสุดที่อาจได้</p>
                         <p className="text-lg font-extrabold text-slate-400">฿{(Number(bet.amount || 0) * Number(bet.payout_rate || 0)).toLocaleString()}</p>
                       </>
                     ) : (
                       <>
-                        <p className="text-[10px] text-slate-400 uppercase font-bold">เงินรางวัล</p>
+                        <p className="text-xs text-slate-400 uppercase font-bold">เงินรางวัล</p>
                         <p className="text-lg font-extrabold text-slate-300">฿0.00</p>
                       </>
                     )}

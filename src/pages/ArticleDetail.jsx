@@ -81,7 +81,7 @@ const ArticleDetail = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
           <div className="absolute bottom-4 left-5 right-5">
-            <span className="bg-accent-red text-white text-[10px] font-bold px-3 py-1 rounded-full">
+            <span className="bg-accent-red text-white text-xs font-bold px-3 py-1 rounded-full">
               {article.category || 'ข่าวสาร'}
             </span>
             <h2 className="text-white font-extrabold text-xl mt-2 leading-tight">{article.title}</h2>
@@ -125,9 +125,9 @@ const ArticleDetail = () => {
                     className="w-20 h-20 object-cover shrink-0"
                   />
                   <div className="py-3 pr-3 flex flex-col justify-center">
-                    <span className="text-[10px] text-primary font-bold mb-1">{r.category}</span>
+                    <span className="text-xs text-primary font-bold mb-1">{r.category}</span>
                     <p className="text-sm font-bold line-clamp-2 text-slate-800">{r.title}</p>
-                    <p className="text-[10px] text-slate-400 mt-1">
+                    <p className="text-xs text-slate-400 mt-1">
                       {new Date(r.created_at).toLocaleDateString('th-TH-u-ca-buddhist', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </p>
                   </div>

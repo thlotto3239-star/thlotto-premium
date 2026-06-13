@@ -267,7 +267,7 @@ const EditProfile = () => {
           </div>
 
           <div className="text-center pb-8">
-            <p className="text-zinc-400 text-[10px] font-bold tracking-widest uppercase">TH-LOTTO Premium</p>
+            <p className="text-zinc-400 text-xs font-bold tracking-widest uppercase">TH-LOTTO Premium</p>
           </div>
         </section>
       </main>

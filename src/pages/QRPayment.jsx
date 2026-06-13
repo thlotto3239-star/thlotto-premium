@@ -72,7 +72,7 @@ const QRPayment = () => {
       <header className="flex items-center justify-between px-6 py-5 sticky top-0 bg-white z-50 border-b border-slate-50">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-50 hover:bg-slate-100 transition-colors"
+          className="flex items-center justify-center w-11 h-11 rounded-full bg-slate-50 hover:bg-slate-100 transition-colors"
         >
           <span className="material-symbols-outlined text-slate-700">arrow_back_ios_new</span>
         </button>
@@ -84,7 +84,7 @@ const QRPayment = () => {
         {/* Branding */}
         <div className="mt-6 mb-4 flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-50 border border-emerald-100">
           <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-          <span className="text-[11px] uppercase font-bold tracking-widest text-primary">TH-LOTTO Premium</span>
+          <span className="text-xs uppercase font-bold tracking-widest text-primary">TH-LOTTO Premium</span>
         </div>
 
         {/* Amount */}
@@ -129,7 +129,7 @@ const QRPayment = () => {
               />
             </svg>
             <div className="text-center z-10">
-              <p className="text-[9px] uppercase text-slate-400 font-bold tracking-widest">หมดเวลาใน</p>
+              <p className="text-xs uppercase text-slate-400 font-bold tracking-widest">หมดเวลาใน</p>
               <p className={`text-2xl font-bold ${secondsLeft <= 60 ? 'text-red-500' : 'text-slate-800'}`}>
                 {minutes}:{seconds}
               </p>
@@ -192,8 +192,8 @@ const QRPayment = () => {
               { id: 3, text: 'กด "แนบสลิป"\nเพื่อยืนยัน' },
             ].map((step) => (
               <div key={step.id} className="flex flex-col items-center text-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center font-bold text-sm border border-slate-100">{step.id}</div>
-                <p className="text-[11px] leading-relaxed text-slate-400 font-bold whitespace-pre-line">{step.text}</p>
+                <div className="w-11 h-11 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center font-bold text-sm border border-slate-100">{step.id}</div>
+                <p className="text-xs leading-relaxed text-slate-400 font-bold whitespace-pre-line">{step.text}</p>
               </div>
             ))}
           </div>

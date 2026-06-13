@@ -118,8 +118,8 @@ const Notifications = () => {
       </div>
       <div className="flex-1 min-w-0 pr-4">
         <div className="flex justify-between items-start">
-          <h3 className={`font-extrabold text-sm ${n.is_read ? 'text-slate-500' : 'text-slate-900'}`}>{n.title}</h3>
-          <span className="text-[10px] text-slate-400 whitespace-nowrap ml-2 font-medium">
+          <h3 className={`font-extrabold text-sm truncate ${n.is_read ? 'text-slate-500' : 'text-slate-900'}`}>{n.title}</h3>
+          <span className="text-xs text-slate-400 whitespace-nowrap ml-2 font-medium">
             {new Date(n.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
@@ -132,13 +132,13 @@ const Notifications = () => {
     <div className="bg-white min-h-screen text-slate-900 pb-32">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-6 h-16 flex items-center justify-between">
-        <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-700">
+        <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-50 text-slate-700">
           <span className="material-symbols-outlined text-[20px]">arrow_back_ios_new</span>
         </button>
         <h1 className="text-lg font-extrabold text-slate-900 tracking-tight">การแจ้งเตือน</h1>
         <button
           onClick={markAllAsRead}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-slate-700"
+          className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-50 text-slate-700"
         >
           <span className="material-symbols-outlined text-[20px]">done_all</span>
         </button>

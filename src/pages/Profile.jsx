@@ -70,11 +70,11 @@ const Profile = () => {
             </div>
             <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white px-4 py-1 rounded-full border border-gold-premium/30 flex items-center gap-1">
               <span className="material-symbols-outlined text-gold-premium text-sm fill-1" style={{ fontVariationSettings: "'FILL' 1" }}>stars</span>
-              <span className="text-[10px] font-extrabold text-gold-premium uppercase tracking-widest font-thai">{profile?.vip_level || 'MEMBER'}</span>
+              <span className="text-xs font-extrabold text-gold-premium uppercase tracking-widest font-thai">{profile?.vip_level || 'MEMBER'}</span>
             </div>
           </div>
           <div className="mt-6 text-center">
-            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight font-thai">{profile?.full_name || 'ผู้ใช้งานทั่วไป'}</h2>
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight font-thai truncate max-w-[260px] mx-auto">{profile?.full_name || 'ผู้ใช้งานทั่วไป'}</h2>
             <p className="text-slate-400 text-sm font-medium mt-1 uppercase tracking-tight font-thai">ID: {profile?.member_id || '------'} • สมาชิกตั้งแต่ {profile?.created_at ? new Date(profile.created_at).getFullYear() : '-'}</p>
           </div>
         </div>
@@ -119,11 +119,11 @@ const Profile = () => {
             </div>
             <div className="grid grid-cols-2 gap-8 mb-6">
               <div>
-                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest font-thai">เพื่อนทั้งหมด</p>
+                <p className="text-xs text-slate-400 uppercase font-bold tracking-widest font-thai">เพื่อนทั้งหมด</p>
                 <p className="text-xl font-extrabold text-slate-900 font-display">{stats.referralCount.toLocaleString()} <span className="text-sm font-semibold text-slate-400 font-thai">คน</span></p>
               </div>
               <div>
-                <p className="text-[10px] text-slate-400 uppercase font-bold tracking-widest font-thai">รายได้สะสม</p>
+                <p className="text-xs text-slate-400 uppercase font-bold tracking-widest font-thai">รายได้สะสม</p>
                 <p className="text-xl font-extrabold text-primary font-display">฿{stats.referralIncome.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
               </div>
             </div>
@@ -209,7 +209,7 @@ const Profile = () => {
             <span className="material-symbols-outlined text-[20px]">logout</span>
             ออกจากระบบ
           </button>
-          <p className="mt-4 text-center text-[10px] text-slate-300">v{__APP_VERSION__}</p>
+          <p className="mt-4 text-center text-xs text-slate-300">v{__APP_VERSION__}</p>
         </div>
         <BottomNav />
       </div>

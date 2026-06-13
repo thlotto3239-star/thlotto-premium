@@ -105,14 +105,14 @@ const BankAccount = () => {
                   </div>
                 )}
                 <div>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.2em] opacity-60">BANK</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-60">BANK</p>
                   <p className="font-bold text-sm leading-tight truncate max-w-[150px]">
                     {bankInfo?.name || bankCode || 'ไม่ระบุธนาคาร'}
                   </p>
                 </div>
               </div>
               <div className="flex flex-col items-end gap-1 mt-0.5">
-                <span className="text-[10px] font-extrabold tracking-[0.3em] uppercase opacity-40">DEBIT</span>
+                <span className="text-xs font-extrabold tracking-[0.3em] uppercase opacity-40">DEBIT</span>
                 <div className="flex gap-0.5">
                   <div className="w-4 h-4 rounded-full bg-white/30" />
                   <div className="w-4 h-4 rounded-full bg-white/20 -ml-2" />
@@ -122,7 +122,7 @@ const BankAccount = () => {
 
             {/* Account Number */}
             <div>
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] opacity-50 mb-1">ACCOUNT NO.</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-50 mb-1">ACCOUNT NO.</p>
               <p className="tabular-nums text-[1.2rem] font-bold tracking-[0.22em]">
                 {maskAccountNumber(profile?.bank_account_number)}
               </p>
@@ -131,13 +131,13 @@ const BankAccount = () => {
             {/* Bottom row */}
             <div className="flex items-end justify-between">
               <div className="min-w-0">
-                <p className="text-[9px] font-bold uppercase tracking-[0.2em] opacity-50 mb-0.5">ACCOUNT HOLDER</p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-50 mb-0.5">ACCOUNT HOLDER</p>
                 <p className="font-bold text-sm truncate max-w-[160px]">
                   {profile?.full_name || '—'}
                 </p>
               </div>
               <div className="text-right shrink-0 ml-4">
-                <p className="text-[9px] font-bold uppercase tracking-[0.2em] opacity-50 mb-0.5">MEMBER SINCE</p>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-50 mb-0.5">MEMBER SINCE</p>
                 <p className="font-bold text-sm">{memberDate}</p>
               </div>
             </div>
@@ -156,7 +156,7 @@ const BankAccount = () => {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ธนาคาร</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">ธนาคาร</p>
               <p className="font-extrabold text-slate-900 text-sm truncate">{bankInfo?.name || bankCode || '—'}</p>
             </div>
             <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: bankColor.bg + '15', color: bankColor.bg }}>
@@ -169,7 +169,7 @@ const BankAccount = () => {
               <span className="material-symbols-outlined text-slate-400 text-[18px]">credit_card</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">เลขที่บัญชี</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">เลขที่บัญชี</p>
               <p className="font-extrabold text-slate-900 text-sm tabular-nums tracking-wider">
                 {profile?.bank_account_number || '—'}
               </p>
@@ -181,7 +181,7 @@ const BankAccount = () => {
               <span className="material-symbols-outlined text-slate-400 text-[18px]">person</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ชื่อบัญชี</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">ชื่อบัญชี</p>
               <p className="font-extrabold text-slate-900 text-sm">{profile?.full_name || '—'}</p>
             </div>
           </div>
@@ -191,7 +191,7 @@ const BankAccount = () => {
               <span className="material-symbols-outlined text-slate-400 text-[18px]">verified_user</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">สถานะ</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">สถานะ</p>
               <p className="font-extrabold text-emerald-600 text-sm flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
                 ยืนยันแล้ว

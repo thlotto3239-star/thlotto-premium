@@ -57,7 +57,7 @@ const Modal = ({
         {!onConfirm && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
+            className="absolute top-4 right-4 w-11 h-11 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
           >
             <span className="material-symbols-outlined">close</span>
           </button>

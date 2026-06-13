@@ -133,7 +133,7 @@ const Register = () => {
                 <img alt="TH LOTTO" className="w-full h-full object-cover" src="https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png" />
               </div>
               <h1 className="text-slate-900 text-lg font-bold leading-tight tracking-tight">TH LOTTO</h1>
-              <span className="text-[#008a3e] text-[10px] font-extrabold tracking-[0.2em] uppercase">การลงทะเบียน</span>
+              <span className="text-[#008a3e] text-xs font-extrabold tracking-[0.2em] uppercase">การลงทะเบียน</span>
             </div>
             <div className="size-10"></div>
           </div>
@@ -259,7 +259,7 @@ const Register = () => {
                     <span>ถัดไป: ข้อมูลธนาคาร</span>
                     <span className="material-symbols-outlined font-bold">arrow_forward</span>
                   </button>
-                  <p className="text-center text-slate-400 text-[10px] px-4 leading-relaxed">
+                  <p className="text-center text-slate-400 text-xs px-4 leading-relaxed">
                     เมื่อคลิกถัดไป แสดงว่าคุณยอมรับ <Link to="/terms" className="text-[#008a3e] underline font-bold">ข้อกำหนดการให้บริการ</Link> และ <Link to="/terms" className="text-[#008a3e] underline font-bold">นโยบายความเป็นส่วนตัว</Link> ของเรา
                   </p>
                 </div>
@@ -343,10 +343,10 @@ const Register = () => {
                       {bank.image_url ? (
                         <img src={bank.image_url} alt={bank.label} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-[#008a00] font-black text-[9px]">{bank.name}</span>
+                        <span className="text-[#008a00] font-black text-xs">{bank.name}</span>
                       )}
                     </div>
-                    <span className="text-[10px] font-medium text-slate-700 text-center leading-tight">{bank.label}</span>
+                    <span className="text-xs font-medium text-slate-700 text-center leading-tight">{bank.label}</span>
                   </button>
                 ))}
                 <button 
@@ -357,10 +357,10 @@ const Register = () => {
                     : 'border-slate-100 bg-slate-50/30 hover:border-[#008a00]/30'
                   }`}
                 >
-                  <div className="w-10 h-10 mb-2 rounded-lg bg-slate-200 flex items-center justify-center text-slate-500">
+                  <div className="w-11 h-11 mb-2 rounded-lg bg-slate-200 flex items-center justify-center text-slate-500">
                     <span className="material-symbols-outlined text-xl">add</span>
                   </div>
-                  <span className="text-[10px] font-medium text-slate-700">อื่นๆ</span>
+                  <span className="text-xs font-medium text-slate-700">อื่นๆ</span>
                 </button>
               </div>
             </section>

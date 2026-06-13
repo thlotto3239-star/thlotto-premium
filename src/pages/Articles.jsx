@@ -90,7 +90,7 @@ const Articles = () => {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute top-3 left-3">
-                  <span className="bg-accent-red text-white text-[10px] font-bold px-3 py-1 rounded-full">
+                  <span className="bg-accent-red text-white text-xs font-bold px-3 py-1 rounded-full">
                     {article.category || 'ข่าวสาร'}
                   </span>
                 </div>

@@ -53,7 +53,7 @@ const AppHeader = ({ announcements = [] }) => {
   return (
     <>
       {/* Marquee announcement */}
-      <div className="bg-primary text-white text-[11px] py-2 overflow-hidden sticky top-0 z-[60]">
+      <div className="bg-primary text-white text-xs py-2 overflow-hidden sticky top-0 z-[60]">
         <div className="flex animate-marquee whitespace-nowrap">
           <span className="mx-4 font-medium">{announcementText}</span>
           <span className="mx-4 font-medium">{announcementText}</span>
@@ -81,7 +81,7 @@ const AppHeader = ({ announcements = [] }) => {
 
         <div className="flex items-center gap-2 shrink-0">
           <div className="flex flex-col items-end">
-            <span className="text-[9px] text-gray-400 uppercase font-bold whitespace-nowrap">ยอดคงเหลือ</span>
+            <span className="text-xs text-gray-400 uppercase font-bold whitespace-nowrap">ยอดคงเหลือ</span>
             <div className="flex items-center gap-1">
               <span className="material-icons text-accent-gold text-sm shrink-0">monetization_on</span>
               <span className="font-bold text-[14px] whitespace-nowrap">฿{displayBalance}</span>

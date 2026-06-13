@@ -27,11 +27,11 @@ const DepositSuccess = () => {
         <header className="flex items-center justify-between px-6 py-4">
           <button
             onClick={() => navigate('/home')}
-            className="flex w-10 h-10 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-colors active:bg-slate-100">
+            className="flex w-11 h-11 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-colors active:bg-slate-100">
             <span className="material-symbols-outlined text-xl">close</span>
           </button>
           <h2 className="text-xs font-bold tracking-widest uppercase text-slate-300">TH-LOTTO Premium</h2>
-          <button onClick={handleShare} className="flex w-10 h-10 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-colors active:bg-slate-100">
+          <button onClick={handleShare} className="flex w-11 h-11 items-center justify-center rounded-full bg-slate-50 text-slate-400 transition-colors active:bg-slate-100">
             <span className="material-symbols-outlined text-xl">share</span>
           </button>
         </header>

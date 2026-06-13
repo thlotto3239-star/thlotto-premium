@@ -400,11 +400,11 @@ export default function InstantLottery() {
         style={{ background: 'linear-gradient(90deg, rgba(0,0,0,0.85) 0%, rgba(6,78,59,0.4) 50%, rgba(0,0,0,0.85) 100%)' }}
       >
         <div className="text-left">
-          <div className="text-[10px] text-gray-400">งวดที่</div>
+          <div className="text-xs text-gray-400">งวดที่</div>
           <div className="text-2xl font-bold text-[#d32f2f] font-mono leading-none">{drawShort}</div>
         </div>
         <div className="text-center">
-          <div className="text-[10px] text-gray-400 mb-1">เวลาถอยหลัง</div>
+          <div className="text-xs text-gray-400 mb-1">เวลาถอยหลัง</div>
           <div className="flex items-center gap-1 justify-center">
             <div className="bg-white text-[#d32f2f] rounded px-2 py-0.5 text-xl font-bold min-w-[40px] text-center">{timerMin}</div>
             <span className="text-white font-bold text-xl">:</span>
@@ -416,7 +416,7 @@ export default function InstantLottery() {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-[10px] text-gray-400">เครดิต</div>
+          <div className="text-xs text-gray-400">เครดิต</div>
           <div
             className={`text-2xl font-bold leading-none transition-all duration-300 ${balanceFlash ? 'text-green-400 scale-110' : 'text-[#D4AF37]'}`}
           >
@@ -458,7 +458,7 @@ export default function InstantLottery() {
               <button
                 key={tab.code}
                 onClick={() => selectTab(tab.code)}
-                className={`px-2 py-2 text-[11px] font-extrabold transition-all rounded-full truncate active:scale-95 border ${
+                className={`px-2 py-2 text-xs font-extrabold transition-all rounded-full truncate active:scale-95 border ${
                   activeTab === tab.code
                     ? 'text-[#0a3a07] border-[#D4AF37] shadow-md shadow-[#D4AF37]/40'
                     : 'text-emerald-100 border-[#137c10]/40 hover:border-[#137c10] backdrop-blur-sm'
@@ -478,7 +478,7 @@ export default function InstantLottery() {
               <button
                 key={tab.code}
                 onClick={() => selectTab(tab.code)}
-                className={`px-2 py-2 text-[11px] font-extrabold transition-all rounded-full truncate active:scale-95 border ${
+                className={`px-2 py-2 text-xs font-extrabold transition-all rounded-full truncate active:scale-95 border ${
                   activeTab === tab.code
                     ? 'text-[#0a3a07] border-[#D4AF37] shadow-md shadow-[#D4AF37]/40'
                     : 'text-emerald-100 border-[#137c10]/40 hover:border-[#137c10] backdrop-blur-sm'
@@ -636,7 +636,7 @@ export default function InstantLottery() {
               <div className="w-full bg-white rounded-lg py-4 flex items-center justify-center mb-2 shadow-inner">
                 <div className="text-5xl font-bold text-[#d32f2f] tracking-[0.15em] font-mono">{popupData.result_6d}</div>
               </div>
-              <div className="text-gray-500 text-[10px] mb-4">รางวัลที่ 1</div>
+              <div className="text-gray-500 text-xs mb-4">รางวัลที่ 1</div>
               <div className="grid grid-cols-2 gap-3 w-full mb-5">
                 <PopupSubBox label="3 ตัวหน้า" value={popupData.result_3top} />
                 <PopupSubBox label="3 ตัวท้าย" value={popupData.result_3back} />
@@ -847,7 +847,7 @@ function HistoryItem({ bet }) {
         <div className="flex-1 min-w-0">
           <div className="text-xs text-[#D4AF37] font-bold mb-1">{typeName}</div>
           <div className="text-white text-base font-mono font-bold break-all leading-tight">{displayNum}</div>
-          <div className="text-[10px] text-gray-500 mt-1">งวด {bet.draw_id} | {dt}</div>
+          <div className="text-xs text-gray-500 mt-1">งวด {bet.draw_id} | {dt}</div>
         </div>
         <div className="text-right ml-2">
           <div className="text-lg font-bold text-white mb-1">฿{fmt(bet.amount)}</div>

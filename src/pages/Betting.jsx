@@ -272,7 +272,7 @@ const Betting = () => {
           <div className="flex items-center justify-between mb-4">
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center justify-center size-10 rounded-full bg-slate-100 active:scale-90 transition-transform"
+              className="flex items-center justify-center size-11 rounded-full bg-slate-100 active:scale-90 transition-transform"
             >
               <span className="material-symbols-outlined text-slate-600">chevron_left</span>
             </button>
@@ -296,13 +296,13 @@ const Betting = () => {
                   frameBorder="0"
                 />
                 {/* LIVE badge */}
-                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-red-600 text-white px-2.5 py-1 rounded-full text-[10px] font-black animate-pulse pointer-events-none">
+                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-red-600 text-white px-2.5 py-1 rounded-full text-xs font-black animate-pulse pointer-events-none">
                   <div className="size-2 rounded-full bg-white"></div> ถ่ายทอดสด
                 </div>
                 {/* Mute toggle */}
                 <button
                   onClick={handleToggleMute}
-                  className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-[11px] font-bold active:scale-95 transition-all"
+                  className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold active:scale-95 transition-all"
                 >
                   <span className="material-symbols-outlined text-[16px]">
                     {isMuted ? 'volume_off' : 'volume_up'}
@@ -316,7 +316,7 @@ const Betting = () => {
                   <span className="material-symbols-outlined text-white text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>live_tv</span>
                 </div>
                 <p className="text-white/50 text-xs font-bold">ยังไม่มีการถ่ายทอดสด</p>
-                <p className="text-white/30 text-[10px]">แอดมินยังไม่ได้ตั้งค่าลิงค์สตรีม</p>
+                <p className="text-white/30 text-xs">แอดมินยังไม่ได้ตั้งค่าลิงค์สตรีม</p>
               </div>
             )}
           </div>
@@ -324,7 +324,7 @@ const Betting = () => {
           {/* Countdown */}
           <div className="flex items-center justify-between border border-yellow-400/20 p-4 rounded-2xl mb-4 bg-slate-50/50">
             <div>
-              <p className={`text-[10px] font-black uppercase tracking-[0.1em] mb-1 ${timeLeft.isExpired ? 'text-red-500 animate-pulse' : 'text-yellow-500'}`}>
+              <p className={`text-xs font-black uppercase tracking-[0.1em] mb-1 ${timeLeft.isExpired ? 'text-red-500 animate-pulse' : 'text-yellow-500'}`}>
                 {timeLeft.isExpired ? 'ปิดรับแทงแล้ว!' : 'งวดถัดไปเปิดรับแทง'}
               </p>
               <p className="text-sm font-bold text-slate-700">{draw?.name || 'สลากกินแบ่งรัฐบาล'}</p>
@@ -339,7 +339,7 @@ const Betting = () => {
                     {i > 0 && <span className="text-lg font-black text-slate-300">:</span>}
                     <div className="flex flex-col items-center justify-center bg-white size-[54px] rounded-xl border border-slate-100">
                       <span className="text-xl font-black text-slate-900 leading-none">{t.val}</span>
-                      <span className="text-[9px] font-bold text-slate-400 mt-1.5">{t.label}</span>
+                      <span className="text-xs font-bold text-slate-400 mt-1.5">{t.label}</span>
                     </div>
                   </React.Fragment>
                 ))}
@@ -404,7 +404,7 @@ const Betting = () => {
                         style={isActive ? { background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' } : {}}
                       >
                         <span className={`${fullW ? 'text-sm' : 'text-xs'} font-black ${dashed ? 'uppercase tracking-wide' : ''}`}>{cat.name}</span>
-                        <span className={`${fullW ? 'text-[10px]' : 'text-[9px]'} font-medium ${isActive ? 'text-white/70' : 'text-slate-400'}`}>
+                        <span className={`${fullW ? 'text-xs' : 'text-xs'} font-medium ${isActive ? 'text-white/70' : 'text-slate-400'}`}>
                           บาทละ {cat.rate?.toLocaleString()}
                         </span>
                       </button>
@@ -442,7 +442,7 @@ const Betting = () => {
                 : 'bg-primary/5 border-primary/20'
             }`}
           >
-            <p className="text-[10px] font-black text-primary tracking-[0.1em] text-center uppercase">
+            <p className="text-xs font-black text-primary tracking-[0.1em] text-center uppercase">
               ตัวเลขที่คุณเลือก ({currentCat?.name || currentCategory})
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
@@ -468,7 +468,7 @@ const Betting = () => {
                 <button
                   key={amt}
                   onClick={() => setBetAmount(amt)}
-                  className={`h-8 px-3 rounded-xl text-[10px] font-black transition-all ${
+                  className={`h-8 px-3 rounded-xl text-xs font-black transition-all ${
                     betAmount === amt
                       ? 'text-white shadow-md'
                       : 'bg-white border border-slate-100 text-slate-500'
@@ -479,7 +479,7 @@ const Betting = () => {
                 </button>
               ))}
             </div>
-            <p className="text-center text-[10px] font-medium text-slate-400 italic">
+            <p className="text-center text-xs font-medium text-slate-400 italic">
               ช่องตัวเลขจะเคลียร์อัตโนมัติเมื่อเปลี่ยนประเภท และบันทึกทันทีเมื่อกดครบหลัก
             </p>
           </div>
@@ -509,7 +509,7 @@ const Betting = () => {
             </button>
             <button
               onClick={handleClear}
-              className="h-16 flex items-center justify-center bg-primary/10 text-primary rounded-2xl font-black border border-primary/20 active:scale-95 transition-transform text-[11px] tracking-wider uppercase"
+              className="h-16 flex items-center justify-center bg-primary/10 text-primary rounded-2xl font-black border border-primary/20 active:scale-95 transition-transform text-xs tracking-wider uppercase"
             >
               ล้างทั้งหมด
             </button>
@@ -527,7 +527,7 @@ const Betting = () => {
                   <h3 className="text-xs font-black text-slate-800">รายการทั้งหมด ({cart.length})</h3>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button onClick={() => setCart([])} className="text-[11px] font-black text-red-400">ล้างทั้งหมด</button>
+                  <button onClick={() => setCart([])} className="text-xs font-black text-red-400">ล้างทั้งหมด</button>
                   <button onClick={() => setShowCartModal(false)} className="text-slate-400">
                     <span className="material-symbols-outlined text-xl">expand_more</span>
                   </button>
@@ -541,7 +541,7 @@ const Betting = () => {
                         <span className="text-sm font-black text-primary">{item.numbers}</span>
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-slate-400">{categories.find(c => c.code === item.type)?.name}</p>
+                        <p className="text-xs font-bold text-slate-400">{categories.find(c => c.code === item.type)?.name}</p>
                         {editingIdx === idx ? (
                           <div className="flex items-center gap-1">
                             <input
@@ -563,7 +563,7 @@ const Betting = () => {
                         onClick={() => handleEditAmount(idx)}
                         className="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-100"
                       >
-                        <span className="text-[10px] font-bold text-slate-400">แก้ไข</span>
+                        <span className="text-xs font-bold text-slate-400">แก้ไข</span>
                         <span className="material-symbols-outlined text-primary text-sm">edit</span>
                       </button>
                       <button onClick={() => handleRemoveFromCart(idx)} className="text-slate-300 hover:text-red-400 transition-colors">
@@ -589,7 +589,7 @@ const Betting = () => {
                 </div>
                 <button
                   onClick={() => setShowCartModal(true)}
-                  className="text-[11px] font-black text-primary"
+                  className="text-xs font-black text-primary"
                 >
                   ดูรายการทั้งหมด
                 </button>
@@ -602,7 +602,7 @@ const Betting = () => {
                     <span className="text-sm font-black text-primary">{lastCartItem.numbers}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-slate-400">{categories.find(c => c.code === lastCartItem.type)?.name}</span>
+                    <span className="text-xs font-bold text-slate-400">{categories.find(c => c.code === lastCartItem.type)?.name}</span>
                     <span className="text-xs font-black text-slate-700">฿ {lastCartItem.amount}</span>
                   </div>
                 </div>
@@ -610,7 +610,7 @@ const Betting = () => {
                   onClick={() => handleEditAmount(cart.length - 1)}
                   className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-100"
                 >
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">เปลี่ยนราคา</span>
+                  <span className="text-xs font-bold text-slate-400 uppercase">เปลี่ยนราคา</span>
                   <span className="material-symbols-outlined text-primary text-sm">edit</span>
                 </button>
               </div>
@@ -618,14 +618,14 @@ const Betting = () => {
             {!lastCartItem && !showCartModal && (
               <div className="flex items-center justify-center gap-2 mb-4 py-3">
                 <span className="material-symbols-outlined text-slate-300 text-lg">touch_app</span>
-                <p className="text-[11px] font-bold text-slate-400">กดตัวเลขเพื่อเพิ่มรายการในโพย</p>
+                <p className="text-xs font-bold text-slate-400">กดตัวเลขเพื่อเพิ่มรายการในโพย</p>
               </div>
             )}
 
             {/* Total + Submit */}
             <div className="flex items-center gap-4">
               <div className="flex flex-col">
-                <span className="text-[9px] font-black text-slate-400 tracking-[0.1em] mb-0.5 uppercase">ยอดรวมทั้งหมด</span>
+                <span className="text-xs font-black text-slate-400 tracking-[0.1em] mb-0.5 uppercase">ยอดรวมทั้งหมด</span>
                 <span className="text-2xl font-black text-yellow-500 flex items-center gap-1">
                   ฿ {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </span>
@@ -653,24 +653,24 @@ const Betting = () => {
         <nav className="sticky bottom-0 bg-white/95 backdrop-blur-xl border-t border-slate-100 flex justify-around items-center pt-3 pb-8 px-4 z-40">
           <Link to="/home" className="flex flex-col items-center gap-1 group">
             <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">home</span>
-            <span className="text-[9px] font-black text-slate-400 group-hover:text-primary tracking-tight">หน้าหลัก</span>
+            <span className="text-xs font-black text-slate-400 group-hover:text-primary tracking-tight">หน้าหลัก</span>
           </Link>
           <Link to="/lottery-list" className="flex flex-col items-center gap-1 group relative">
             <div className="absolute -top-1.5 size-1.5 rounded-full bg-primary"></div>
             <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>confirmation_number</span>
-            <span className="text-[9px] font-black text-primary tracking-tight">แทงหวย</span>
+            <span className="text-xs font-black text-primary tracking-tight">แทงหวย</span>
           </Link>
           <Link to="/results" className="flex flex-col items-center gap-1 group">
             <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">leaderboard</span>
-            <span className="text-[9px] font-black text-slate-400 group-hover:text-primary tracking-tight">ผลรางวัล</span>
+            <span className="text-xs font-black text-slate-400 group-hover:text-primary tracking-tight">ผลรางวัล</span>
           </Link>
           <Link to="/wallet" className="flex flex-col items-center gap-1 group">
             <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">account_balance_wallet</span>
-            <span className="text-[9px] font-black text-slate-400 group-hover:text-primary tracking-tight">กระเป๋าเงิน</span>
+            <span className="text-xs font-black text-slate-400 group-hover:text-primary tracking-tight">กระเป๋าเงิน</span>
           </Link>
           <Link to="/profile" className="flex flex-col items-center gap-1 group">
             <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">person</span>
-            <span className="text-[9px] font-black text-slate-400 group-hover:text-primary tracking-tight">โปรไฟล์</span>
+            <span className="text-xs font-black text-slate-400 group-hover:text-primary tracking-tight">โปรไฟล์</span>
           </Link>
         </nav>
       </div>

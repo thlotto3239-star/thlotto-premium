@@ -63,7 +63,7 @@ const BottomNav = () => {
             </span>
             {/* spacer เมื่อ active (เว้นที่ให้วงกลมลอย) */}
             {isActive && <div className="h-6" />}
-            <span className={`text-[10px] font-bold whitespace-nowrap truncate ${isActive ? 'text-primary' : ''}`}>
+            <span className={`text-xs font-bold whitespace-nowrap truncate ${isActive ? 'text-primary' : ''}`}>
               {tab.label}
             </span>
           </Link>

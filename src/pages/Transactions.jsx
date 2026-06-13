@@ -133,11 +133,11 @@ const Transactions = () => {
     <div className="bg-white text-slate-800 min-h-screen flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md px-4 pt-6 pb-4 flex items-center justify-between border-b border-slate-50">
-        <button onClick={() => navigate(-1)} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 transition-colors">
+        <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-slate-50 transition-colors">
           <span className="material-symbols-outlined text-slate-700">arrow_back_ios_new</span>
         </button>
         <h1 className="text-xl font-semibold text-slate-900">ประวัติธุรกรรม</h1>
-        <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 transition-colors">
+        <button className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-slate-50 transition-colors">
           <span className="material-symbols-outlined text-slate-700">search</span>
         </button>
       </header>
@@ -222,7 +222,7 @@ const Transactions = () => {
                         {new Date(t.created_at).toLocaleDateString('th-TH-u-ca-buddhist', { day: '2-digit', month: 'short', year: '2-digit' })},{' '}
                         {new Date(t.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
                       </p>
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide ${getStatusStyle(t.status)}`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${getStatusStyle(t.status)}`}>
                         {getStatusLabel(t.status)}
                       </span>
                     </div>

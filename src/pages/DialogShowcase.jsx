@@ -5,7 +5,7 @@ const DialogShowcase = () => {
     <div className="bg-background-dark text-slate-100 min-h-screen pb-24 font-display">
       {/* Header Navigation */}
       <header className="sticky top-0 z-50 flex items-center bg-background-dark/80 backdrop-blur-md p-4 border-b border-slate-800">
-        <button className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-800 cursor-pointer transition-colors">
+        <button className="flex items-center justify-center w-11 h-11 rounded-full hover:bg-slate-800 cursor-pointer transition-colors">
           <span className="material-symbols-outlined">chevron_left</span>
         </button>
         <h1 className="flex-1 text-center text-lg font-bold tracking-tight">TH-LOTTO Premium</h1>
@@ -21,7 +21,7 @@ const DialogShowcase = () => {
         {/* 1. SUCCESS ALERT */}
         <section className="relative">
           <div className="absolute -top-3 left-6 z-10 bg-primary px-3 py-0.5 rounded-full">
-            <span className="text-[10px] font-bold text-background-dark uppercase">Success Alert</span>
+            <span className="text-xs font-bold text-background-dark uppercase">Success Alert</span>
           </div>
           <div className="glass-card rounded-[2rem] p-8 relative overflow-hidden flex flex-col items-center text-center shadow-2xl">
             <button className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
@@ -41,7 +41,7 @@ const DialogShowcase = () => {
         {/* 2. WARNING CONFIRM */}
         <section className="relative">
           <div className="absolute -top-3 left-6 z-10 bg-yellow-400 px-3 py-0.5 rounded-full">
-            <span className="text-[10px] font-bold text-background-dark uppercase">Warning Confirm</span>
+            <span className="text-xs font-bold text-background-dark uppercase">Warning Confirm</span>
           </div>
           <div className="glass-card rounded-[2rem] p-8 relative overflow-hidden flex flex-col items-center text-center shadow-2xl">
             <button className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
@@ -66,7 +66,7 @@ const DialogShowcase = () => {
         {/* 3. ERROR ALERT */}
         <section className="relative">
           <div className="absolute -top-3 left-6 z-10 bg-rose-500 px-3 py-0.5 rounded-full text-white">
-            <span className="text-[10px] font-bold uppercase">Error Alert</span>
+            <span className="text-xs font-bold uppercase">Error Alert</span>
           </div>
           <div className="glass-card rounded-[2rem] p-8 relative overflow-hidden flex flex-col items-center text-center shadow-2xl">
             <button className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
@@ -89,19 +89,19 @@ const DialogShowcase = () => {
         <div className="flex items-center justify-between max-w-md mx-auto">
           <a className="flex flex-col items-center gap-1 text-primary" href="/">
             <span className="material-symbols-outlined">home</span>
-            <span className="text-[10px] font-bold">หน้าหลัก</span>
+            <span className="text-xs font-bold">หน้าหลัก</span>
           </a>
           <a className="flex flex-col items-center gap-1 text-primary/40" href="/bet-history">
             <span className="material-symbols-outlined">confirmation_number</span>
-            <span className="text-[10px] font-bold">โพยหวย</span>
+            <span className="text-xs font-bold">โพยหวย</span>
           </a>
           <a className="flex flex-col items-center gap-1 text-primary/40" href="/results">
             <span className="material-symbols-outlined">emoji_events</span>
-            <span className="text-[10px] font-bold">ผลรางวัล</span>
+            <span className="text-xs font-bold">ผลรางวัล</span>
           </a>
           <a className="flex flex-col items-center gap-1 text-primary/40" href="/profile">
             <span className="material-symbols-outlined">person</span>
-            <span className="text-[10px] font-bold">โปรไฟล์</span>
+            <span className="text-xs font-bold">โปรไฟล์</span>
           </a>
         </div>
       </nav>

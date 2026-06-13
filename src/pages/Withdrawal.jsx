@@ -130,7 +130,7 @@ const Withdrawal = () => {
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md px-6 pt-12 pb-4 flex items-center justify-between border-b border-slate-100">
         <button
           onClick={() => navigate(-1)}
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 text-[#1a7e2a]"
+          className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-50 text-[#1a7e2a]"
         >
           <span className="material-symbols-outlined">arrow_back_ios_new</span>
         </button>
@@ -165,7 +165,7 @@ const Withdrawal = () => {
 
         {/* Bank Details */}
         <section className="mb-6">
-          <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest px-1 mb-3">บัญชีรับเงินของคุณ</p>
+          <p className="text-xs font-extrabold text-slate-400 uppercase tracking-widest px-1 mb-3">บัญชีรับเงินของคุณ</p>
           <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-slate-100">
             <BankBadge
               code={userProfile?.bank_name}
@@ -238,7 +238,7 @@ const Withdrawal = () => {
         </button>
         <div className="mt-3 flex items-center justify-center gap-1.5 opacity-40">
           <span className="material-symbols-outlined text-[12px]">lock</span>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-900">Secure SSL 256-bit Encryption</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-slate-900">Secure SSL 256-bit Encryption</span>
         </div>
       </footer>
 
@@ -249,7 +249,7 @@ const Withdrawal = () => {
           <div className="relative bg-white rounded-[2rem] p-6 w-full max-w-sm shadow-2xl">
             <button
               onClick={() => setShowPinModal(false)}
-              className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
+              className="absolute top-4 right-4 w-11 h-11 flex items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
             >
               <span className="material-symbols-outlined">close</span>
             </button>

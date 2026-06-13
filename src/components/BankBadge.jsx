@@ -11,7 +11,7 @@ import { supabase } from '../supabaseClient';
  *   mask?: boolean — ถ้า true จะปิดเลขบัญชีบางส่วน
  */
 const sizeMap = {
-  sm: { logo: 'w-6 h-6', name: 'text-xs', acc: 'text-[10px]' },
+  sm: { logo: 'w-6 h-6', name: 'text-xs', acc: 'text-xs' },
   md: { logo: 'w-10 h-10', name: 'text-sm', acc: 'text-xs' },
   lg: { logo: 'w-14 h-14', name: 'text-base', acc: 'text-sm' },
 };
@@ -45,7 +45,7 @@ export default function BankBadge({ code, accountNumber, accountName, size = 'md
         {bank?.image_url ? (
           <img src={bank.image_url} alt={bank.name} className="w-full h-full object-cover" />
         ) : (
-          <span className="text-[9px] font-black text-slate-500">{(code || '?').slice(0, 3)}</span>
+          <span className="text-xs font-black text-slate-500">{(code || '?').slice(0, 3)}</span>
         )}
       </div>
       <div className="flex-1 min-w-0">

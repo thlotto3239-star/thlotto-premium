@@ -86,7 +86,7 @@ const ForgotPassword = () => {
       <div className="relative w-full max-w-[430px] min-h-screen flex flex-col bg-white overflow-x-hidden">
         {/* Header */}
         <div className="flex items-center px-6 pt-8 pb-4 justify-between bg-white sticky top-0 z-50">
-          <Link to="/login" className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
+          <Link to="/login" className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
             <span className="material-symbols-outlined">arrow_back</span>
           </Link>
           <div className="flex flex-col items-center gap-1">
@@ -292,7 +292,7 @@ const ForgotPassword = () => {
 
         {/* Footer */}
         <div className="px-6 pb-8 pt-2 border-t border-slate-100 flex flex-col items-center gap-3">
-          <p className="text-[10px] text-slate-400 text-center">
+          <p className="text-xs text-slate-400 text-center">
             © {new Date().getFullYear()} TH LOTTO. หนึ่งในเครือข่ายความภูมิใจของประเทศไทย
           </p>
         </div>

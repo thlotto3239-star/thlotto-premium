@@ -150,7 +150,7 @@ const LuckyWheel = () => {
           <span className="material-symbols-outlined text-xl">arrow_back_ios_new</span>
         </button>
         <div className="text-center">
-          <p className="text-[9px] font-black text-emerald-400 uppercase tracking-[0.35em]">TH LOTTO VIP</p>
+          <p className="text-xs font-black text-emerald-400 uppercase tracking-[0.35em]">TH LOTTO VIP</p>
           <p className="text-sm font-black text-white" style={{ whiteSpace: 'normal' }}>Premium Lucky Wheel</p>
         </div>
         <button onClick={() => setShowInfoModal(true)}
@@ -335,7 +335,7 @@ const LuckyWheel = () => {
             </span>
           </button>
         </div>
-        <p className="text-center text-white/25 text-[10px] font-black uppercase tracking-widest mb-8">
+        <p className="text-center text-white/25 text-xs font-black uppercase tracking-widest mb-8">
           ค่าหมุน ฿{spinStatus.spin_cost} / ครั้ง · คงเหลือ {spinStatus.spins_left} สิทธิ์วันนี้
         </p>
 
@@ -347,7 +347,7 @@ const LuckyWheel = () => {
               <span className="material-symbols-outlined text-emerald-400">history</span>
               <h3 className="text-white font-black text-sm" style={{ whiteSpace: 'normal' }}>ประวัติการหมุน</h3>
             </div>
-            <span className="text-[9px] font-black text-white/25 uppercase shrink-0">{history.length} LATEST</span>
+            <span className="text-xs font-black text-white/25 uppercase shrink-0">{history.length} LATEST</span>
           </div>
           <div className="space-y-3">
             {history.length > 0 ? history.map(item => (
@@ -362,7 +362,7 @@ const LuckyWheel = () => {
                   </div>
                   <div>
                     <p className="text-white text-sm font-bold">{item.prize_name}</p>
-                    <p className="text-[9px] text-white/25 font-bold uppercase">
+                    <p className="text-xs text-white/25 font-bold uppercase">
                       {new Date(item.spun_at).toLocaleString('th-TH', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}
                     </p>
                   </div>
@@ -375,7 +375,7 @@ const LuckyWheel = () => {
             )) : (
               <div className="py-8 text-center">
                 <span className="material-symbols-outlined text-4xl block mb-2" style={{ color: 'rgba(255,255,255,0.1)' }}>sports_esports</span>
-                <p className="text-[10px] font-black uppercase" style={{ color: 'rgba(255,255,255,0.18)' }}>ยังไม่มีประวัติ</p>
+                <p className="text-xs font-black uppercase" style={{ color: 'rgba(255,255,255,0.18)' }}>ยังไม่มีประวัติ</p>
               </div>
             )}
           </div>
@@ -396,7 +396,7 @@ const LuckyWheel = () => {
                 <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.4)', whiteSpace: 'normal' }}>{prizeData.message}</p>
                 <div className="rounded-2xl p-5 mb-6"
                   style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)' }}>
-                  <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'rgba(52,211,153,0.6)' }}>รางวัลที่ได้รับ</p>
+                  <p className="text-xs font-black uppercase tracking-widest mb-1" style={{ color: 'rgba(52,211,153,0.6)' }}>รางวัลที่ได้รับ</p>
                   <p className="text-5xl font-black" style={{ color: '#34d399' }}>{prizeData.prize}</p>
                 </div>
                 <button onClick={() => setShowPrize(false)}
@@ -412,7 +412,7 @@ const LuckyWheel = () => {
                 <h2 className="text-2xl font-black text-white mb-1">เสียดายจัง</h2>
                 <p className="text-sm mb-6" style={{ color: 'rgba(255,255,255,0.3)', whiteSpace: 'normal' }}>{prizeData.message}</p>
                 <div className="rounded-2xl p-5 mb-6" style={{ background: 'rgba(255,255,255,0.04)' }}>
-                  <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.25)' }}>ผลการหมุน</p>
+                  <p className="text-xs font-black uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.25)' }}>ผลการหมุน</p>
                   <p className="text-3xl font-black" style={{ color: 'rgba(255,255,255,0.35)' }}>{prizeData.prize}</p>
                 </div>
                 <button onClick={() => setShowPrize(false)}

@@ -107,7 +107,7 @@ const Wallet = () => {
               </div>
             </div>
             <div className="mb-4">
-              <p className="text-emerald-100/60 text-[10px] font-semibold tracking-[0.2em] uppercase mb-1">ยอดเงินคงเหลือ</p>
+              <p className="text-emerald-100/60 text-xs font-semibold tracking-[0.2em] uppercase mb-1">ยอดเงินคงเหลือ</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-medium text-emerald-200">฿</span>
                 <h1 className="text-4xl font-extrabold tracking-tight font-display">
@@ -124,11 +124,11 @@ const Wallet = () => {
                     <span className="material-symbols-outlined text-white text-sm">account_balance</span>
                   </div>
                 )}
-                <p className="text-[10px] text-emerald-100/70 font-medium">{profile?.bank_account_number || ''}</p>
+                <p className="text-xs text-emerald-100/70 font-medium">{profile?.bank_account_number || ''}</p>
               </div>
               <div className="text-right">
                 {memberSince && (
-                  <p className="text-[10px] text-emerald-100/50 tracking-wide">สมาชิกตั้งแต่ {memberSince}</p>
+                  <p className="text-xs text-emerald-100/50 tracking-wide">สมาชิกตั้งแต่ {memberSince}</p>
                 )}
               </div>
             </div>
@@ -178,7 +178,7 @@ const Wallet = () => {
                     <div className="flex items-center gap-1.5 mb-0.5">
                       <p className="font-bold text-sm truncate">{p.title}</p>
                       {p.badge_text && (
-                        <span className="bg-primary text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full shrink-0">{p.badge_text}</span>
+                        <span className="bg-primary text-white text-xs font-extrabold px-1.5 py-0.5 rounded-full shrink-0">{p.badge_text}</span>
                       )}
                     </div>
                     <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{p.description}</p>
@@ -261,10 +261,10 @@ const Wallet = () => {
                       <div>
                         <p className="font-bold text-sm">{tx.note || getTypeThai(tx.type)}</p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-xs text-slate-400">
                             {new Date(tx.created_at).toLocaleDateString('th-TH-u-ca-buddhist', { day: '2-digit', month: 'short', year: '2-digit' })} • {new Date(tx.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusBadge}`}>{statusText}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${statusBadge}`}>{statusText}</span>
                         </div>
                       </div>
                     </div>

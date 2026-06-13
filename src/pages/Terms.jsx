@@ -136,21 +136,21 @@ const Terms = () => {
             {minDeposit && (
               <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 text-center flex flex-col items-center gap-1">
                 <span className="material-symbols-outlined text-emerald-600 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>savings</span>
-                <p className="text-[10px] font-extrabold text-emerald-700 uppercase tracking-wide">ฝากขั้นต่ำ</p>
+                <p className="text-xs font-extrabold text-emerald-700 uppercase tracking-wide">ฝากขั้นต่ำ</p>
                 <p className="text-base font-black text-emerald-900">฿{Number(minDeposit).toLocaleString()}</p>
               </div>
             )}
             {minWithdraw && (
               <div className="bg-blue-50 border border-blue-100 rounded-2xl p-3 text-center flex flex-col items-center gap-1">
                 <span className="material-symbols-outlined text-blue-600 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
-                <p className="text-[10px] font-extrabold text-blue-700 uppercase tracking-wide">ถอนขั้นต่ำ</p>
+                <p className="text-xs font-extrabold text-blue-700 uppercase tracking-wide">ถอนขั้นต่ำ</p>
                 <p className="text-base font-black text-blue-900">฿{Number(minWithdraw).toLocaleString()}</p>
               </div>
             )}
             {minBet && (
               <div className="bg-amber-50 border border-amber-100 rounded-2xl p-3 text-center flex flex-col items-center gap-1">
                 <span className="material-symbols-outlined text-amber-600 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>confirmation_number</span>
-                <p className="text-[10px] font-extrabold text-amber-700 uppercase tracking-wide">แทงขั้นต่ำ</p>
+                <p className="text-xs font-extrabold text-amber-700 uppercase tracking-wide">แทงขั้นต่ำ</p>
                 <p className="text-base font-black text-amber-900">฿{Number(minBet).toLocaleString()}</p>
               </div>
             )}
@@ -202,10 +202,10 @@ const Terms = () => {
 
         {/* Footer note */}
         <div className="mt-8 text-center space-y-2">
-          <p className="text-[10px] text-slate-400 leading-relaxed">
+          <p className="text-xs text-slate-400 leading-relaxed">
             การใช้บริการ {siteName} ถือว่าท่านยอมรับเงื่อนไขทั้งหมดข้างต้น
           </p>
-          <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">
+          <p className="text-xs text-slate-300 font-bold uppercase tracking-widest">
             {siteName} Premium © {new Date().getFullYear()}
           </p>
         </div>

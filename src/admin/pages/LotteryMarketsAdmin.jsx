@@ -197,7 +197,7 @@ export default function LotteryMarketsAdmin() {
                     </label>
                   ))}
                 </div>
-                <p className="text-[11px] text-slate-400 mt-1">ไม่เลือก = ทุกวัน (ใช้กับหวยรายวัน)</p>
+                <p className="text-xs text-slate-400 mt-1">ไม่เลือก = ทุกวัน (ใช้กับหวยรายวัน)</p>
               </div>
 
               {/* Draw Day of Month */}
@@ -209,7 +209,7 @@ export default function LotteryMarketsAdmin() {
                   defaultValue={(editing.draw_day_of_month || []).join(',')}
                   className="w-full border rounded px-2 py-1.5 mt-1 text-sm"
                 />
-                <span className="text-[11px] text-slate-400">ถ้ากำหนดนี้ จะใช้แทนวันในสัปดาห์ข้างบน</span>
+                <span className="text-xs text-slate-400">ถ้ากำหนดนี้ จะใช้แทนวันในสัปดาห์ข้างบน</span>
               </label>
 
               <div className="grid grid-cols-2 gap-3">
@@ -246,7 +246,7 @@ export default function LotteryMarketsAdmin() {
                 </label>
               </div>
 
-              <p className="text-[11px] text-blue-600 bg-blue-50 rounded p-2">
+              <p className="text-xs text-blue-600 bg-blue-50 rounded p-2">
                 💡 เมื่อบันทึก ระบบจะสร้าง schedule 90 วันล่วงหน้าโดยอัตโนมัติ และ countdown จะอัปเดตทันที
               </p>
 

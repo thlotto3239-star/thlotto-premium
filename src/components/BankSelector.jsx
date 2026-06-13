@@ -46,10 +46,10 @@ export default function BankSelector({ value, onChange, placeholder = 'เลื
           <>
             {selected.image_url
               ? <img src={selected.image_url} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
-              : <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-black text-slate-500 shrink-0">{selected.code.slice(0,3)}</div>}
+              : <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-black text-slate-500 shrink-0">{selected.code.slice(0,3)}</div>}
             <div className="flex-1 text-left min-w-0">
               <div className="font-bold text-slate-900 truncate">{selected.name}</div>
-              <div className="text-[10px] font-mono text-slate-400">{selected.code}</div>
+              <div className="text-xs font-mono text-slate-400">{selected.code}</div>
             </div>
           </>
         ) : (
@@ -69,10 +69,10 @@ export default function BankSelector({ value, onChange, placeholder = 'เลื
             >
               {b.image_url
                 ? <img src={b.image_url} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
-                : <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-black text-slate-500 shrink-0">{b.code.slice(0,3)}</div>}
+                : <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-black text-slate-500 shrink-0">{b.code.slice(0,3)}</div>}
               <div className="flex-1 min-w-0">
                 <div className="font-bold text-slate-900 text-sm truncate">{b.name}</div>
-                <div className="text-[10px] font-mono text-slate-400">{b.code}</div>
+                <div className="text-xs font-mono text-slate-400">{b.code}</div>
               </div>
               {value === b.code && <span className="material-symbols-outlined text-emerald-600 text-base">check</span>}
             </button>

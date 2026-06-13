@@ -11,7 +11,7 @@ const Processing = () => {
         
         {/* Top App Bar */}
         <div className="z-10 flex w-full items-center p-6 justify-between">
-          <button onClick={() => navigate(-1)} className="text-slate-100 flex w-10 h-10 shrink-0 items-center justify-center rounded-full bg-slate-800/40 backdrop-blur-md hover:bg-slate-700/50 transition-colors">
+          <button onClick={() => navigate(-1)} className="text-slate-100 flex w-11 h-11 shrink-0 items-center justify-center rounded-full bg-slate-800/40 backdrop-blur-md hover:bg-slate-700/50 transition-colors">
             <span className="material-symbols-outlined text-[24px]">close</span>
           </button>
           <h2 className="text-slate-100 text-sm font-bold tracking-[0.1em] uppercase flex-1 text-center pr-10">

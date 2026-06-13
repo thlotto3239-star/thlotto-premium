@@ -88,7 +88,7 @@ const Login = () => {
               />
             </div>
             <h1 className="text-slate-900 text-lg font-bold leading-tight tracking-tight">TH LOTTO</h1>
-            <span className="text-primary text-[10px] font-extrabold tracking-[0.2em] uppercase">เข้าสู่ระบบ</span>
+            <span className="text-primary text-xs font-extrabold tracking-[0.2em] uppercase">เข้าสู่ระบบ</span>
           </div>
           <div className="w-10 h-10" />
         </div>
@@ -213,7 +213,7 @@ const Login = () => {
               <div key={f.icon} className="bg-slate-50 rounded-2xl p-4 flex flex-col items-center text-center border border-slate-100">
                 <span className="material-symbols-outlined text-primary text-2xl mb-1">{f.icon}</span>
                 <p className="font-bold text-slate-900 text-xs">{f.title}</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">{f.sub}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{f.sub}</p>
               </div>
             ))}
           </div>
@@ -221,12 +221,12 @@ const Login = () => {
 
         {/* Footer */}
         <div className="px-6 pb-8 pt-2 border-t border-slate-100 flex flex-col items-center gap-3">
-          <p className="text-[10px] text-slate-400 text-center">
+          <p className="text-xs text-slate-400 text-center">
             © {new Date().getFullYear()} TH LOTTO. หนึ่งในเครือข่ายความภูมิใจของประเทศไทย
           </p>
           <div className="flex items-center gap-6">
-            <a className="text-[10px] font-medium text-slate-400 hover:text-primary transition-colors" href="#">นโยบายความเป็นส่วนตัว</a>
-            <a className="text-[10px] font-medium text-slate-400 hover:text-primary transition-colors" href="#">ข้อกำหนดการใช้งาน</a>
+            <a className="text-xs font-medium text-slate-400 hover:text-primary transition-colors" href="#">นโยบายความเป็นส่วนตัว</a>
+            <a className="text-xs font-medium text-slate-400 hover:text-primary transition-colors" href="#">ข้อกำหนดการใช้งาน</a>
           </div>
         </div>
 

@@ -88,7 +88,7 @@ const Support = () => {
               <p className="text-xs text-slate-500 mt-0.5">ตอบกลับภายใน 5-15 นาที</p>
               <div className="flex items-center gap-1.5 mt-1">
                 <div className="size-1.5 rounded-full bg-[#06C755] animate-pulse" />
-                <span className="text-[11px] font-bold text-[#06C755]">พร้อมให้บริการ 24 ชั่วโมง</span>
+                <span className="text-xs font-bold text-[#06C755]">พร้อมให้บริการ 24 ชั่วโมง</span>
               </div>
             </div>
           </div>
@@ -130,7 +130,7 @@ const Support = () => {
 
         {/* FAQ */}
         <div className="mx-5 mt-5">
-          <p className="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest px-1 mb-3">
+          <p className="text-xs font-extrabold text-slate-400 uppercase tracking-widest px-1 mb-3">
             คำถามที่พบบ่อย
           </p>
           <div className="space-y-2">

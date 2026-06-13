@@ -308,7 +308,7 @@ const Home = () => {
                   <p className="text-white/80 text-xs whitespace-nowrap truncate">{govResult?.date ? formatThaiDate(govResult.date) : 'กำลังโหลด...'}</p>
                 </div>
               </div>
-              <span className={`text-[10px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap shrink-0 ${govResult && !isPending(govResult.main) ? 'bg-green-400 text-white' : 'bg-red-500 text-white'}`}>
+              <span className={`text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap shrink-0 ${govResult && !isPending(govResult.main) ? 'bg-green-400 text-white' : 'bg-red-500 text-white'}`}>
                 {govResult && !isPending(govResult.main) ? 'ประกาศผลแล้ว' : 'รอประกาศผล'}
               </span>
             </div>
@@ -330,15 +330,15 @@ const Home = () => {
             </div>
             <div className="grid grid-cols-3 gap-2 text-center pt-6 border-t border-white/10">
               <div>
-                <p className="text-[10px] text-white/60 mb-1">3 ตัวหน้า</p>
+                <p className="text-xs text-white/60 mb-1">3 ตัวหน้า</p>
                 <p className="font-bold text-lg tracking-wider">{govResult ? govResult.top3 : '—'}</p>
               </div>
               <div>
-                <p className="text-[10px] text-white/60 mb-1">2 ตัวล่าง</p>
+                <p className="text-xs text-white/60 mb-1">2 ตัวล่าง</p>
                 <p className="font-bold text-lg tracking-wider">{govResult ? govResult.bot2 : '—'}</p>
               </div>
               <div>
-                <p className="text-[10px] text-white/60 mb-1">3 ตัวท้าย</p>
+                <p className="text-xs text-white/60 mb-1">3 ตัวท้าย</p>
                 <p className="font-bold text-lg tracking-wider">{govResult ? govResult.col6 : '—'}</p>
               </div>
             </div>
@@ -376,13 +376,13 @@ const Home = () => {
                         : <span className="material-icons text-primary text-3xl">timer</span>}
                     </div>
                     <h3 className="font-bold text-sm mb-1 text-center whitespace-nowrap truncate w-full">{instantCfg.name}</h3>
-                    <div className="flex items-center gap-1 text-accent-red text-[11px] font-bold mb-3">
+                    <div className="flex items-center gap-1 text-accent-red text-xs font-bold mb-3">
                       <span className="material-icons text-[12px]">bolt</span>
                       <span>ทุก 1 นาที</span>
                     </div>
                     <button
                       onClick={() => navigate('/instant-lottery')}
-                      className="w-full text-white py-2 rounded-full text-[11px] font-bold active:scale-95 transition-transform"
+                      className="w-full text-white py-2 rounded-full text-xs font-bold active:scale-95 transition-transform"
                       style={{ background: 'linear-gradient(to bottom, rgb(22, 68, 30), rgb(13, 121, 4))' }}
                     >แทงเลย</button>
                   </div>
@@ -393,13 +393,13 @@ const Home = () => {
                       <img alt={lottery.name} className="w-full h-full object-cover" src={lottery.logo_url} />
                     </div>
                     <h3 className="font-bold text-sm mb-1 text-center whitespace-nowrap truncate w-full">{lottery.name}</h3>
-                    <div className="flex items-center gap-1 text-accent-red text-[11px] font-bold mb-3">
+                    <div className="flex items-center gap-1 text-accent-red text-xs font-bold mb-3">
                       <span className="material-icons text-[12px]">schedule</span>
                       <span>{formatTime(timeLeft[lottery.id] || 0)}</span>
                     </div>
                     <button
                       onClick={() => navigate(`/betting?draw=${lottery.id}`)}
-                      className="w-full text-white py-2 rounded-full text-[11px] font-bold active:scale-95 transition-transform"
+                      className="w-full text-white py-2 rounded-full text-xs font-bold active:scale-95 transition-transform"
                       style={{ background: 'linear-gradient(to bottom, rgb(22, 68, 30), rgb(13, 121, 4))' }}
                     >แทงเลย</button>
                   </div>
@@ -436,7 +436,7 @@ const Home = () => {
                   </div>
                   <p className="text-xs text-slate-400 whitespace-nowrap">ออกผลทุก 1 นาที ตลอด 24 ชั่วโมง</p>
                   <button
-                    className="text-white px-5 py-1.5 rounded-full text-[11px] font-bold mt-3"
+                    className="text-white px-5 py-1.5 rounded-full text-xs font-bold mt-3"
                     style={{ background: 'linear-gradient(to bottom, rgb(22, 68, 30), rgb(13, 121, 4))' }}
                   >เล่นเลย</button>
                 </div>
@@ -462,7 +462,7 @@ const Home = () => {
                   </div>
                   <p className="text-xs text-slate-400 whitespace-nowrap">{item.code}</p>
                   <button
-                    className="text-white px-5 py-1.5 rounded-full text-[11px] font-bold mt-3"
+                    className="text-white px-5 py-1.5 rounded-full text-xs font-bold mt-3"
                     style={{ background: 'linear-gradient(to bottom, rgb(22, 68, 30), rgb(13, 121, 4))' }}
                   >เล่นเลย</button>
                 </div>
@@ -523,11 +523,11 @@ const Home = () => {
                       <h3 className="text-xl font-bold mb-1">แนะนำเพื่อน รับโบนัส</h3>
                       <div className="flex items-center gap-2">
                         <span className="text-accent-gold font-black text-3xl">0.6%</span>
-                        <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold">จากยอดเดิมพัน</span>
+                        <span className="bg-white/20 px-2 py-0.5 rounded text-xs font-bold">จากยอดเดิมพัน</span>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <p className="text-[11px] text-white/80">รับส่วนแบ่งไม่อั้น ยิ่งชวนยิ่งได้</p>
+                      <p className="text-xs text-white/80">รับส่วนแบ่งไม่อั้น ยิ่งชวนยิ่งได้</p>
                       <Link to="/affiliate" className="bg-white text-primary px-4 py-1.5 rounded-full text-xs font-bold">รับโปรโมชั่น</Link>
                     </div>
                   </div>
@@ -538,11 +538,11 @@ const Home = () => {
                       <h3 className="text-xl font-bold mb-1">สมาชิกใหม่ รับเครดิตฟรี</h3>
                       <div className="flex items-center gap-2">
                         <span className="text-white font-black text-3xl">100</span>
-                        <span className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold">บาททันที</span>
+                        <span className="bg-white/20 px-2 py-0.5 rounded text-xs font-bold">บาททันที</span>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <p className="text-[11px] text-white/80">เพียงฝากครั้งแรกขั้นต่ำ 300 บาท</p>
+                      <p className="text-xs text-white/80">เพียงฝากครั้งแรกขั้นต่ำ 300 บาท</p>
                       <Link to="/deposit" className="bg-white text-accent-red px-4 py-1.5 rounded-full text-xs font-bold">รับโปรโมชั่น</Link>
                     </div>
                   </div>
@@ -557,7 +557,7 @@ const Home = () => {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white">อัตราจ่ายพิเศษ</h2>
             <div className="bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
-              <span className="text-[10px] text-white font-bold">สูงสุด 10,000</span>
+              <span className="text-xs text-white font-bold">สูงสุด 10,000</span>
             </div>
           </div>
           <div className="overflow-hidden">
@@ -571,9 +571,9 @@ const Home = () => {
                 { label: 'สองตัวบน/ล่าง', value: '100' },
               ].map((item, i) => (
                 <div key={i} className="min-w-[140px] bg-white rounded-2xl flex flex-col items-center justify-center p-4 text-center shrink-0">
-                  <p className="text-[10px] text-gray-400 font-bold mb-1">{item.label}</p>
+                  <p className="text-xs text-gray-400 font-bold mb-1">{item.label}</p>
                   <p className="text-2xl font-black text-accent-red leading-tight">{item.value}</p>
-                  <p className="text-[9px] text-gray-400 font-bold mb-3">บาทละ</p>
+                  <p className="text-xs text-gray-400 font-bold mb-3">บาทละ</p>
                   <div className="flex items-center gap-1.5">
                     <img className="w-3.5 h-3.5 rounded-full" src="https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png" alt="TH-LOTTO" />
                     <span className="text-[8px] font-black text-emerald-treasury">TH-LOTTO</span>
@@ -615,7 +615,7 @@ const Home = () => {
               <div className="h-44 relative">
                 <img alt={article.title} className="w-full h-full object-cover" src={article.image_url || 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&auto=format&fit=crop'} />
                 <div className="absolute top-4 left-4">
-                  <span className="bg-accent-red text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">{article.category || 'ข่าวประกาศ'}</span>
+                  <span className="bg-accent-red text-white text-xs font-bold px-3 py-1 rounded-full uppercase">{article.category || 'ข่าวประกาศ'}</span>
                 </div>
               </div>
               <div className="p-6">
@@ -631,7 +631,7 @@ const Home = () => {
               <div className="h-44 relative">
                 <img alt="News" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcxihAZw-dkDidV--5la9GBHlrPK0Pc3wOHcbDeloFUkGCMVE7i-1DDPJfrPGq52WodowfWE4uUikQGLoT5GdcUVJs4xGeP-yy4j7knWToBPN0iRE0vRDXKOtQZYQFEnG12ZJPVluLDBVZgSmJSIr0hRGkKTEjeJb5DNMR9ULeg2x0UaEZcjuAtGVCoOhKACACS9XNfl9RhqV9iJICPX9Xrt3S5MgcpDiHUqtTCo9MkinUYkX43Q-iEzF7yHHc0NEeM1FpJCv2ZA" />
                 <div className="absolute top-4 left-4">
-                  <span className="bg-accent-red text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase">ข่าวประกาศ</span>
+                  <span className="bg-accent-red text-white text-xs font-bold px-3 py-1 rounded-full uppercase">ข่าวประกาศ</span>
                 </div>
               </div>
               <div className="p-6">
@@ -653,7 +653,7 @@ const Home = () => {
           <div className="bg-white w-full max-w-md rounded-[3.5rem] overflow-hidden shadow-2xl relative">
             <button
               onClick={() => setSelectedPromo(null)}
-              className="absolute top-4 right-4 w-10 h-10 rounded-full bg-black/20 flex items-center justify-center text-white z-10"
+              className="absolute top-4 right-4 w-11 h-11 rounded-full bg-black/20 flex items-center justify-center text-white z-10"
             >
               <span className="material-symbols-outlined text-xl">close</span>
             </button>

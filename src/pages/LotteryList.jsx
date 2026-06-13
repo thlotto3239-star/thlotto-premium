@@ -106,7 +106,7 @@ const LotteryList = () => {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 animate-pulse">กำลังโหลด...</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 animate-pulse">กำลังโหลด...</p>
           </div>
         ) : filteredLotteries.length > 0 ? (
           filteredLotteries.map((draw) => (
@@ -136,13 +136,13 @@ const LotteryList = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">อัตราจ่าย</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">อัตราจ่าย</p>
                   <p className="text-lg font-extrabold text-slate-900">บาทละ <span className="text-primary">{draw.payout_3top}</span></p>
                 </div>
               </div>
               <div className="flex items-center justify-between pt-5 border-t border-slate-100">
                 <div className="flex flex-col">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">ปิดรับใน</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">ปิดรับใน</p>
                   <div className="flex items-center gap-1.5">
                     <span className={`material-symbols-outlined text-base ${timeLeft[draw.id] <= 3600 ? 'text-red-500' : 'text-slate-700'}`}>schedule</span>
                     <span className={`font-body tabular-nums font-bold text-base ${timeLeft[draw.id] <= 3600 ? 'text-red-500' : 'text-slate-700'}`}>

@@ -97,11 +97,11 @@ const Results = () => {
   const SubDate = ({ row }) => {
     if (row.has_draw_today && isPending(row.result_status)) {
       const cd = getCountdown(row.draw_time);
-      if (cd) return <p className="text-[9px] text-amber-500 font-bold">อีก {cd}</p>;
-      return <p className="text-[9px] text-slate-400 font-medium">ออกผล {fmtTime(row.draw_time)}</p>;
+      if (cd) return <p className="text-xs text-amber-500 font-bold">อีก {cd}</p>;
+      return <p className="text-xs text-slate-400 font-medium">ออกผล {fmtTime(row.draw_time)}</p>;
     }
-    if (row.has_draw_today) return <p className="text-[9px] text-slate-400 font-medium">ออกผล {fmtTime(row.draw_time)}</p>;
-    return <p className="text-[9px] text-slate-400 font-medium">{fmtDate(row.draw_date)}</p>;
+    if (row.has_draw_today) return <p className="text-xs text-slate-400 font-medium">ออกผล {fmtTime(row.draw_time)}</p>;
+    return <p className="text-xs text-slate-400 font-medium">{fmtDate(row.draw_date)}</p>;
   };
 
   const pending = (row) => isPending(row.result_status);
@@ -144,12 +144,12 @@ const Results = () => {
                       </div>
                       <div className="min-w-0 flex-1">
                         <h2 className="text-sm sm:text-lg font-bold leading-tight truncate">สลากกินแบ่งรัฐบาล</h2>
-                        <p className="text-white/70 text-[10px] font-medium truncate mt-0.5">
+                        <p className="text-white/70 text-xs font-medium truncate mt-0.5">
                           {govRow.has_draw_today ? `วันนี้ ออกผล ${fmtTime(govRow.draw_time)}` : fmtDate(govRow.draw_date)}
                         </p>
                       </div>
                     </div>
-                    <div className={`px-2 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-bold whitespace-nowrap shrink-0 ${
+                    <div className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-xs font-bold whitespace-nowrap shrink-0 ${
                       !govRow.has_draw_today ? 'bg-blue-400/30 text-white' :
                       pending(govRow) ? 'bg-red-500 text-white' : 'bg-green-400 text-white'
                     }`}>
@@ -157,14 +157,14 @@ const Results = () => {
                     </div>
                   </div>
                   <div className="mb-6 text-center">
-                    <p className="text-white/80 text-[11px] font-medium mb-3">รางวัลที่ 1</p>
+                    <p className="text-white/80 text-xs font-medium mb-3">รางวัลที่ 1</p>
                     <div className="flex justify-center gap-1.5">
                       {pending(govRow)
                         ? Array.from({ length: 6 }).map((_, i) => (
-                            <span key={i} className="w-10 h-10 bg-white/15 border border-white/20 rounded-full flex items-center justify-center text-white/30 font-bold text-xl">x</span>
+                            <span key={i} className="w-11 h-11 bg-white/15 border border-white/20 rounded-full flex items-center justify-center text-white/30 font-bold text-xl">x</span>
                           ))
                         : (govRow.result_main || '').split('').map((digit, i) => (
-                            <span key={i} className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#064e3b] font-bold text-xl">{digit}</span>
+                            <span key={i} className="w-11 h-11 bg-white rounded-full flex items-center justify-center text-[#064e3b] font-bold text-xl">{digit}</span>
                           ))
                       }
                     </div>
@@ -172,15 +172,15 @@ const Results = () => {
                   <div className="h-px bg-white/10 mb-5"></div>
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div>
-                      <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวหน้า</p>
+                      <p className="text-white/60 text-xs font-medium mb-1">3 ตัวหน้า</p>
                       <div className="text-base font-bold">{pending(govRow) ? 'xxx' : (govRow.result_3front || 'xxx')}</div>
                     </div>
                     <div>
-                      <p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวท้าย</p>
+                      <p className="text-white/60 text-xs font-medium mb-1">3 ตัวท้าย</p>
                       <div className="text-base font-bold">{pending(govRow) ? 'xxx' : (govRow.result_3top || 'xxx')}</div>
                     </div>
                     <div>
-                      <p className="text-white/60 text-[9px] font-medium mb-1">2 ตัวล่าง</p>
+                      <p className="text-white/60 text-xs font-medium mb-1">2 ตัวล่าง</p>
                       <div className="text-xl font-bold">{pending(govRow) ? 'xx' : (govRow.result_2bottom || govRow.result_2top || 'xx')}</div>
                     </div>
                   </div>
@@ -309,12 +309,12 @@ const Results = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="text-sm font-bold leading-tight truncate">{r.lottery_markets?.name}</h4>
-                        <p className="text-white/70 text-[10px] font-medium truncate mt-0.5">{fmtDate(date)}</p>
+                        <p className="text-white/70 text-xs font-medium truncate mt-0.5">{fmtDate(date)}</p>
                       </div>
                     </div>
                     {r.result_main && (
                       <div className="mb-4 text-center">
-                        <p className="text-white/80 text-[10px] font-medium mb-2">รางวัลที่ 1</p>
+                        <p className="text-white/80 text-xs font-medium mb-2">รางวัลที่ 1</p>
                         <div className="flex justify-center gap-1">
                           {r.result_main.split('').map((d, idx) => (
                             <span key={idx} className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center text-[#064e3b] font-bold text-base sm:text-xl">{d}</span>
@@ -324,9 +324,9 @@ const Results = () => {
                     )}
                     <div className="h-px bg-white/10 mb-3"></div>
                     <div className="grid grid-cols-3 gap-2 text-center">
-                      <div><p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวหน้า</p><div className="text-sm sm:text-base font-bold">{r.result_3front || '—'}</div></div>
-                      <div><p className="text-white/60 text-[9px] font-medium mb-1">3 ตัวท้าย</p><div className="text-sm sm:text-base font-bold">{r.result_3top || '—'}</div></div>
-                      <div><p className="text-white/60 text-[9px] font-medium mb-1">2 ตัวล่าง</p><div className="text-base sm:text-xl font-bold">{r.result_2bottom || r.result_2top || '—'}</div></div>
+                      <div><p className="text-white/60 text-xs font-medium mb-1">3 ตัวหน้า</p><div className="text-sm sm:text-base font-bold">{r.result_3front || '—'}</div></div>
+                      <div><p className="text-white/60 text-xs font-medium mb-1">3 ตัวท้าย</p><div className="text-sm sm:text-base font-bold">{r.result_3top || '—'}</div></div>
+                      <div><p className="text-white/60 text-xs font-medium mb-1">2 ตัวล่าง</p><div className="text-base sm:text-xl font-bold">{r.result_2bottom || r.result_2top || '—'}</div></div>
                     </div>
                   </div>
                 </div>
@@ -375,7 +375,7 @@ const Results = () => {
                             : <div className="w-10 h-10 rounded-full bg-slate-100 shrink-0"></div>}
                           <div className="flex-1 min-w-0">
                             <h4 className="font-bold text-slate-900 text-sm truncate">{r.lottery_markets?.name}</h4>
-                            <p className="text-[9px] text-slate-400 font-mono">{r.lottery_markets?.code}</p>
+                            <p className="text-xs text-slate-400 font-mono">{r.lottery_markets?.code}</p>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">

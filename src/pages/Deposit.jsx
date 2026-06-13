@@ -59,7 +59,7 @@ const Deposit = () => {
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md px-6 pt-12 pb-4 flex items-center justify-between border-b border-slate-100">
         <button
           onClick={() => navigate(-1)}
-          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-slate-50 transition-colors text-[#b08d57]"
+          className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-slate-50 transition-colors text-[#b08d57]"
         >
           <span className="material-symbols-outlined text-3xl font-bold">chevron_left</span>
         </button>
@@ -75,7 +75,7 @@ const Deposit = () => {
               <p className="text-primary font-extrabold text-sm">ฝากพร้อมโปรโมชั่น</p>
               <p className="text-slate-600 text-xs font-medium">{promoName || promoCode}</p>
             </div>
-            <span className="text-[10px] font-bold bg-primary text-white px-3 py-1 rounded-full uppercase tracking-wide">Active</span>
+            <span className="text-xs font-bold bg-primary text-white px-3 py-1 rounded-full uppercase tracking-wide">Active</span>
           </div>
         )}
 
@@ -92,7 +92,7 @@ const Deposit = () => {
             </div>
             <div className="flex items-center justify-between bg-slate-50 rounded-2xl p-4 border border-slate-100">
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">เลขที่บัญชี</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">เลขที่บัญชี</p>
                 <p className="text-lg font-extrabold font-body tabular-nums tracking-wider text-slate-800">{bankSettings.bank_account_number}</p>
               </div>
               <button
