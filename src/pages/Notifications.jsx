@@ -62,6 +62,7 @@ const Notifications = () => {
       case 'DEPOSIT': return 'account_balance_wallet';
       case 'WITHDRAW': return 'payments';
       case 'SYSTEM': return 'info';
+      case 'broadcast': return 'campaign';
       default: return 'notifications';
     }
   };
@@ -72,6 +73,7 @@ const Notifications = () => {
       case 'DEPOSIT': return 'text-[#1a7e2a]';
       case 'WITHDRAW': return 'text-[#b08d57]';
       case 'SYSTEM': return 'text-blue-500';
+      case 'broadcast': return 'text-orange-500';
       default: return 'text-slate-400';
     }
   };
@@ -82,6 +84,7 @@ const Notifications = () => {
       case 'DEPOSIT': return 'bg-[#1a7e2a]/10';
       case 'WITHDRAW': return 'bg-[#b08d57]/10';
       case 'SYSTEM': return 'bg-blue-50';
+      case 'broadcast': return 'bg-orange-50';
       default: return 'bg-slate-50';
     }
   };
@@ -149,7 +152,8 @@ const Notifications = () => {
             { id: 'WIN', name: 'ถูกรางวัล' },
             { id: 'DEPOSIT', name: 'ฝากเงิน' },
             { id: 'WITHDRAW', name: 'ถอนเงิน' },
-            { id: 'SYSTEM', name: 'ระบบ' }
+            { id: 'SYSTEM', name: 'ระบบ' },
+            { id: 'broadcast', name: 'ประกาศ' }
           ].map((f) => (
             <button
               key={f.id}
