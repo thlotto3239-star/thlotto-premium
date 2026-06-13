@@ -7,23 +7,14 @@ import { useAuth } from '../AuthContext';
 // หวยไทย 1 นาที (Instant Lottery) — Single-bet auto-popup UX
 // ============================================================
 
-const BET_TABS = [
-  { code: '2top',      name: '2 ตัว',    digits: 2, positioned: false },
-  { code: '2bottom',   name: '2 ตัวร่าง',   digits: 2, positioned: false },
-  { code: '3top',      name: '3 ตัวหน้า',    digits: 3, positioned: false },
-  { code: '3toad',     name: '3 ตัวโต๊ด',   digits: 3, positioned: false },
-  { code: '3front',    name: '3 ตัวหน้า',   digits: 3, positioned: false },
-  { code: '3back',     name: '3 ตัวท้าย',   digits: 3, positioned: false },
-  { code: '6straight', name: '6 ตัวตรง',    digits: 6, positioned: false },
-  { code: 'pin_top',    name: 'ปักหลักบน',  digits: 0, positioned: true, maxPin: 7, positions: ['hundreds', 'tens', 'units'] },
-  { code: 'pin_bottom', name: 'ปักหลักล่าง', digits: 0, positioned: true, maxPin: 7, positions: ['tens', 'units'] },
-];
+const PIN_META = {
+  pin_top:    { maxPin: 7, positions: ['hundreds', 'tens', 'units'] },
+  pin_bottom: { maxPin: 7, positions: ['tens', 'units'] },
+};
 
 const CHIPS = [10, 20, 50, 100, 200, 500];
 const POS_LABEL = { hundreds: 'หลักร้อย', tens: 'หลักสิบ', units: 'หลักหน่วย' };
 const POS_SHORT = { hundreds: 'ร้อย', tens: 'สิบ', units: 'หน่วย' };
-
-const BET_NAME_BY_CODE = BET_TABS.reduce((a, c) => ({ ...a, [c.code]: c.name }), {});
 
 const fmt = (n) => Math.floor(parseFloat(n || 0)).toLocaleString('th-TH');
 
@@ -33,7 +24,8 @@ export default function InstantLottery() {
   const balance = Math.floor(profile?.balance ?? 0);
 
   // ---- State ----
-  const [activeTab, setActiveTab] = useState('2top');
+  const [betTabs, setBetTabs] = useState([]);
+  const [activeTab, setActiveTab] = useState('');
   const [inputNumber, setInputNumber] = useState('');
   const [pinSelection, setPinSelection] = useState({ hundreds: [], tens: [], units: [] });
   const [logoUrl, setLogoUrl] = useState('https://flagcdn.com/w160/th.png');
@@ -62,7 +54,36 @@ export default function InstantLottery() {
   const prevBalanceRef = useRef(balance);
   const prevDrawIdRef = useRef(null);
 
-  const tabInfo = BET_TABS.find(t => t.code === activeTab);
+  const tabInfo = betTabs.find(t => t.code === activeTab);
+  const betNameByCode = betTabs.reduce((a, c) => ({ ...a, [c.code]: c.name }), {});
+
+  // ============================================================
+  // Fetch active bet types from DB
+  // ============================================================
+  useEffect(() => {
+    const fetchBetTypes = async () => {
+      const { data } = await supabase
+        .from('instant_bet_types')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order');
+      if (data && data.length > 0) {
+        const tabs = data.map(r => ({
+          code: r.code,
+          name: r.name,
+          digits: r.is_positioned ? 0 : (r.max_digits || r.min_digits || 0),
+          positioned: r.is_positioned,
+          ...(PIN_META[r.code] || {}),
+        }));
+        setBetTabs(tabs);
+        setActiveTab(prev => {
+          if (!prev || !tabs.some(t => t.code === prev)) return tabs[0].code;
+          return prev;
+        });
+      }
+    };
+    fetchBetTypes();
+  }, []);
 
   // ============================================================
   // Timer — sync every second + detect minute change
@@ -454,7 +475,7 @@ export default function InstantLottery() {
           style={{ background: 'linear-gradient(180deg, rgba(13,74,10,0.95) 0%, rgba(6,78,59,0.9) 100%)' }}
         >
           <div className="grid grid-cols-5 gap-1">
-            {BET_TABS.slice(0, 5).map((tab) => (
+            {betTabs.slice(0, 5).map((tab) => (
               <button
                 key={tab.code}
                 onClick={() => selectTab(tab.code)}
@@ -474,7 +495,7 @@ export default function InstantLottery() {
             ))}
           </div>
           <div className="grid grid-cols-4 gap-1 mt-1">
-            {BET_TABS.slice(5).map((tab) => (
+            {betTabs.slice(5).map((tab) => (
               <button
                 key={tab.code}
                 onClick={() => selectTab(tab.code)}
@@ -561,7 +582,7 @@ export default function InstantLottery() {
             <div className="text-center mb-4">
               <h3 className="text-gray-300 text-sm">รายการที่เลือก</h3>
               <div className="text-[#D4AF37] font-mono text-sm font-bold mt-1 break-all">
-                [{BET_NAME_BY_CODE[pendingBet?.type] || ''}] {pendingBet?.display}
+                [{betNameByCode[pendingBet?.type] || ''}] {pendingBet?.display}
               </div>
               {pendingBet?.type?.startsWith('pin_') && (() => {
                 const numObj = JSON.parse(pendingBet.numbers || '{}');
@@ -689,7 +710,7 @@ export default function InstantLottery() {
             ) : historyData.length === 0 ? (
               <div className="text-center text-gray-500 mt-10">ไม่มีประวัติ</div>
             ) : (
-              historyData.map((b) => <HistoryItem key={b.id} bet={b} />)
+              historyData.map((b) => <HistoryItem key={b.id} bet={b} betNameByCode={betNameByCode} />)
             )}
           </div>
         </div>
@@ -803,8 +824,8 @@ function PopupSubBox({ label, value }) {
   );
 }
 
-function HistoryItem({ bet }) {
-  const typeName = BET_NAME_BY_CODE[bet.bet_type] || bet.bet_type;
+function HistoryItem({ bet, betNameByCode = {} }) {
+  const typeName = betNameByCode[bet.bet_type] || bet.bet_type;
   let displayNum = bet.numbers;
   if (bet.bet_type?.startsWith('pin_')) {
     try {
