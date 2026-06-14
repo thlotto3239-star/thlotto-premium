@@ -11,6 +11,7 @@ const Wallet = () => {
   const [promotions, setPromotions] = useState([]);
   const [banks, setBanks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [promoStatus, setPromoStatus] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -49,6 +50,23 @@ const Wallet = () => {
       setBanks(data || []);
     };
     fetchBanks();
+
+    const fetchPromoStatus = async () => {
+      const { data } = await supabase
+        .from('wallets')
+        .select('active_promo_id, turnover_required, turnover_completed, promo_max_withdrawal, promo_allowed_game')
+        .eq('user_id', user.id)
+        .single();
+      if (data?.active_promo_id) {
+        const { data: promo } = await supabase
+          .from('promotions')
+          .select('title')
+          .eq('id', data.active_promo_id)
+          .single();
+        setPromoStatus({ ...data, promo_title: promo?.title || 'โปรโมชั่น' });
+      }
+    };
+    fetchPromoStatus();
   }, [user]);
 
   const getTypeThai = (type) => {
@@ -136,6 +154,47 @@ const Wallet = () => {
           </div>
         </header>
 
+        {/* Promo Status */}
+        {promoStatus && (
+          <div className="mx-6 mb-2 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="material-symbols-outlined text-amber-600 text-lg">redeem</span>
+              <span className="font-bold text-sm text-amber-800">โปรโมชั่นที่ใช้อยู่: {promoStatus.promo_title}</span>
+            </div>
+            <div className="mb-2">
+              <div className="flex justify-between text-xs text-amber-700 mb-1">
+                <span>เทิร์นโอเวอร์</span>
+                <span className="font-bold">
+                  {Number(promoStatus.turnover_completed).toLocaleString()} / {Number(promoStatus.turnover_required).toLocaleString()} บาท
+                </span>
+              </div>
+              <div className="w-full bg-amber-200 rounded-full h-2.5">
+                <div
+                  className="h-2.5 rounded-full transition-all"
+                  style={{
+                    width: `${Math.min(100, promoStatus.turnover_required > 0 ? (promoStatus.turnover_completed / promoStatus.turnover_required) * 100 : 0)}%`,
+                    background: promoStatus.turnover_completed >= promoStatus.turnover_required ? '#16a34a' : '#f59e0b'
+                  }}
+                />
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-amber-700">
+              {promoStatus.turnover_completed < promoStatus.turnover_required && (
+                <span>แทงอีก ฿{(promoStatus.turnover_required - promoStatus.turnover_completed).toLocaleString()} ถึงจะถอนได้</span>
+              )}
+              {promoStatus.turnover_completed >= promoStatus.turnover_required && (
+                <span className="text-green-600 font-bold">✅ ทำเทิร์นครบแล้ว ถอนได้</span>
+              )}
+              {promoStatus.promo_max_withdrawal > 0 && (
+                <span>ถอนสูงสุด ฿{Number(promoStatus.promo_max_withdrawal).toLocaleString()}</span>
+              )}
+              {promoStatus.promo_allowed_game && promoStatus.promo_allowed_game !== 'all' && (
+                <span>เล่นได้: {promoStatus.promo_allowed_game === 'instant' ? 'หวย 1 นาที' : 'หวยหลัก'}</span>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Main Actions */}
         <div className="px-6 grid grid-cols-2 gap-4 my-6">
           <button
@@ -164,7 +223,7 @@ const Wallet = () => {
             {promotions.length > 0 ? promotions.map((p) => (
               <div
                 key={p.id}
-                onClick={() => navigate(`/deposit?promo=${p.promo_code || p.id}&promoName=${encodeURIComponent(p.title)}&amount=${p.min_deposit || 100}`)}
+                onClick={() => navigate(`/deposit?promo=${p.promo_code || p.id}&promoName=${encodeURIComponent(p.title)}&promoId=${p.id}&amount=${p.min_deposit || 100}`)}
                 className="min-w-[280px] bg-slate-50 rounded-2xl p-4 border border-slate-100 cursor-pointer active:scale-[0.98] transition-all"
               >
                 <div className="flex items-center gap-3 mb-3">

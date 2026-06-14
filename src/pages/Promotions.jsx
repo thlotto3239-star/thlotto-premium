@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { useAuth } from '../AuthContext';
 import BottomNav from '../components/BottomNav';
 
 const BADGE_COLORS = {
@@ -13,29 +14,47 @@ const BADGE_COLORS = {
   VIP: 'bg-yellow-600',
 };
 
+const GAME_LABEL = { all: 'ทั้งหมด (หวยหลัก + หวย 1 นาที)', main: 'หวยหลักเท่านั้น', instant: 'หวย 1 นาทีเท่านั้น' };
+
 const Promotions = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [promotions, setPromotions] = useState([]);
+  const [usedPromoIds, setUsedPromoIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
 
   const handleAccept = (promo) => {
     setSelected(null);
-    navigate(`/deposit?promo=${promo.promo_code || promo.id}&promoName=${encodeURIComponent(promo.title)}&amount=${promo.min_deposit || 100}`);
+    navigate(`/deposit?promo=${promo.promo_code || promo.id}&promoName=${encodeURIComponent(promo.title)}&promoId=${promo.id}&amount=${promo.min_deposit || 100}`);
   };
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchData = async () => {
       const { data } = await supabase
         .from('promotions')
         .select('*')
         .eq('is_active', true)
         .order('id', { ascending: false });
       setPromotions(data || []);
+
+      if (user) {
+        const { data: bonusTx } = await supabase
+          .from('transactions')
+          .select('note')
+          .eq('user_id', user.id)
+          .eq('type', 'BONUS');
+        const ids = new Set();
+        (bonusTx || []).forEach(t => {
+          const m = t.note?.match(/\((\d+)\)$/);
+          if (m) ids.add(Number(m[1]));
+        });
+        setUsedPromoIds(ids);
+      }
       setLoading(false);
     };
-    fetch();
-  }, []);
+    fetchData();
+  }, [user]);
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-900">
@@ -88,7 +107,10 @@ const Promotions = () => {
                   )}
                 </div>
                 <p className="text-sm text-slate-500 line-clamp-2">{promo.description}</p>
-                <div className="flex items-center justify-between mt-4">
+                {promo.allowed_game && promo.allowed_game !== 'all' && (
+                  <p className="text-xs text-blue-600 font-bold mt-2">🎮 {GAME_LABEL[promo.allowed_game]}</p>
+                )}
+                <div className="flex items-center justify-between mt-3">
                   <div className="flex gap-4">
                     {promo.bonus_amount > 0 && (
                       <div className="text-center">
@@ -109,9 +131,13 @@ const Promotions = () => {
                       </div>
                     )}
                   </div>
-                  <button className="bg-primary text-white px-5 py-2 rounded-full text-xs font-extrabold shadow-md shadow-primary/20">
-                    รับโปร
-                  </button>
+                  {usedPromoIds.has(promo.id) ? (
+                    <span className="text-xs font-extrabold text-slate-400 px-4 py-2 rounded-full bg-slate-100">รับแล้ว ✅</span>
+                  ) : (
+                    <button className="bg-primary text-white px-5 py-2 rounded-full text-xs font-extrabold shadow-md shadow-primary/20">
+                      รับโปร
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -171,6 +197,35 @@ const Promotions = () => {
                 </div>
               )}
             </div>
+            {selected.allowed_game && (
+              <div className="mt-3 flex items-center gap-2 text-xs">
+                <span className="material-symbols-outlined text-blue-500 text-sm">sports_esports</span>
+                <span className="text-slate-600 font-semibold">เล่นได้เฉพาะ: {GAME_LABEL[selected.allowed_game]}</span>
+              </div>
+            )}
+            {selected.expires_at && (
+              <div className="mt-2 flex items-center gap-2 text-xs">
+                <span className="material-symbols-outlined text-red-400 text-sm">schedule</span>
+                <span className="text-slate-600 font-semibold">หมดอายุ: {new Date(selected.expires_at).toLocaleDateString('th-TH-u-ca-buddhist', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+              </div>
+            )}
+            {selected.max_uses_per_user > 0 && (
+              <div className="mt-2 flex items-center gap-2 text-xs">
+                <span className="material-symbols-outlined text-slate-400 text-sm">person</span>
+                <span className="text-slate-600 font-semibold">รับได้ {selected.max_uses_per_user} ครั้ง/คน</span>
+              </div>
+            )}
+            {selected.max_uses_per_day > 0 && (
+              <div className="mt-2 flex items-center gap-2 text-xs">
+                <span className="material-symbols-outlined text-slate-400 text-sm">today</span>
+                <span className="text-slate-600 font-semibold">รับได้วันละ {selected.max_uses_per_day} ครั้ง</span>
+              </div>
+            )}
+            {usedPromoIds.has(selected.id) && (
+              <div className="mt-3 bg-slate-100 rounded-xl p-3 text-center">
+                <span className="text-sm font-bold text-slate-500">✅ คุณรับโปรนี้ไปแล้ว</span>
+              </div>
+            )}
             <button
               onClick={() => handleAccept(selected)}
               className="mt-6 w-full bg-primary text-white py-4 rounded-2xl font-extrabold text-sm shadow-lg shadow-primary/20"

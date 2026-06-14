@@ -13,6 +13,7 @@ const Withdrawal = () => {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [minWithdraw, setMinWithdraw] = useState(300);
+  const [promoStatus, setPromoStatus] = useState(null);
   const [showPinModal, setShowPinModal] = useState(false);
   const [pendingAmount, setPendingAmount] = useState(null);
   const [pin, setPin] = useState('');
@@ -37,7 +38,26 @@ const Withdrawal = () => {
       if (data) setMinWithdraw(Number(data.value));
     };
     fetchMin();
-  }, []);
+
+    if (profile) {
+      const fetchPromoStatus = async () => {
+        const { data } = await supabase
+          .from('wallets')
+          .select('active_promo_id, turnover_required, turnover_completed, promo_max_withdrawal, promo_allowed_game')
+          .eq('user_id', profile.id)
+          .single();
+        if (data?.active_promo_id) {
+          const { data: promo } = await supabase
+            .from('promotions')
+            .select('title')
+            .eq('id', data.active_promo_id)
+            .single();
+          setPromoStatus({ ...data, promo_title: promo?.title || 'โปรโมชั่น' });
+        }
+      };
+      fetchPromoStatus();
+    }
+  }, [profile]);
 
   const handleWithdrawal = () => {
     const withdrawAmount = parseFloat(amount);
@@ -139,6 +159,37 @@ const Withdrawal = () => {
       </header>
 
       <main className="flex-1 px-6 pt-6 pb-36">
+        {/* Promo Turnover Warning */}
+        {promoStatus && (
+          <div className={`mb-4 rounded-2xl p-4 border ${promoStatus.turnover_completed >= promoStatus.turnover_required ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="material-symbols-outlined text-lg" style={{ color: promoStatus.turnover_completed >= promoStatus.turnover_required ? '#16a34a' : '#d97706' }}>
+                {promoStatus.turnover_completed >= promoStatus.turnover_required ? 'check_circle' : 'warning'}
+              </span>
+              <span className={`font-bold text-sm ${promoStatus.turnover_completed >= promoStatus.turnover_required ? 'text-green-800' : 'text-amber-800'}`}>
+                {promoStatus.turnover_completed >= promoStatus.turnover_required ? 'ทำเทิร์นครบแล้ว ถอนได้' : 'ติดเงื่อนไขโปรโมชั่น'}
+              </span>
+            </div>
+            <p className="text-xs font-semibold text-slate-600 mb-2">โปร: {promoStatus.promo_title}</p>
+            <div className="flex justify-between text-xs text-slate-500 mb-1">
+              <span>เทิร์นโอเวอร์</span>
+              <span className="font-bold">{Number(promoStatus.turnover_completed).toLocaleString()} / {Number(promoStatus.turnover_required).toLocaleString()}</span>
+            </div>
+            <div className="w-full bg-slate-200 rounded-full h-2 mb-2">
+              <div className="h-2 rounded-full transition-all" style={{
+                width: `${Math.min(100, promoStatus.turnover_required > 0 ? (promoStatus.turnover_completed / promoStatus.turnover_required) * 100 : 0)}%`,
+                background: promoStatus.turnover_completed >= promoStatus.turnover_required ? '#16a34a' : '#f59e0b'
+              }} />
+            </div>
+            {promoStatus.turnover_completed < promoStatus.turnover_required && (
+              <p className="text-xs text-amber-700">แทงอีก ฿{(promoStatus.turnover_required - promoStatus.turnover_completed).toLocaleString()} ถึงจะถอนได้</p>
+            )}
+            {promoStatus.promo_max_withdrawal > 0 && (
+              <p className="text-xs text-slate-500 mt-1">ถอนสูงสุด ฿{Number(promoStatus.promo_max_withdrawal).toLocaleString()}</p>
+            )}
+          </div>
+        )}
+
         {/* Premium Badge */}
         <div className="flex justify-center mb-6">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5">
