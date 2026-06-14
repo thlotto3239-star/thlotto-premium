@@ -264,7 +264,7 @@ const Wallet = () => {
                           <span className="text-xs text-slate-400">
                             {new Date(tx.created_at).toLocaleDateString('th-TH-u-ca-buddhist', { day: '2-digit', month: 'short', year: '2-digit' })} • {new Date(tx.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${statusBadge}`}>{statusText}</span>
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold whitespace-nowrap ${statusBadge}`}>{statusText}</span>
                         </div>
                       </div>
                     </div>

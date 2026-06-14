@@ -222,7 +222,7 @@ const Transactions = () => {
                         {new Date(t.created_at).toLocaleDateString('th-TH-u-ca-buddhist', { day: '2-digit', month: 'short', year: '2-digit' })},{' '}
                         {new Date(t.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
                       </p>
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${getStatusStyle(t.status)}`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide whitespace-nowrap ${getStatusStyle(t.status)}`}>
                         {getStatusLabel(t.status)}
                       </span>
                     </div>
