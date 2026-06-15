@@ -102,7 +102,8 @@ const Home = () => {
         (popupSettings || []).forEach(s => { popupMap[s.key] = s.value; });
         if (popupMap.popup_enabled?.toUpperCase() === 'TRUE' && (popupMap.popup_title || popupMap.popup_image_url)) {
           const dismissed = localStorage.getItem('popup_dismissed');
-          if (!dismissed) {
+          const today = new Date().toISOString().slice(0, 10);
+          if (dismissed !== today) {
             setPopupData({
               title: popupMap.popup_title || '',
               description: popupMap.popup_description || '',
@@ -705,7 +706,7 @@ const Home = () => {
                 </button>
                 <button
                   onClick={() => {
-                    localStorage.setItem('popup_dismissed', '1');
+                    localStorage.setItem('popup_dismissed', new Date().toISOString().slice(0, 10));
                     setShowPopup(false);
                   }}
                   className="flex-1 py-2.5 bg-slate-100 text-slate-500 text-sm font-bold rounded-xl active:scale-95 transition"
