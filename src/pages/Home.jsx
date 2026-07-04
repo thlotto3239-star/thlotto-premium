@@ -13,7 +13,7 @@ const isPending = (v) => {
 
 const formatThaiDate = (dateStr) => {
   if (!dateStr) return '';
-  const match = dateStr.match(/(\d{1,2})\s+([\u0e00-\u0e7f]+)\s+(\d{4})/);
+  const match = dateStr.match(/(\d{1,2})\s+([฀-๿]+)\s+(\d{4})/);
   if (match) return `งวดวันที่ ${match[1]} ${match[2]} ${match[3]}`;
   return dateStr;
 };
@@ -28,6 +28,7 @@ const Home = () => {
   const [articles, setArticles] = useState([]);
   const [announcements, setAnnouncements] = useState([]);
   const [trending, setTrending] = useState([]);
+  const [payoutRates, setPayoutRates] = useState([]);
   const [instantCfg, setInstantCfg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [luckyWheelBanner, setLuckyWheelBanner] = useState('');
@@ -126,6 +127,29 @@ const Home = () => {
           show_popular: instMap.instant_show_popular === 'true',
           show_trending: instMap.instant_show_trending !== 'false',
         });
+
+        // 11. Fetch Payout Rates — ดึงอัตราจ่ายสูงสุดแต่ละประเภท
+        const { data: ratesData } = await supabase
+          .from('payout_rates')
+          .select('bet_type, rate')
+          .in('bet_type', ['4TOP', '3TOP', '3TODE', '2TOP', '2BOTTOM', 'RUN_UP', 'RUN_DOWN'])
+          .order('rate', { ascending: false });
+        if (ratesData && ratesData.length > 0) {
+          const maxByType = {};
+          ratesData.forEach(r => {
+            if (!maxByType[r.bet_type] || Number(r.rate) > Number(maxByType[r.bet_type]))
+              maxByType[r.bet_type] = Number(r.rate);
+          });
+          const typeLabels = {
+            '4TOP': 'สี่ตัวตรง', '3TOP': 'สามตัวตรง', '3TODE': 'สามตัวโต๊ด',
+            '2TOP': 'สองตัวบน', '2BOTTOM': 'สองตัวล่าง',
+            'RUN_UP': 'วิ่งบน', 'RUN_DOWN': 'วิ่งล่าง',
+          };
+          const sorted = Object.entries(maxByType)
+            .sort((a, b) => b[1] - a[1])
+            .map(([type, rate]) => ({ label: typeLabels[type] || type, value: rate }));
+          setPayoutRates(sorted);
+        }
 
         setDraws(drawData || []);
         setPopularLotteries(popularData || []);
@@ -554,26 +578,20 @@ const Home = () => {
         </section>
 
         {/* Special Payout Rates */}
+        {payoutRates.length > 0 && (
         <section className="rounded-[2.5rem] p-6 overflow-hidden relative bg-emerald-treasury">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-white">อัตราจ่ายพิเศษ</h2>
             <div className="bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
-              <span className="text-xs text-white font-bold">สูงสุด 10,000</span>
+              <span className="text-xs text-white font-bold">สูงสุด {Number(payoutRates[0].value).toLocaleString()}</span>
             </div>
           </div>
           <div className="overflow-hidden">
             <div className="flex animate-marquee-payout whitespace-nowrap gap-3">
-              {[
-                { label: 'สามตัวตรง', value: '950' },
-                { label: 'สี่ตัวตรง', value: '10,000' },
-                { label: 'สองตัวบน/ล่าง', value: '100' },
-                { label: 'สามตัวตรง', value: '950' },
-                { label: 'สี่ตัวตรง', value: '10,000' },
-                { label: 'สองตัวบน/ล่าง', value: '100' },
-              ].map((item, i) => (
+              {[...payoutRates, ...payoutRates].map((item, i) => (
                 <div key={i} className="min-w-[140px] bg-white rounded-2xl flex flex-col items-center justify-center p-4 text-center shrink-0">
                   <p className="text-xs text-gray-400 font-bold mb-1">{item.label}</p>
-                  <p className="text-2xl font-black text-accent-red leading-tight">{item.value}</p>
+                  <p className="text-2xl font-black text-accent-red leading-tight">{Number(item.value).toLocaleString()}</p>
                   <p className="text-xs text-gray-400 font-bold mb-3">บาทละ</p>
                   <div className="flex items-center gap-1.5">
                     <img className="w-3.5 h-3.5 rounded-full" src="https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png" alt="TH-LOTTO" />
@@ -584,6 +602,7 @@ const Home = () => {
             </div>
           </div>
         </section>
+        )}
 
         {/* Lucky Wheel Banner */}
         <section>
