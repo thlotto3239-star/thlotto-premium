@@ -132,7 +132,7 @@ const Home = () => {
         const { data: ratesData } = await supabase
           .from('payout_rates')
           .select('bet_type, rate')
-          .in('bet_type', ['4TOP', '3TOP', '3TODE', '2TOP', '2BOTTOM', 'RUN_UP', 'RUN_DOWN'])
+          .in('bet_type', ['6DIGIT', '4TOP', '3TOP', '3TODE', '3FRONT', '3BOTTOM', '2TOP', '2BOTTOM', 'RUN_UP', 'RUN_DOWN'])
           .order('rate', { ascending: false });
         if (ratesData && ratesData.length > 0) {
           const maxByType = {};
@@ -141,7 +141,9 @@ const Home = () => {
               maxByType[r.bet_type] = Number(r.rate);
           });
           const typeLabels = {
-            '4TOP': 'สี่ตัวตรง', '3TOP': 'สามตัวตรง', '3TODE': 'สามตัวโต๊ด',
+            '6DIGIT': 'หกตัวตรง', '4TOP': 'สี่ตัวตรง',
+            '3TOP': 'สามตัวตรง', '3TODE': 'สามตัวโต๊ด',
+            '3FRONT': 'สามตัวหน้า', '3BOTTOM': 'สามตัวท้าย',
             '2TOP': 'สองตัวบน', '2BOTTOM': 'สองตัวล่าง',
             'RUN_UP': 'วิ่งบน', 'RUN_DOWN': 'วิ่งล่าง',
           };

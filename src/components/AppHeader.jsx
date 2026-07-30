@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
+import { useSettings } from '../contexts/SettingsContext';
 import { supabase } from '../supabaseClient';
 
 const AppHeader = ({ announcements = [] }) => {
   const { profile, user } = useAuth();
+  const { settings } = useSettings();
   const [balance, setBalance] = useState(null);
   const [unread, setUnread] = useState(false);
 
@@ -65,14 +67,14 @@ const AppHeader = ({ announcements = [] }) => {
         <div className="flex items-center gap-2 min-w-0 shrink-0">
           <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
             <img
-              alt="TH LOTTO"
+              alt={settings.site_name || 'TH LOTTO'}
               className="w-full h-full object-cover"
-              src="https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png"
+              src={settings.site_logo_url || 'https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png'}
             />
           </div>
           <div className="shrink-0">
             <div className="flex items-center gap-1">
-              <h1 className="font-bold text-[16px] leading-tight whitespace-nowrap">TH LOTTO</h1>
+              <h1 className="font-bold text-[16px] leading-tight whitespace-nowrap">{settings.site_name || 'TH LOTTO'}</h1>
               <span className="material-symbols-outlined text-primary text-[14px] shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
             </div>
             <p className="text-primary text-[12px] font-medium leading-tight whitespace-nowrap">Premium</p>
