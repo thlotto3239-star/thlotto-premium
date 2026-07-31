@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../AuthContext';
@@ -20,7 +20,7 @@ const fmt = (n) => Math.floor(parseFloat(n || 0)).toLocaleString('th-TH');
 
 export default function InstantLottery() {
   const navigate = useNavigate();
-  const { profile, user, refreshProfile, signOut } = useAuth();
+  const { profile, user, refreshProfile } = useAuth();
   const balance = Math.floor(profile?.balance ?? 0);
 
   // ---- State ----
@@ -187,7 +187,7 @@ export default function InstantLottery() {
       } else {
         setResultDisplay(null);
       }
-    } catch (e) {
+    } catch {
       setResultDisplay(null);
     }
   };
@@ -206,7 +206,7 @@ export default function InstantLottery() {
           t2: data.result_2top,
         });
       }
-    } catch (e) { /* silent */ }
+    } catch { /* silent */ }
   };
 
   const navigateDraw = (step) => {
@@ -339,7 +339,7 @@ export default function InstantLottery() {
     try {
       const { data } = await supabase.rpc('fn_get_instant_bets');
       setHistoryData(data?.bets || []);
-    } catch (e) {
+    } catch {
       setHistoryData([]);
     } finally {
       setLoadingHistory(false);
@@ -835,7 +835,7 @@ function HistoryItem({ bet, betNameByCode = {} }) {
       if (sel.tens?.length) parts.push(`สิบ: ${sel.tens.join(',')}`);
       if (sel.units?.length) parts.push(`หน่วย: ${sel.units.join(',')}`);
       displayNum = parts.join(' | ');
-    } catch (e) { /* fallback */ }
+    } catch { /* fallback */ }
   }
   let statusNode;
   let bgClass;
