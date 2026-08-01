@@ -40,7 +40,7 @@ const Results = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('today');
-  const [, setTick] = useState(0);
+  const [tick, setTick] = useState(0);
 
   const fetchResults = useCallback(async () => {
     try {

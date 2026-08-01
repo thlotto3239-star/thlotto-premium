@@ -124,6 +124,26 @@ const Withdrawal = () => {
     }
   };
 
+  const getBankColor = (bankName) => {
+    const name = bankName?.toUpperCase() || '';
+    if (name.includes('SCB') || name.includes('ไทยพาณิชย์')) return 'bg-[#4e2e7f] text-white';
+    if (name.includes('KBANK') || name.includes('กสิกร')) return 'bg-[#138036] text-white';
+    if (name.includes('BBL') || name.includes('กรุงเทพ')) return 'bg-[#1e4598] text-white';
+    if (name.includes('KTB') || name.includes('กรุงไทย')) return 'bg-[#00a1e0] text-white';
+    if (name.includes('BAY') || name.includes('กรุงศรี')) return 'bg-[#fec43b] text-[#543b17]';
+    return 'bg-purple-600 text-white';
+  };
+
+  const bankShortName = (bankName) => {
+    const name = bankName?.toUpperCase() || '';
+    if (name.includes('SCB')) return 'SCB';
+    if (name.includes('KBANK')) return 'KBANK';
+    if (name.includes('BBL')) return 'BBL';
+    if (name.includes('KTB')) return 'KTB';
+    if (name.includes('BAY')) return 'BAY';
+    return bankName?.substring(0, 3)?.toUpperCase() || 'BNK';
+  };
+
   return (
     <div className="bg-white min-h-screen text-slate-900 flex flex-col">
       {/* Header */}
