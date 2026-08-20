@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 
@@ -12,6 +12,22 @@ const ForgotPassword = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
+  const [logoUrl, setLogoUrl] = useState('');
+  const [siteName, setSiteName] = useState('TH LOTTO');
+
+  useEffect(() => {
+    supabase.from('settings')
+      .select('key,value')
+      .in('key', ['site_logo_url', 'site_name'])
+      .then(({ data }) => {
+        if (data) {
+          const map = {};
+          data.forEach(s => { map[s.key] = s.value; });
+          if (map.site_logo_url) setLogoUrl(map.site_logo_url);
+          if (map.site_name) setSiteName(map.site_name);
+        }
+      });
+  }, []);
 
   // ตรวจสอบเบอร์โทรและขอ reset
   const handleCheckPhone = async (e) => {
@@ -92,12 +108,12 @@ const ForgotPassword = () => {
           <div className="flex flex-col items-center gap-1">
             <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
               <img
-                alt="TH LOTTO"
+                alt={siteName}
                 className="w-full h-full object-cover"
-                src="https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png"
+                src={logoUrl || 'https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png'}
               />
             </div>
-            <h1 className="text-slate-900 text-lg font-bold leading-tight tracking-tight">TH LOTTO</h1>
+            <h1 className="text-slate-900 text-lg font-bold leading-tight tracking-tight">{siteName}</h1>
           </div>
           <div className="w-10 h-10" />
         </div>
@@ -293,7 +309,7 @@ const ForgotPassword = () => {
         {/* Footer */}
         <div className="px-6 pb-8 pt-2 border-t border-slate-100 flex flex-col items-center gap-3">
           <p className="text-xs text-slate-400 text-center">
-            © {new Date().getFullYear()} TH LOTTO. หนึ่งในเครือข่ายความภูมิใจของประเทศไทย
+            © {new Date().getFullYear()} {siteName}. หนึ่งในเครือข่ายความภูมิใจของประเทศไทย
           </p>
         </div>
       </div>
