@@ -18,6 +18,8 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [banks, setBanks] = useState([]);
+  const [logoUrl, setLogoUrl] = useState('');
+  const [siteName, setSiteName] = useState('TH LOTTO');
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -28,6 +30,20 @@ const Register = () => {
       setFormData(prev => ({ ...prev, referral_code: ref }));
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    supabase.from('settings')
+      .select('key,value')
+      .in('key', ['site_logo_url', 'site_name'])
+      .then(({ data }) => {
+        if (data) {
+          const map = {};
+          data.forEach(s => { map[s.key] = s.value });
+          if (map.site_logo_url) setLogoUrl(map.site_logo_url);
+          if (map.site_name) setSiteName(map.site_name);
+        }
+      });
+  }, []);
 
   useEffect(() => {
     const fetchBanks = async () => {
@@ -130,9 +146,9 @@ const Register = () => {
             </button>
             <div className="flex flex-col items-center gap-1">
               <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
-                <img alt="TH LOTTO" className="w-full h-full object-cover" src="https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png" />
+                <img alt={siteName} className="w-full h-full object-cover" src={logoUrl || 'https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png'} />
               </div>
-              <h1 className="text-slate-900 text-lg font-bold leading-tight tracking-tight">TH LOTTO</h1>
+              <h1 className="text-slate-900 text-lg font-bold leading-tight tracking-tight">{siteName}</h1>
               <span className="text-[#008a3e] text-xs font-extrabold tracking-[0.2em] uppercase">การลงทะเบียน</span>
             </div>
             <div className="size-10"></div>
@@ -302,9 +318,9 @@ const Register = () => {
             <div className="w-10"></div>
           </div>
           <div className="flex flex-col items-center text-center space-y-3">
-            <img alt="TH LOTTO Logo" className="w-20 h-20 drop-shadow-sm" src="https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png"/>
+            <img alt={`${siteName} Logo`} className="w-20 h-20 drop-shadow-sm" src={logoUrl || 'https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png'}/>
             <div className="space-y-1">
-              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">TH <span className="text-[#008a00]">LOTTO</span></h1>
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{siteName}</h1>
               <p className="text-slate-500 text-sm max-w-[320px] mx-auto leading-relaxed">
                 ตั้งค่าข้อมูลธนาคารของคุณเพื่อรับรางวัลโดยอัตโนมัติและปลอดภัย
               </p>

@@ -11,6 +11,8 @@ const Login = () => {
   const [error, setError] = useState('');
   const [lockSeconds, setLockSeconds] = useState(0);
   const [rememberMe, setRememberMe] = useState(() => localStorage.getItem('thlotto_remember') === 'true');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [siteName, setSiteName] = useState('TH LOTTO');
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
@@ -24,6 +26,20 @@ const Login = () => {
     }, 1000);
     return () => clearInterval(timer);
   }, [lockSeconds]);
+
+  useEffect(() => {
+    supabase.from('settings')
+      .select('key,value')
+      .in('key', ['site_logo_url', 'site_name'])
+      .then(({ data }) => {
+        if (data) {
+          const map = {};
+          data.forEach(s => { map[s.key] = s.value });
+          if (map.site_logo_url) setLogoUrl(map.site_logo_url);
+          if (map.site_name) setSiteName(map.site_name);
+        }
+      });
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -82,12 +98,12 @@ const Login = () => {
           <div className="flex flex-col items-center gap-1">
             <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
               <img
-                alt="TH LOTTO"
+                alt={siteName}
                 className="w-full h-full object-cover"
-                src="https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png"
+                src={logoUrl || 'https://ygopnjbvccenryejqmlw.supabase.co/storage/v1/object/public/appearance/site_logo/th_lotto_logo.png'}
               />
             </div>
-            <h1 className="text-slate-900 text-lg font-bold leading-tight tracking-tight">TH LOTTO</h1>
+            <h1 className="text-slate-900 text-lg font-bold leading-tight tracking-tight">{siteName}</h1>
             <span className="text-primary text-xs font-extrabold tracking-[0.2em] uppercase">เข้าสู่ระบบ</span>
           </div>
           <div className="w-10 h-10" />
