@@ -69,7 +69,7 @@ const AppHeader = ({ announcements = [] }) => {
             <img
               alt={settings.site_name || 'TH LOTTO'}
               className="w-full h-full object-cover"
-              src={settings.site_logo_url || 'https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png'}
+              src={settings.site_logo_url || 'https://ygopnjbvccenryejqmlw.supabase.co/storage/v1/object/public/appearance/site_logo/th_lotto_logo.png'}
             />
           </div>
           <div className="shrink-0">
