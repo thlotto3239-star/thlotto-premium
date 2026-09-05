@@ -141,7 +141,42 @@ export async function fetchProfile(userId) {
   ]);
 
   if (profileRes.error) {
-    logger.error('fetchProfile error:', profileRes.error.message);
+    logger.warn('fetchProfile initial fetch:', profileRes.error.message);
+    // กรณีผู้ใช้เข้าสู่ระบบด้วย Google OAuth ครั้งแรกและยังไม่มีแถวข้อมูลใน profiles
+    if (profileRes.error.code === 'PGRST116') {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          const u = userData.user;
+          const meta = u.user_metadata || {};
+          const memberId = 'TH' + Math.floor(100000 + Math.random() * 900000);
+          const { data: createdProfile } = await supabase
+            .from('profiles')
+            .upsert({
+              id: u.id,
+              member_id: memberId,
+              full_name: meta.full_name || meta.name || u.email?.split('@')[0] || 'สมาชิก Google',
+              username: meta.name || u.email?.split('@')[0] || 'member',
+              phone: meta.phone || '',
+              avatar_url: meta.avatar_url || meta.picture || '',
+            })
+            .select()
+            .single();
+
+          await supabase.from('wallets').upsert({ user_id: u.id }).catch(() => {});
+
+          return { 
+            ...(createdProfile || {}), 
+            balance: 0, 
+            commission_balance: 0, 
+            total_won: 0, 
+            total_bets: 0 
+          };
+        }
+      } catch (err) {
+        logger.error('Error creating fallback profile for OAuth user:', err);
+      }
+    }
     throw profileRes.error;
   }
 
