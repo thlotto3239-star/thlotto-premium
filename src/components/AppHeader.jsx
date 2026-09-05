@@ -92,30 +92,11 @@ const AppHeader = ({ announcements = [] }) => {
             </div>
           </Link>
 
-          {/* Desktop Navigation Links (Visible on PC >= 1024px) */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
-            {NAV_ITEMS.map((item) => {
-              const isActive = location.pathname.startsWith(item.path);
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`relative px-3.5 py-2 rounded-xl text-xs xl:text-sm font-bold transition-all flex items-center gap-1.5 ${
-                    isActive
-                      ? 'bg-brand-50 text-brand-700 font-extrabold shadow-2xs border border-brand-200/50'
-                      : 'text-slate-600 hover:text-brand-700 hover:bg-slate-100/80'
-                  }`}
-                >
-                  <span>{item.label}</span>
-                  {item.badge && (
-                    <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold animate-pulse">
-                      {item.badge}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
+          {/* Desktop Status Badge (Replaces duplicate top nav since menu is now on the left sidebar) */}
+          <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200/80 text-xs font-medium text-slate-600">
+            <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>ระบบอัตโนมัติ 24 ชม. · ปรับยอดทันที รวดเร็ว ปลอดภัย</span>
+          </div>
 
           <div className="flex items-center gap-3 shrink-0">
             <div className="flex flex-col items-end">
