@@ -1,7 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { 
+  ShieldCheck, 
+  Check, 
+  Eye, 
+  EyeOff, 
+  ArrowRight, 
+  ArrowLeft, 
+  User, 
+  Gift, 
+  AlertCircle, 
+  Plus, 
+  CheckCircle2 
+} from 'lucide-react';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
+
+const FEATURE_LIST = [
+  "ระบบผูกบัญชีธนาคารอัตโนมัติ ถอนเงินเข้าบัญชีตรง ปลอดภัยสูงสุด",
+  "ระบบคำนวณและปรับยอดรางวัลอัตโนมัติ แม่นยำทุกมาร์เก็ต",
+  "บริการสมาชิกตลอด 24 ชั่วโมง พร้อมทีมงานดูแลอย่างมืออาชีพ",
+];
+
+const STATS = [
+  { value: "0 บาท", label: "ค่าธรรมเนียมสมัคร" },
+  { value: "100%", label: "ระบบอัตโนมัติ" },
+  { value: "24/7", label: "ศูนย์บริการสมาชิก" },
+];
 
 const Register = () => {
   const [step, setStep] = useState(1);
@@ -40,7 +65,7 @@ const Register = () => {
       .then(({ data }) => {
         if (data) {
           const map = {};
-          data.forEach(s => { map[s.key] = s.value });
+          data.forEach(s => { map[s.key] = s.value; });
           if (map.site_logo_url) setLogoUrl(map.site_logo_url);
           if (map.site_name) setSiteName(map.site_name);
         }
@@ -74,7 +99,7 @@ const Register = () => {
   const handleNextStep = (e) => {
     e.preventDefault();
     if (!/^0\d{8,9}$/.test(formData.phone)) {
-      setError('เบอร์โทรศัพท์ไม่ถูกต้อง');
+      setError('หมายเลขโทรศัพท์ไม่ถูกต้อง (ต้องขึ้นต้นด้วย 0 และมี 10 หลัก)');
       return;
     }
     if (!formData.full_name.trim()) {
@@ -82,11 +107,11 @@ const Register = () => {
       return;
     }
     if (formData.pin.length !== 4) {
-      setError('รหัสผ่านต้องมี 4 หลัก');
+      setError('รหัส PIN ต้องมีตัวเลข 4 หลัก');
       return;
     }
     if (formData.pin !== formData.confirm_pin) {
-      setError('รหัสผ่านไม่ตรงกัน');
+      setError('รหัส PIN ทั้งสองช่องไม่ตรงกัน');
       return;
     }
     setError('');
@@ -99,10 +124,9 @@ const Register = () => {
     setError('');
 
     try {
-      // Pre-check: เบอร์นี้มีในระบบแล้วหรือยัง (ผ่าน RPC — ไม่ expose ข้อมูล profiles)
       const { data: phoneExists } = await supabase.rpc('check_phone_exists', { p_phone: formData.phone });
       if (phoneExists) {
-        throw new Error('เบอร์นี้ถูกใช้สมัครสมาชิกไปแล้ว กรุณาเข้าสู่ระบบ หรือใช้เบอร์อื่น');
+        throw new Error('หมายเลขโทรศัพท์นี้ถูกใช้สมัครสมาชิกไปแล้ว กรุณาเข้าสู่ระบบ หรือใช้หมายเลขอื่น');
       }
 
       const { error: signUpError } = await signUp({
@@ -120,9 +144,9 @@ const Register = () => {
       const raw = (err.message || '').toLowerCase();
       let msg = err.message || 'เกิดข้อผิดพลาดในการลงทะเบียน';
       if (raw.includes('duplicate') || raw.includes('unique') || raw.includes('already') || raw.includes('database error saving new user')) {
-        msg = 'เบอร์นี้ถูกใช้สมัครสมาชิกไปแล้ว กรุณาเข้าสู่ระบบ หรือใช้เบอร์อื่น';
-      } else if (raw.includes('password')) {
-        msg = 'รหัสผ่านไม่ถูกต้องตามรูปแบบ';
+        msg = 'หมายเลขโทรศัพท์นี้ถูกใช้สมัครสมาชิกไปแล้ว กรุณาเข้าสู่ระบบ หรือใช้หมายเลขอื่น';
+      } else if (raw.includes('password') || raw.includes('pin')) {
+        msg = 'รหัส PIN 4 หลักไม่ถูกต้องตามรูปแบบ';
       } else if (raw.includes('network') || raw.includes('fetch')) {
         msg = 'ไม่สามารถเชื่อมต่อระบบได้ กรุณาลองใหม่';
       }
@@ -135,114 +159,117 @@ const Register = () => {
 
   return (
     <div className="min-h-screen bg-white flex antialiased">
-      <aside className="hidden lg:flex lg:w-[46%] xl:w-[50%] relative overflow-hidden bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-800 text-white p-12 xl:p-16 flex-col justify-between select-none">
+      {/* ─── ฝั่งแบรนดิ้ง (ดึงสีและโครงสร้างจากโลโก้ทางการ ตรงกับ Admin Login) ─── */}
+      <aside className="relative hidden w-[44%] overflow-hidden bg-brand-950 lg:flex xl:w-[50%] select-none">
+        {/* พื้นหลังไล่เฉดเขียวจากโลโก้ */}
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-950 via-brand-900 to-brand-800" />
         <div
-          className="absolute inset-0 opacity-15"
+          className="absolute inset-0 opacity-60"
           style={{
-            backgroundImage: "radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
+            backgroundImage: "radial-gradient(rgba(255,255,255,0.07) 1px, transparent 1px)",
+            backgroundSize: "26px 26px",
           }}
         />
-        <div className="absolute -right-24 -top-24 size-80 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-32 -left-20 size-96 rounded-full bg-emerald-600/20 blur-3xl pointer-events-none" />
+        {/* วงกลมตกแต่ง */}
+        <div className="absolute -right-24 -top-24 size-80 rounded-full bg-brand-500/15 blur-2xl pointer-events-none" />
+        <div className="absolute -bottom-32 -left-20 size-96 rounded-full bg-brand-600/20 blur-2xl pointer-events-none" />
+        <div className="absolute right-16 top-1/3 size-24 rounded-full border border-white/10 pointer-events-none" />
+        <div className="absolute right-32 top-1/2 size-40 rounded-full border border-white/5 pointer-events-none" />
 
-        <div className="relative z-10 flex items-center gap-4">
-          <div className="size-13 rounded-full overflow-hidden border-2 border-white/20 bg-white/10 shadow-lg p-0.5">
+        <div className="relative z-10 flex w-full flex-col px-10 py-9 xl:px-14">
+          {/* โลโก้ + ชื่อระบบ */}
+          <div className="flex items-center gap-3.5">
             <img
               src={logoUrl || '/logo.svg'}
               alt={siteName}
-              className="w-full h-full object-cover rounded-full"
+              className="size-13 rounded-full object-cover ring-2 ring-white/25"
             />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xl font-black tracking-tight text-white">{siteName}</span>
-              <span className="material-symbols-outlined text-emerald-400 text-base" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-            </div>
-            <p className="text-xs font-medium text-emerald-200/90 tracking-wider uppercase">สมัครสมาชิกใหม่</p>
-          </div>
-        </div>
-
-        <div className="relative z-10 my-auto py-8">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold backdrop-blur-md border border-white/15 text-emerald-200 mb-6">
-            <span className="material-symbols-outlined text-sm text-emerald-400">lock</span>
-            ข้อมูลปลอดภัย ไม่เปิดเผยต่อบุคคลภายนอก 100%
-          </div>
-
-          <h2 className="text-3xl xl:text-4xl font-extrabold leading-tight tracking-tight text-white mb-6">
-            เปิดบัญชีง่าย ภายใน 1 นาที
-            <br />
-            <span className="text-emerald-300">เริ่มแทงหวยและรับรางวัลทันที</span>
-          </h2>
-
-          <ul className="space-y-4 text-sm text-emerald-100/90 font-medium">
-            <li className="flex items-center gap-3">
-              <span className="size-6 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 text-xs shrink-0 font-bold">✓</span>
-              <span>ฟรีค่าธรรมเนียมสมัครสมาชิก ไม่มีขั้นต่ำในการฝาก</span>
-            </li>
-            <li className="flex items-center gap-3">
-              <span className="size-6 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 text-xs shrink-0 font-bold">✓</span>
-              <span>ระบบผูกบัญชีธนาคารอัตโนมัติ ถอนเงินเข้าบัญชีตรง ปลอดภัยสูงสุด</span>
-            </li>
-            <li className="flex items-center gap-3">
-              <span className="size-6 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 text-xs shrink-0 font-bold">✓</span>
-              <span>บริการลูกค้าตลอด 24 ชั่วโมง มีทีมงานดูแลช่วยเหลืออย่างมืออาชีพ</span>
-            </li>
-          </ul>
-
-          <div className="mt-10 grid grid-cols-3 gap-6 pt-8 border-t border-white/10">
             <div>
-              <p className="text-2xl xl:text-3xl font-black text-white font-mono">0 บาท</p>
-              <p className="text-xs text-emerald-300/80 mt-1 font-medium">ค่าสมัคร</p>
-            </div>
-            <div>
-              <p className="text-2xl xl:text-3xl font-black text-white font-mono">1 นาที</p>
-              <p className="text-xs text-emerald-300/80 mt-1 font-medium">เปิดบัญชีเสร็จ</p>
-            </div>
-            <div>
-              <p className="text-2xl xl:text-3xl font-black text-white font-mono">24 ชม.</p>
-              <p className="text-xs text-emerald-300/80 mt-1 font-medium">ดูแลตลอดเวลา</p>
+              <p className="text-xl font-bold tracking-tight text-white">{siteName}</p>
+              <p className="text-xs font-medium tracking-wide text-brand-200">สมัครสมาชิกใหม่</p>
             </div>
           </div>
-        </div>
 
-        <div className="relative z-10 text-xs text-emerald-300/60 flex items-center justify-between">
-          <p>© {new Date().getFullYear()} {siteName}. สงวนลิขสิทธิ์ทุกประการ</p>
-          <span>มาตรฐานความปลอดภัยระดับสูง</span>
+          {/* คำโปรยและจุดเด่น */}
+          <div className="mt-auto pt-10">
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium text-brand-100 ring-1 ring-inset ring-white/15">
+              <ShieldCheck className="size-3.5" />
+              ระบบรับรองความปลอดภัยข้อมูลสมาชิก 100%
+            </span>
+            <h2 className="mt-4 text-3xl font-bold leading-snug tracking-tight text-white xl:text-4xl">
+              เปิดบัญชีสมาชิกใหม่
+              <br />
+              สะดวกรวดเร็วในไม่กี่ขั้นตอน
+            </h2>
+            <ul className="mt-6 space-y-3">
+              {FEATURE_LIST.map((f) => (
+                <li key={f} className="flex items-start gap-3">
+                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-brand-500/90">
+                    <Check className="size-3 text-white" strokeWidth={3} />
+                  </span>
+                  <span className="text-sm leading-relaxed text-brand-100">{f}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* ตัวเลขภาพรวมทางการ */}
+            <div className="mt-8 flex items-center gap-6 border-t border-white/10 pt-6 xl:gap-9">
+              {STATS.map((s) => (
+                <div key={s.label}>
+                  <p className="text-2xl font-bold text-white xl:text-3xl font-mono">{s.value}</p>
+                  <p className="mt-0.5 text-xs text-brand-300">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="mt-9 text-[11px] text-brand-300/70">
+            © 2569 TH-LOTTO · สงวนลิขสิทธิ์ทุกประการ
+          </p>
         </div>
       </aside>
 
+      {/* ─── ฝั่งฟอร์มผู้ใช้ (Clean White Minimalist Form) ─── */}
       <main className="flex-1 flex flex-col justify-center items-center px-5 sm:px-8 py-10 min-h-screen bg-white">
         <div className="w-full max-w-[440px] mx-auto">
-          <div className="lg:hidden flex flex-col items-center text-center mb-6">
-            <div className="w-14 h-14 rounded-full overflow-hidden border border-slate-200 bg-white shadow-xs p-0.5 mb-2">
+          {/* แถบแบรนด์มือถือ (เมื่ออยู่บนจอมือถือ) */}
+          <div className="relative overflow-hidden bg-gradient-to-r from-brand-950 via-brand-900 to-brand-800 px-5 py-5 lg:hidden rounded-2xl mb-6 text-white shadow-xs">
+            <div className="absolute -right-10 -top-14 size-40 rounded-full bg-brand-500/15 blur-xl pointer-events-none" />
+            <div className="relative flex items-center gap-3">
               <img
-                alt={siteName}
-                className="w-full h-full object-cover rounded-full"
                 src={logoUrl || '/logo.svg'}
+                alt={siteName}
+                className="size-11 rounded-full object-cover ring-2 ring-white/25"
               />
+              <div className="min-w-0">
+                <p className="text-base font-bold tracking-tight text-white">{siteName}</p>
+                <p className="truncate text-[11px] font-medium text-brand-200">ลงทะเบียนสมาชิกใหม่</p>
+              </div>
+              <span className="ml-auto inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-medium text-brand-100 ring-1 ring-inset ring-white/15">
+                <ShieldCheck className="size-3" />
+                SSL 256-Bit
+              </span>
             </div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">{siteName}</h1>
-            <span className="text-[#008a3e] text-[11px] font-bold tracking-widest uppercase">การลงทะเบียนสมาชิก</span>
           </div>
 
-          <div className="mb-6 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+          {/* Progress Indicator Card */}
+          <div className="mb-6 p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
             <div className="flex justify-between items-center mb-2">
               <div>
                 <p className="text-slate-900 text-sm font-bold">
                   {step === 1 ? 'ขั้นตอนที่ 1: ข้อมูลส่วนตัว' : 'ขั้นตอนที่ 2: ข้อมูลบัญชีธนาคาร'}
                 </p>
-                <p className="text-slate-400 text-xs mt-0.5">
-                  {step === 1 ? 'กำหนดเบอร์และรหัสผ่าน' : 'สำหรับรับเงินรางวัลอัตโนมัติ'}
+                <p className="text-slate-500 text-xs mt-0.5">
+                  {step === 1 ? 'กำหนดหมายเลขโทรศัพท์และรหัส PIN' : 'สำหรับรับเงินรางวัลอัตโนมัติ'}
                 </p>
               </div>
-              <span className="text-[#008a3e] text-xs font-bold bg-[#008a3e]/10 px-3 py-1 rounded-full">
+              <span className="text-brand-700 text-xs font-bold bg-brand-50 border border-brand-200 px-3 py-1 rounded-full">
                 {step === 1 ? '50%' : '100%'}
               </span>
             </div>
             <div className="relative h-2 w-full rounded-full bg-slate-200 overflow-hidden">
               <div
-                className="absolute top-0 left-0 h-full rounded-full bg-[#008a3e] transition-all duration-500"
+                className="absolute top-0 left-0 h-full rounded-full bg-brand-600 transition-all duration-500"
                 style={{ width: step === 1 ? '50%' : '100%' }}
               />
             </div>
@@ -250,7 +277,7 @@ const Register = () => {
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200/80 rounded-2xl flex items-center gap-3">
-              <span className="material-symbols-outlined text-red-500 shrink-0 text-xl">error</span>
+              <AlertCircle className="size-5 text-red-600 shrink-0" />
               <p className="text-red-600 text-sm font-medium">{error}</p>
             </div>
           )}
@@ -259,7 +286,7 @@ const Register = () => {
             <form onSubmit={handleNextStep} className="space-y-4" noValidate>
               <div className="space-y-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-700">หมายเลขโทรศัพท์</label>
-                <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-[#008a3e] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#008a3e]/15">
+                <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-brand-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-600/15">
                   <span className="flex h-full items-center border-r border-slate-200 px-3.5 text-xs font-bold text-slate-500 bg-slate-100/70">
                     โทร. +66
                   </span>
@@ -277,9 +304,9 @@ const Register = () => {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-700">ชื่อ-นามสกุล (ตรงกับบัญชีธนาคาร)</label>
-                <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-[#008a3e] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#008a3e]/15">
+                <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-brand-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-600/15">
                   <span className="flex h-full items-center pl-3.5 pr-2 text-slate-400">
-                    <span className="material-symbols-outlined text-lg">person</span>
+                    <User className="size-4 text-slate-400" />
                   </span>
                   <input
                     name="full_name"
@@ -294,8 +321,8 @@ const Register = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">รหัสผ่าน PIN (4 หลัก)</label>
-                <div className="relative flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-[#008a3e] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#008a3e]/15">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">รหัส PIN (4 หลัก)</label>
+                <div className="relative flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-brand-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-600/15">
                   <input
                     name="pin"
                     type={showPassword ? 'text' : 'password'}
@@ -312,17 +339,16 @@ const Register = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 flex items-center text-slate-400 hover:text-slate-700 transition-colors p-1"
                     tabIndex={-1}
+                    aria-label={showPassword ? 'ซ่อนรหัส PIN' : 'แสดงรหัส PIN'}
                   >
-                    <span className="material-symbols-outlined text-[20px]">
-                      {showPassword ? 'visibility' : 'visibility_off'}
-                    </span>
+                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">ยืนยันรหัสผ่าน PIN</label>
-                <div className="relative flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-[#008a3e] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#008a3e]/15">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">ยืนยันรหัส PIN (4 หลัก)</label>
+                <div className="relative flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-brand-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-600/15">
                   <input
                     name="confirm_pin"
                     type={showConfirmPassword ? 'text' : 'password'}
@@ -339,19 +365,18 @@ const Register = () => {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 flex items-center text-slate-400 hover:text-slate-700 transition-colors p-1"
                     tabIndex={-1}
+                    aria-label={showConfirmPassword ? 'ซ่อนรหัส PIN' : 'แสดงรหัส PIN'}
                   >
-                    <span className="material-symbols-outlined text-[20px]">
-                      {showConfirmPassword ? 'visibility' : 'visibility_off'}
-                    </span>
+                    {showConfirmPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                   </button>
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-700">รหัสผู้แนะนำ (ไม่บังคับ)</label>
-                <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-[#008a3e] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#008a3e]/15">
+                <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-brand-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-600/15">
                   <span className="flex h-full items-center pl-3.5 pr-2 text-slate-400">
-                    <span className="material-symbols-outlined text-lg">redeem</span>
+                    <Gift className="size-4 text-slate-400" />
                   </span>
                   <input
                     name="referral_code"
@@ -366,11 +391,10 @@ const Register = () => {
 
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2.5 h-12 text-white font-bold text-base rounded-2xl active:scale-[0.99] transition-all shadow-md shadow-emerald-900/20 cursor-pointer mt-6"
-                style={{ background: 'linear-gradient(to bottom, #15803d, #166534)' }}
+                className="w-full flex items-center justify-center gap-2 h-12 text-white font-bold text-sm tracking-wide rounded-2xl active:scale-[0.99] transition-all bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-600/20 cursor-pointer mt-6"
               >
                 <span>ถัดไป: ผูกบัญชีธนาคาร</span>
-                <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                <ArrowRight className="size-4" />
               </button>
             </form>
           ) : (
@@ -379,10 +403,10 @@ const Register = () => {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-slate-900 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                  className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
                 >
-                  <span className="material-symbols-outlined text-base">arrow_back</span>
-                  <span>ย้อนกลับไปแก้ไขข้อมูล</span>
+                  <ArrowLeft className="size-4" />
+                  <span>ย้อนกลับไปแก้ไขข้อมูลส่วนตัว</span>
                 </button>
               </div>
 
@@ -398,7 +422,7 @@ const Register = () => {
                       onClick={() => setFormData(prev => ({ ...prev, bank_name: b.name }))}
                       className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer ${
                         formData.bank_name === b.name
-                          ? 'border-[#008a3e] bg-[#008a3e]/5 text-[#008a3e] shadow-xs'
+                          ? 'border-brand-600 bg-brand-50/50 text-brand-700 shadow-xs'
                           : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 text-slate-700'
                       }`}
                     >
@@ -417,12 +441,12 @@ const Register = () => {
                     onClick={() => setFormData(prev => ({ ...prev, bank_name: 'OTHER' }))}
                     className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer ${
                       formData.bank_name === 'OTHER'
-                        ? 'border-[#008a3e] bg-[#008a3e]/5 text-[#008a3e] shadow-xs'
+                        ? 'border-brand-600 bg-brand-50/50 text-brand-700 shadow-xs'
                         : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 text-slate-700'
                     }`}
                   >
                     <div className="w-9 h-9 rounded-xl bg-slate-200 flex items-center justify-center text-slate-600 mb-1.5">
-                      <span className="material-symbols-outlined text-lg">add</span>
+                      <Plus className="size-4" />
                     </div>
                     <span className="text-[11px] font-bold">อื่นๆ</span>
                   </button>
@@ -431,7 +455,7 @@ const Register = () => {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-700">ชื่อบัญชีธนาคาร</label>
-                <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-[#008a3e] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#008a3e]/15">
+                <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-brand-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-600/15">
                   <input
                     name="bank_account_name"
                     value={formData.bank_account_name}
@@ -445,7 +469,7 @@ const Register = () => {
 
               <div className="space-y-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-700">หมายเลขบัญชีธนาคาร</label>
-                <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-[#008a3e] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#008a3e]/15">
+                <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-brand-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-600/15">
                   <input
                     name="bank_account_number"
                     value={formData.bank_account_number}
@@ -457,9 +481,9 @@ const Register = () => {
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-start gap-2.5">
-                <span className="material-symbols-outlined text-[#008a3e] text-lg shrink-0 mt-0.5">verified_user</span>
-                <p className="text-xs text-emerald-900 leading-relaxed font-medium">
+              <div className="p-3.5 rounded-2xl bg-brand-50 border border-brand-200/80 flex items-start gap-2.5">
+                <ShieldCheck className="size-4 text-brand-600 shrink-0 mt-0.5" />
+                <p className="text-xs text-brand-900 leading-relaxed font-medium">
                   ชื่อบัญชีธนาคารต้องตรงกับชื่อที่ลงทะเบียนเพื่อความรวดเร็วในการถอนเงินรางวัลแบบอัตโนมัติ
                 </p>
               </div>
@@ -468,20 +492,29 @@ const Register = () => {
                 type="button"
                 onClick={handleRegister}
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2.5 h-12 text-white font-bold text-base rounded-2xl active:scale-[0.99] transition-all shadow-md shadow-emerald-900/20 disabled:opacity-50 cursor-pointer mt-6"
-                style={{ background: 'linear-gradient(to bottom, #15803d, #166534)' }}
+                className="w-full flex items-center justify-center gap-2 h-12 text-white font-bold text-sm tracking-wide rounded-2xl active:scale-[0.99] transition-all bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-600/20 disabled:opacity-50 cursor-pointer mt-6"
               >
                 {loading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
-                    <span>ยืนยันและสมัครสมาชิก</span>
-                    <span className="material-symbols-outlined text-lg">check_circle</span>
+                    <span>ยืนยันและเปิดบัญชีสมาชิก</span>
+                    <CheckCircle2 className="size-4" />
                   </>
                 )}
               </button>
             </div>
           )}
+
+          {/* Already have account */}
+          <div className="mt-8 text-center pt-6 border-t border-slate-100">
+            <p className="text-xs sm:text-sm text-slate-600 font-medium">
+              มีบัญชีสมาชิกอยู่แล้ว?{' '}
+              <Link to="/login" className="text-brand-600 font-bold hover:text-brand-700 hover:underline ml-1">
+                เข้าสู่ระบบที่นี่
+              </Link>
+            </p>
+          </div>
         </div>
       </main>
     </div>

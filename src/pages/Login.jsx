@@ -1,7 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { 
+  ShieldCheck, 
+  Check, 
+  Eye, 
+  EyeOff, 
+  ArrowRight, 
+  Lock, 
+  Zap, 
+  Headphones,
+  AlertCircle
+} from 'lucide-react';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
+
+const FEATURE_LIST = [
+  "ระบบคำนวณและปรับยอดรางวัลอัตโนมัติ แม่นยำทุกมาร์เก็ต",
+  "ถ่ายทอดสดสัญญาณผลรางวัลเรียลไทม์ โปร่งใส ตรวจสอบได้",
+  "ธุรกรรมการเงินอัตโนมัติ รวดเร็ว ปลอดภัย ได้รับการรับรอง",
+];
+
+const STATS = [
+  { value: "9", label: "ตลาดหวยชั้นนำ" },
+  { value: "100%", label: "การันตีความมั่นคง" },
+  { value: "24/7", label: "ศูนย์บริการสมาชิก" },
+];
 
 const Login = () => {
   const [phone, setPhone] = useState(() => localStorage.getItem('thlotto_phone') || '');
@@ -34,7 +57,7 @@ const Login = () => {
       .then(({ data }) => {
         if (data) {
           const map = {};
-          data.forEach(s => { map[s.key] = s.value });
+          data.forEach(s => { map[s.key] = s.value; });
           if (map.site_logo_url) setLogoUrl(map.site_logo_url);
           if (map.site_name) setSiteName(map.site_name);
         }
@@ -43,47 +66,48 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    if (pin.length !== 4) {
-      setError('กรุณากรอกรหัสผ่าน 4 หลัก');
+    if (lockSeconds > 0) return;
+
+    if (!phone || phone.length !== 10) {
+      setError('กรุณากรอกหมายเลขโทรศัพท์ 10 หลัก');
       return;
     }
-    if (lockSeconds > 0) return;
+    if (!pin || pin.length !== 4) {
+      setError('กรุณากรอกรหัส PIN ตัวเลข 4 หลัก');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      // ตรวจ rate limit ก่อน login
-      const { data: rlCheck } = await supabase.rpc('check_login_rate_limit', { p_phone: phone });
-      if (rlCheck?.locked) {
-        setLockSeconds(Math.max(rlCheck.remaining_seconds || 60, 1));
-        setError(`บัญชีถูกล็อคชั่วคราว กรุณารอ ${Math.ceil((rlCheck.remaining_seconds || 60) / 60)} นาที`);
-        return;
+      if (rememberMe) {
+        localStorage.setItem('thlotto_phone', phone);
+        localStorage.setItem('thlotto_remember', 'true');
+      } else {
+        localStorage.removeItem('thlotto_phone');
+        localStorage.removeItem('thlotto_remember');
       }
 
-      const { error: signInError } = await signIn(phone, pin, rememberMe);
-      if (signInError) {
-        // บันทึก failed attempt
-        await supabase.rpc('record_login_attempt', { p_phone: phone, p_success: false });
-        const remaining = (rlCheck?.remaining_attempts ?? 5) - 1;
-        setError(`เบอร์โทรศัพท์หรือรหัสผ่านไม่ถูกต้อง${remaining > 0 ? ` (เหลืออีก ${remaining} ครั้ง)` : ''}`);
-        if (remaining <= 0) {
-          setLockSeconds(900);
-          setError('ใส่รหัสผ่านผิดเกินจำนวนครั้ง บัญชีถูกล็อค 15 นาที');
+      const { data, error: authError } = await signIn(phone, pin, rememberMe);
+
+      if (authError) {
+        if (authError.status === 429) {
+          setLockSeconds(300);
+          setError('พยายามเข้าสู่ระบบมากเกินไป กรุณารอ 5 นาที');
+        } else if (authError.message?.includes('Invalid login credentials')) {
+          setError('หมายเลขโทรศัพท์หรือรหัส PIN 4 หลักไม่ถูกต้อง');
+        } else {
+          setError(authError.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
         }
         return;
       }
-      
-      // บันทึกการตั้งค่าจำฉันไว้
-      localStorage.setItem('thlotto_remember', rememberMe.toString());
 
-      // บันทึก success → ลบ failed records
-      await supabase.rpc('record_login_attempt', { p_phone: phone, p_success: true });
-      localStorage.setItem('thlotto_phone', phone);
-      localStorage.setItem('thlotto_remember', rememberMe.toString());
-      navigate('/home');
+      if (data?.session) {
+        navigate('/home', { replace: true });
+      }
     } catch (err) {
-      setError('เกิดข้อผิดพลาด กรุณาลองใหม่');
-      console.error(err);
+      setError(err.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
     } finally {
       setLoading(false);
     }
@@ -91,127 +115,120 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-white flex antialiased">
-      {/* ─── Desktop Left Brand Showcase Panel (Visible on lg+) ─── */}
-      <aside className="hidden lg:flex lg:w-[46%] xl:w-[50%] relative overflow-hidden bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-800 text-white p-12 xl:p-16 flex-col justify-between select-none">
-        {/* Subtle Background Pattern */}
+      {/* ─── ฝั่งแบรนดิ้ง (ดึงสีและโครงสร้างจากโลโก้ทางการ ตรงกับ Admin Login) ─── */}
+      <aside className="relative hidden w-[44%] overflow-hidden bg-brand-950 lg:flex xl:w-[50%] select-none">
+        {/* พื้นหลังไล่เฉดเขียวจากโลโก้ */}
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-950 via-brand-900 to-brand-800" />
         <div
-          className="absolute inset-0 opacity-15"
+          className="absolute inset-0 opacity-60"
           style={{
-            backgroundImage: "radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)",
-            backgroundSize: "28px 28px",
+            backgroundImage: "radial-gradient(rgba(255,255,255,0.07) 1px, transparent 1px)",
+            backgroundSize: "26px 26px",
           }}
         />
-        {/* Glow Spheres */}
-        <div className="absolute -right-24 -top-24 size-80 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-32 -left-20 size-96 rounded-full bg-emerald-600/20 blur-3xl pointer-events-none" />
+        {/* วงกลมตกแต่ง */}
+        <div className="absolute -right-24 -top-24 size-80 rounded-full bg-brand-500/15 blur-2xl pointer-events-none" />
+        <div className="absolute -bottom-32 -left-20 size-96 rounded-full bg-brand-600/20 blur-2xl pointer-events-none" />
+        <div className="absolute right-16 top-1/3 size-24 rounded-full border border-white/10 pointer-events-none" />
+        <div className="absolute right-32 top-1/2 size-40 rounded-full border border-white/5 pointer-events-none" />
 
-        {/* Top: Brand Logo & Title */}
-        <div className="relative z-10 flex items-center gap-4">
-          <div className="size-13 rounded-full overflow-hidden border-2 border-white/20 bg-white/10 shadow-lg p-0.5">
+        <div className="relative z-10 flex w-full flex-col px-10 py-9 xl:px-14">
+          {/* โลโก้ + ชื่อระบบ */}
+          <div className="flex items-center gap-3.5">
             <img
               src={logoUrl || '/logo.svg'}
               alt={siteName}
-              className="w-full h-full object-cover rounded-full"
+              className="size-13 rounded-full object-cover ring-2 ring-white/25"
             />
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xl font-black tracking-tight text-white">{siteName}</span>
-              <span className="material-symbols-outlined text-emerald-400 text-base" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
-            </div>
-            <p className="text-xs font-medium text-emerald-200/90 tracking-wider uppercase">Official Lottery & Lotto Platform</p>
-          </div>
-        </div>
-
-        {/* Center: Main Headline & Official Guarantees */}
-        <div className="relative z-10 my-auto py-8">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold backdrop-blur-md border border-white/15 text-emerald-200 mb-6">
-            <span className="material-symbols-outlined text-sm text-emerald-400">shield_lock</span>
-            ระบบความปลอดภัยมาตรฐานระดับสากล SSL 256-Bit
-          </div>
-
-          <h2 className="text-3xl xl:text-4xl font-extrabold leading-tight tracking-tight text-white mb-6">
-            สลากและล็อตโต้ออนไลน์
-            <br />
-            <span className="text-emerald-300">โปร่งใส ปลอดภัย จ่ายจริง 100%</span>
-          </h2>
-
-          <ul className="space-y-4 text-sm text-emerald-100/90 font-medium">
-            <li className="flex items-center gap-3">
-              <span className="size-6 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 text-xs shrink-0 font-bold">✓</span>
-              <span>อัตราจ่ายสูงสุด 3 ตัวบาทละ 900 / 2 ตัวบาทละ 95</span>
-            </li>
-            <li className="flex items-center gap-3">
-              <span className="size-6 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 text-xs shrink-0 font-bold">✓</span>
-              <span>ล็อตโต้ 15 นาที ออกผลสดด้วยลูกบอลจริง วันละ 58 รอบ ตลอด 24 ชม.</span>
-            </li>
-            <li className="flex items-center gap-3">
-              <span className="size-6 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 text-xs shrink-0 font-bold">✓</span>
-              <span>ฝาก-ถอนออโต้ ตรวจสอบสลิปผ่าน QR รวดเร็วภายใน 10 วินาที</span>
-            </li>
-          </ul>
-
-          {/* Key Stats Counter */}
-          <div className="mt-10 grid grid-cols-3 gap-6 pt-8 border-t border-white/10">
             <div>
-              <p className="text-2xl xl:text-3xl font-black text-white font-mono">฿900</p>
-              <p className="text-xs text-emerald-300/80 mt-1 font-medium">จ่ายสูงสุด 3 ตัว</p>
-            </div>
-            <div>
-              <p className="text-2xl xl:text-3xl font-black text-white font-mono">58 รอบ</p>
-              <p className="text-xs text-emerald-300/80 mt-1 font-medium">ล็อตโต้ต่อวัน</p>
-            </div>
-            <div>
-              <p className="text-2xl xl:text-3xl font-black text-white font-mono">24 ชม.</p>
-              <p className="text-xs text-emerald-300/80 mt-1 font-medium">บริการข้อมูลสด</p>
+              <p className="text-xl font-bold tracking-tight text-white">{siteName}</p>
+              <p className="text-xs font-medium tracking-wide text-brand-200">ระบบสลากและล็อตโต้ออนไลน์</p>
             </div>
           </div>
-        </div>
 
-        {/* Bottom Copyright */}
-        <div className="relative z-10 text-xs text-emerald-300/60 flex items-center justify-between">
-          <p>© {new Date().getFullYear()} {siteName}. สงวนลิขสิทธิ์ทุกประการ</p>
-          <span>ความมั่นคงทางการเงิน 100%</span>
+          {/* คำโปรยและจุดเด่น */}
+          <div className="mt-auto pt-10">
+            <span className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium text-brand-100 ring-1 ring-inset ring-white/15">
+              <ShieldCheck className="size-3.5" />
+              มาตรฐานความปลอดภัยข้อมูล SSL 256-Bit
+            </span>
+            <h2 className="mt-4 text-3xl font-bold leading-snug tracking-tight text-white xl:text-4xl">
+              ระบบสลากและล็อตโต้ออนไลน์
+              <br />
+              มาตรฐานความมั่นคงระดับสูง
+            </h2>
+            <ul className="mt-6 space-y-3">
+              {FEATURE_LIST.map((f) => (
+                <li key={f} className="flex items-start gap-3">
+                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-brand-500/90">
+                    <Check className="size-3 text-white" strokeWidth={3} />
+                  </span>
+                  <span className="text-sm leading-relaxed text-brand-100">{f}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* ตัวเลขภาพรวมทางการ */}
+            <div className="mt-8 flex items-center gap-6 border-t border-white/10 pt-6 xl:gap-9">
+              {STATS.map((s) => (
+                <div key={s.label}>
+                  <p className="text-2xl font-bold text-white xl:text-3xl font-mono">{s.value}</p>
+                  <p className="mt-0.5 text-xs text-brand-300">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="mt-9 text-[11px] text-brand-300/70">
+            © 2569 TH-LOTTO · สงวนลิขสิทธิ์ทุกประการ
+          </p>
         </div>
       </aside>
 
-      {/* ─── Right Form Side (Desktop & Mobile Clean Form) ─── */}
+      {/* ─── ฝั่งฟอร์มผู้ใช้ (Clean White Minimalist Form) ─── */}
       <main className="flex-1 flex flex-col justify-center items-center px-5 sm:px-8 py-10 min-h-screen bg-white">
         <div className="w-full max-w-[420px] mx-auto">
-          {/* Mobile-only Top Brand Header */}
-          <div className="lg:hidden flex flex-col items-center text-center mb-8">
-            <div className="w-14 h-14 rounded-full overflow-hidden border border-slate-200 bg-white shadow-xs p-0.5 mb-2">
+          {/* แถบแบรนด์มือถือ (เมื่ออยู่บนจอมือถือ) */}
+          <div className="relative overflow-hidden bg-gradient-to-r from-brand-950 via-brand-900 to-brand-800 px-5 py-5 lg:hidden rounded-2xl mb-8 text-white shadow-xs">
+            <div className="absolute -right-10 -top-14 size-40 rounded-full bg-brand-500/15 blur-xl pointer-events-none" />
+            <div className="relative flex items-center gap-3">
               <img
-                alt={siteName}
-                className="w-full h-full object-cover rounded-full"
                 src={logoUrl || '/logo.svg'}
+                alt={siteName}
+                className="size-11 rounded-full object-cover ring-2 ring-white/25"
               />
+              <div className="min-w-0">
+                <p className="text-base font-bold tracking-tight text-white">{siteName}</p>
+                <p className="truncate text-[11px] font-medium text-brand-200">เข้าสู่ระบบสมาชิก</p>
+              </div>
+              <span className="ml-auto inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-medium text-brand-100 ring-1 ring-inset ring-white/15">
+                <ShieldCheck className="size-3" />
+                SSL 256-Bit
+              </span>
             </div>
-            <h1 className="text-xl font-bold text-slate-900 tracking-tight">{siteName}</h1>
-            <span className="text-primary text-[11px] font-bold tracking-widest uppercase">เข้าสู่ระบบ</span>
           </div>
 
           {/* Form Header */}
           <div className="mb-8">
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">ยินดีต้อนรับกลับมา</h2>
-            <p className="text-slate-500 text-sm mt-1.5">กรุณากรอกข้อมูลเพื่อเข้าใช้งานบัญชีของคุณ</p>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">เข้าสู่ระบบสมาชิก</h2>
+            <p className="text-slate-500 text-sm mt-1.5">กรุณากรอกหมายเลขโทรศัพท์และรหัส PIN 4 หลักเพื่อเข้าใช้งาน</p>
           </div>
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200/80 rounded-2xl flex items-center gap-3">
-              <span className="material-symbols-outlined text-red-500 shrink-0 text-xl">error</span>
+              <AlertCircle className="size-5 text-red-600 shrink-0" />
               <p className="text-red-600 text-sm font-medium">{error}</p>
             </div>
           )}
 
           {/* Form */}
           <form onSubmit={handleLogin} className="space-y-5" noValidate>
-            {/* Phone */}
+            {/* Phone Input */}
             <div className="space-y-2">
               <label className="text-xs font-bold uppercase tracking-wider text-slate-700" htmlFor="phone">
                 หมายเลขโทรศัพท์
               </label>
-              <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-primary focus-within:bg-white focus-within:ring-4 focus-within:ring-primary/15">
+              <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-brand-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-600/15">
                 <span className="flex h-full items-center border-r border-slate-200 px-3.5 text-xs font-bold text-slate-500 bg-slate-100/70">
                   โทร. +66
                 </span>
@@ -227,17 +244,17 @@ const Login = () => {
               </div>
             </div>
 
-            {/* PIN/Password */}
+            {/* PIN (4 หลัก) Input */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-700" htmlFor="pin">
-                  รหัสผ่าน (4 หลัก)
+                  รหัส PIN (4 หลัก)
                 </label>
-                <Link to="/forgot-password" className="text-xs font-bold text-primary hover:underline">
-                  ลืมรหัสผ่าน?
+                <Link to="/forgot-password" className="text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline">
+                  ลืมรหัส PIN?
                 </Link>
               </div>
-              <div className="relative flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-primary focus-within:bg-white focus-within:ring-4 focus-within:ring-primary/15">
+              <div className="relative flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-brand-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-600/15">
                 <input
                   id="pin"
                   type={showPin ? 'text' : 'password'}
@@ -254,10 +271,9 @@ const Login = () => {
                   onClick={() => setShowPin(!showPin)}
                   className="absolute right-3 flex items-center text-slate-400 hover:text-slate-700 transition-colors p-1"
                   tabIndex={-1}
+                  aria-label={showPin ? 'ซ่อนรหัส PIN' : 'แสดงรหัส PIN'}
                 >
-                  <span className="material-symbols-outlined text-[20px]">
-                    {showPin ? 'visibility' : 'visibility_off'}
-                  </span>
+                  {showPin ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
               </div>
             </div>
@@ -269,9 +285,9 @@ const Login = () => {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-primary border-slate-300 rounded focus:ring-primary accent-emerald-700"
+                  className="size-4 text-brand-600 border-slate-300 rounded focus:ring-brand-600 accent-brand-600"
                 />
-                <span className="text-xs font-medium text-slate-600">จดจำเบอร์โทรศัพท์ในเครื่องนี้</span>
+                <span className="text-xs font-medium text-slate-600">จดจำหมายเลขโทรศัพท์ในเครื่องนี้</span>
               </label>
             </div>
 
@@ -279,17 +295,16 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading || lockSeconds > 0}
-              className="w-full flex items-center justify-center gap-2.5 h-12 text-white font-bold text-base rounded-2xl active:scale-[0.99] transition-all shadow-md shadow-emerald-900/20 disabled:opacity-50 mt-4 cursor-pointer"
-              style={{ background: lockSeconds > 0 ? '#dc2626' : 'linear-gradient(to bottom, #15803d, #166534)' }}
+              className="w-full flex items-center justify-center gap-2 h-12 text-white font-bold text-sm tracking-wide rounded-2xl active:scale-[0.99] transition-all bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-600/20 disabled:opacity-50 mt-4 cursor-pointer"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : lockSeconds > 0 ? (
                 <span>ถูกล็อค {Math.floor(lockSeconds / 60)}:{String(lockSeconds % 60).padStart(2, '0')}</span>
               ) : (
                 <>
                   <span>เข้าสู่ระบบ</span>
-                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
+                  <ArrowRight className="size-4" />
                 </>
               )}
             </button>
@@ -299,28 +314,28 @@ const Login = () => {
           <div className="mt-8 text-center pt-6 border-t border-slate-100">
             <p className="text-xs sm:text-sm text-slate-600 font-medium">
               ยังไม่มีบัญชีสมาชิก?{' '}
-              <Link to="/register" className="text-primary font-bold hover:underline ml-1">
+              <Link to="/register" className="text-brand-600 font-bold hover:text-brand-700 hover:underline ml-1">
                 สมัครสมาชิกใหม่ฟรี
               </Link>
             </p>
           </div>
 
-          {/* Trust Guarantees */}
+          {/* Trust Badges — Official Lucide Vector Icons (No Emojis) */}
           <div className="mt-8 grid grid-cols-3 gap-2.5 pt-4">
-            <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 text-center">
-              <span className="material-symbols-outlined text-primary text-xl">verified_user</span>
-              <p className="text-[11px] font-bold text-slate-800 mt-1">ปลอดภัย</p>
-              <p className="text-[9px] text-slate-400">SSL 256-bit</p>
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 text-center flex flex-col items-center">
+              <ShieldCheck className="size-4 text-brand-600 mb-1" />
+              <p className="text-[11px] font-bold text-slate-800">ความปลอดภัย</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">SSL 256-Bit</p>
             </div>
-            <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 text-center">
-              <span className="material-symbols-outlined text-amber-500 text-xl">bolt</span>
-              <p className="text-[11px] font-bold text-slate-800 mt-1">ฝากถอนไว</p>
-              <p className="text-[9px] text-slate-400">ออโต้ 10 วิ</p>
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 text-center flex flex-col items-center">
+              <Zap className="size-4 text-amber-500 mb-1" />
+              <p className="text-[11px] font-bold text-slate-800">ธุรกรรมออโต้</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">ปรับยอดทันที</p>
             </div>
-            <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 text-center">
-              <span className="material-symbols-outlined text-teal-500 text-xl">support_agent</span>
-              <p className="text-[11px] font-bold text-slate-800 mt-1">บริการ 24 ชม.</p>
-              <p className="text-[9px] text-slate-400">ดูแลตลอดเวลา</p>
+            <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 text-center flex flex-col items-center">
+              <Headphones className="size-4 text-brand-600 mb-1" />
+              <p className="text-[11px] font-bold text-slate-800">ศูนย์บริการ</p>
+              <p className="text-[10px] text-slate-500 mt-0.5">ดูแล 24 ชม.</p>
             </div>
           </div>
         </div>

@@ -1,21 +1,35 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #1a7e2a;
-  --color-emerald-dark: #0d4a0a;
+  /* TH-LOTTO official brand palette — extracted from the official esports logo
+     bright green #287e0b · dark green #0c4b1c · black #000000 */
+  --color-brand-50: #f3faec;
+  --color-brand-100: #e5f3d3;
+  --color-brand-200: #cbe6a9;
+  --color-brand-300: #a8d375;
+  --color-brand-400: #7fbb45;
+  --color-brand-500: #579c2c;
+  --color-brand-600: #287e0b;
+  --color-brand-700: #1f6a0a;
+  --color-brand-800: #0c4b1c;
+  --color-brand-900: #0a3d18;
+  --color-brand-950: #05220d;
+
+  --color-primary: #287e0b;
+  --color-emerald-dark: #0c4b1c;
   --color-gold-premium: #D4AF37;
   --color-background-light: #f6f8f6;
   --color-background-dark: #122111;
   --color-card-bg: #ffffff;
 
-  --color-primary-dark: #0d5c0b;
-  --color-primary-light: #f0fdf4;
+  --color-primary-dark: #1f6a0a;
+  --color-primary-light: #f3faec;
   --color-text-main: #0f172a;
   --color-accent-gold: #d4af37;
   --color-accent-red: #dc2626;
-  --color-emerald-deep: #064e3b;
-  --color-emerald-treasury: #137c10;
-  --color-emerald-glow: #22c55e;
+  --color-emerald-deep: #0a3d18;
+  --color-emerald-treasury: #287e0b;
+  --color-emerald-glow: #579c2c;
 
   --font-display: "Prompt", sans-serif;
   --font-thai: "Prompt", sans-serif;

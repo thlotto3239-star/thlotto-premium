@@ -318,7 +318,7 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
             <div className="space-y-3 pt-2">
               <div className="p-3 bg-white rounded-xl border border-slate-200/80 text-center">
                 <p className="text-xs font-bold text-slate-800 flex items-center justify-center gap-1.5">
-                  <span className="material-icons text-emerald-600 text-sm">verified</span>
+                  <span className="material-icons text-brand-600 text-sm">verified</span>
                   <span>3 ตัวตรง จ่ายบาทละ 900 · 2 ตัว จ่ายบาทละ 95</span>
                 </p>
                 <p className="text-[11px] text-slate-500 mt-0.5">
@@ -328,10 +328,10 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
 
               <button
                 onClick={() => navigate(`/betting?draw=${marketId}`)}
-                className="w-full py-3.5 px-6 rounded-xl font-bold text-sm text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm hover:shadow-md active:scale-98 transition-all flex items-center justify-center gap-2"
+                className="w-full py-3.5 px-6 rounded-xl font-bold text-sm text-white bg-brand-600 hover:bg-brand-700 shadow-sm hover:shadow-md active:scale-98 transition-all flex items-center justify-center gap-2"
               >
-                <span className="material-icons text-lg">local_fire_department</span>
-                <span>แทงหวยรอบนี้เลย</span>
+                <span>เข้าสู่หน้ารับแทงรอบนี้</span>
+                <span className="material-icons text-base">arrow_forward</span>
               </button>
             </div>
           </div>
@@ -341,7 +341,7 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
         <div className="p-4 sm:p-5 bg-white border-t border-slate-100">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-              <span className="material-icons text-sm text-emerald-600">view_timeline</span>
+              <span className="material-icons text-sm text-brand-600">view_timeline</span>
               <span>เลือกรอบออกรางวัล (ทั้งหมด 58 รอบ/วัน)</span>
             </span>
             <span className="text-[11px] text-slate-500">คลิกที่รอบเพื่อดูผลย้อนหลังหรือแทงล่วงหน้า</span>
@@ -359,7 +359,7 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
                   onClick={() => handleSelectRound(r)}
                   className={`shrink-0 px-3.5 py-2 rounded-xl flex flex-col items-center gap-0.5 transition-all text-center border ${
                     isSelected
-                      ? 'bg-emerald-600 text-white font-bold border-emerald-600 shadow-sm scale-105'
+                      ? 'bg-brand-600 text-white font-bold border-brand-600 shadow-sm scale-105'
                       : r.isSettled
                       ? 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
                       : 'bg-white border-slate-200/60 text-slate-400 opacity-75'
@@ -368,7 +368,11 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
                   <span className="text-[10px] opacity-80">รอบที่ {r.round}</span>
                   <span className="text-xs font-bold">{r.time}</span>
                   <span className="text-[9px] mt-0.5">
-                    {r.isSettled ? '✅ ออกผล' : '⏳ รอผล'}
+                    {r.isSettled ? (
+                      <span className={isSelected ? 'text-white' : 'text-brand-700 font-semibold'}>ออกผลแล้ว</span>
+                    ) : (
+                      <span className={isSelected ? 'text-white/80' : 'text-slate-400'}>รอผล</span>
+                    )}
                   </span>
                 </button>
               );
