@@ -100,7 +100,7 @@ const Login = () => {
               <img
                 alt={siteName}
                 className="w-full h-full object-cover"
-                src={logoUrl || 'https://ygopnjbvccenryejqmlw.supabase.co/storage/v1/object/public/appearance/site_logo/th_lotto_logo.png'}
+                src={logoUrl || '/logo.svg'}
               />
             </div>
             <h1 className="text-slate-900 text-lg font-bold leading-tight tracking-tight">{siteName}</h1>

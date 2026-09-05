@@ -37,7 +37,7 @@ export function SettingsProvider({ children }) {
     if (isPreview) {
       const previewSettings = {
         site_name: params.get('name') || 'TH LOTTO',
-        site_logo_url: params.get('logo') || 'https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png',
+        site_logo_url: params.get('logo') || '/logo.svg',
         site_primary_color: params.get('primaryColor') || '#1a7e2a'
       };
       setSettings(previewSettings);

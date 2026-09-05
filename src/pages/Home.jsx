@@ -288,7 +288,7 @@ const Home = () => {
 
       <AppHeader announcements={announcements} />
 
-      <main className="px-4 py-4 space-y-8">
+      <main className="max-w-6xl mx-auto px-4 py-4 space-y-8">
 
         {/* Hero Slider */}
         <section>
@@ -390,7 +390,7 @@ const Home = () => {
               <span className="material-icons text-[14px]">chevron_right</span>
             </Link>
           </div>
-          <div className="flex gap-5 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4">
+          <div className="flex gap-5 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4 sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 sm:mx-0 sm:px-0">
             {loading ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="min-w-[120px] flex flex-col items-center gap-3">
@@ -450,7 +450,7 @@ const Home = () => {
             <span className="material-icons text-accent-red">local_fire_department</span>
             <h2 className="text-lg font-bold">มาแรง</h2>
           </div>
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* การ์ดหวย 1 นาที (แสดงเมื่อแอดมินเปิด toggle มาแรง) */}
             {instantCfg?.show_trending && (
               <div

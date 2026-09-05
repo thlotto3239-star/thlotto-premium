@@ -10,71 +10,79 @@ export default function Lotto15M() {
   const balance = Math.floor(profile?.balance ?? 0);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col pb-20 selection:bg-emerald-500 selection:text-white">
+    <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col pb-24 selection:bg-emerald-600 selection:text-white">
       {/* Top Bar */}
-      <header className="sticky top-0 z-30 bg-slate-900/80 backdrop-blur-md border-b border-emerald-500/20 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => navigate('/home')}
-            className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-300 hover:text-white transition-colors"
-          >
-            <span className="material-icons text-xl">arrow_back</span>
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-white/10 p-0.5 border border-emerald-400/30 flex items-center justify-center">
-              <img src="/icons/thlotto-15m.png" alt="TH" className="w-full h-full object-contain" />
-            </div>
-            <div>
-              <h1 className="text-sm font-black text-white tracking-wide flex items-center gap-1.5">
-                ล็อตโต้ 15 นาที
-                <span className="bg-emerald-500/20 text-emerald-400 text-[9px] px-1.5 py-0.2 rounded-full border border-emerald-400/30 font-bold">
-                  LIVE
-                </span>
-              </h1>
-              <p className="text-[10px] text-slate-400">TH-LOTTO In-House Speed Draw</p>
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 px-4 py-3 shadow-xs">
+        <div className="max-w-6xl mx-auto w-full flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => navigate('/home')}
+              className="w-9 h-9 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              <span className="material-icons text-xl">arrow_back</span>
+            </button>
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-slate-200 shadow-xs bg-white">
+                <img src="/logo.svg" alt="TH-LOTTO" className="w-full h-full object-cover" />
+              </div>
+              <div>
+                <h1 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight flex items-center gap-1.5">
+                  ล็อตโต้ 15 นาที
+                  <span className="bg-emerald-50 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full border border-emerald-300 font-bold">
+                    LIVE
+                  </span>
+                </h1>
+                <p className="text-[11px] text-slate-500 font-medium">TH-LOTTO In-House Speed Draw</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* User Balance & Deposit */}
-        <div className="flex items-center gap-2">
-          <div className="text-right">
-            <span className="text-[10px] text-slate-400 block leading-tight">ยอดคงเหลือ</span>
-            <span className="text-xs font-black text-amber-400 font-mono">
-              ฿{balance.toLocaleString('th-TH')}
-            </span>
+          {/* User Balance & Deposit */}
+          <div className="flex items-center gap-2.5">
+            <div className="text-right">
+              <span className="text-[10px] text-slate-400 block leading-tight font-medium">ยอดคงเหลือ</span>
+              <span className="text-xs sm:text-sm font-bold text-slate-800 font-mono">
+                ฿{balance.toLocaleString('th-TH')}
+              </span>
+            </div>
+            <button
+              onClick={() => navigate('/deposit')}
+              className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center shadow-sm hover:opacity-90 active:scale-95 transition-all"
+              title="เติมเงิน"
+            >
+              <span className="material-icons text-sm">add</span>
+            </button>
           </div>
-          <button
-            onClick={() => navigate('/deposit')}
-            className="w-8 h-8 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white flex items-center justify-center shadow-md shadow-emerald-900/40 active:scale-95 transition-all"
-            title="เติมเงิน"
-          >
-            <span className="material-icons text-sm">add</span>
-          </button>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-4 max-w-2xl mx-auto w-full space-y-5">
+      <main className="flex-1 p-4 max-w-4xl mx-auto w-full space-y-6">
         {/* The Live Studio Component */}
         <Lotto15MLiveStudio marketId="2ecc136e-0734-4be0-9e26-cf3149cb84cd" />
 
         {/* Quick Features Highlight Banner */}
-        <div className="grid grid-cols-3 gap-2.5">
-          <div className="rounded-2xl p-3 bg-slate-900/60 border border-emerald-500/20 text-center">
-            <span className="material-icons text-emerald-400 text-lg">bolt</span>
-            <p className="text-[11px] font-bold text-slate-200 mt-1">ออกผลทุก 15 นาที</p>
-            <p className="text-[9px] text-slate-400">วันละ 58 รอบ 24 ชม.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="rounded-2xl p-4 bg-white border border-slate-200/80 shadow-xs text-center flex flex-col items-center">
+            <div className="w-9 h-9 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 mb-2">
+              <span className="material-icons text-lg">bolt</span>
+            </div>
+            <p className="text-xs font-bold text-slate-800">ออกผลทุก 15 นาที</p>
+            <p className="text-[10px] text-slate-500 mt-0.5">วันละ 58 รอบ 24 ชม.</p>
           </div>
-          <div className="rounded-2xl p-3 bg-slate-900/60 border border-amber-500/20 text-center">
-            <span className="material-icons text-amber-400 text-lg">stars</span>
-            <p className="text-[11px] font-bold text-slate-200 mt-1">จ่ายบาทละ 900</p>
-            <p className="text-[9px] text-slate-400">2 ตัวจ่ายบาทละ 95</p>
+          <div className="rounded-2xl p-4 bg-white border border-slate-200/80 shadow-xs text-center flex flex-col items-center">
+            <div className="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 mb-2">
+              <span className="material-icons text-lg">stars</span>
+            </div>
+            <p className="text-xs font-bold text-slate-800">จ่ายบาทละ 900</p>
+            <p className="text-[10px] text-slate-500 mt-0.5">2 ตัวจ่ายบาทละ 95</p>
           </div>
-          <div className="rounded-2xl p-3 bg-slate-900/60 border border-teal-500/20 text-center">
-            <span className="material-icons text-teal-400 text-lg">videocam</span>
-            <p className="text-[11px] font-bold text-slate-200 mt-1">ลูกบอลจริง HD</p>
-            <p className="text-[9px] text-slate-400">โปร่งใส ตรวจย้อนหลังได้</p>
+          <div className="rounded-2xl p-4 bg-white border border-slate-200/80 shadow-xs text-center flex flex-col items-center">
+            <div className="w-9 h-9 rounded-full bg-teal-50 flex items-center justify-center text-teal-600 mb-2">
+              <span className="material-icons text-lg">videocam</span>
+            </div>
+            <p className="text-xs font-bold text-slate-800">ลูกบอลจริง HD</p>
+            <p className="text-[10px] text-slate-500 mt-0.5">โปร่งใส ตรวจย้อนหลังได้</p>
           </div>
         </div>
       </main>

@@ -189,9 +189,9 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-white/10 p-1 border border-emerald-400/30 shadow-inner flex items-center justify-center">
               <img 
-                src="/icons/thlotto-15m.png" 
-                alt="TH-LOTTO 15M" 
-                className="w-full h-full object-contain"
+                src="/logo.svg" 
+                alt="TH-LOTTO" 
+                className="w-full h-full object-cover"
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
             </div>
