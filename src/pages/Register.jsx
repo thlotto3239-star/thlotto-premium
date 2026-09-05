@@ -17,6 +17,8 @@ const Register = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [banks, setBanks] = useState([]);
   const [logoUrl, setLogoUrl] = useState('');
   const [siteName, setSiteName] = useState('TH LOTTO');
@@ -115,7 +117,6 @@ const Register = () => {
       if (signUpError) throw signUpError;
       navigate('/registration-success');
     } catch (err) {
-      // แปล error ทั่วไปจาก Supabase → ข้อความภาษาไทย
       const raw = (err.message || '').toLowerCase();
       let msg = err.message || 'เกิดข้อผิดพลาดในการลงทะเบียน';
       if (raw.includes('duplicate') || raw.includes('unique') || raw.includes('already') || raw.includes('database error saving new user')) {
@@ -132,328 +133,357 @@ const Register = () => {
     }
   };
 
-  if (step === 1) {
-    return (
-      <div className="bg-white min-h-screen font-headline">
-        <div className="relative flex h-full min-h-screen w-full max-w-[430px] mx-auto flex-col bg-white overflow-x-hidden">
-          {/* Header with Logo */}
-          <div className="flex items-center px-6 pt-8 pb-4 justify-between bg-white sticky top-0 z-50">
-            <button 
-              onClick={() => navigate(-1)}
-              className="text-slate-900 flex size-10 shrink-0 items-center justify-center rounded-full bg-slate-100"
-            >
-              <span className="material-symbols-outlined">arrow_back_ios_new</span>
-            </button>
-            <div className="flex flex-col items-center gap-1">
-              <div className="w-10 h-10 rounded-full overflow-hidden shrink-0">
-                <img alt={siteName} className="w-full h-full object-cover" src={logoUrl || '/logo.svg'} />
-              </div>
-              <h1 className="text-slate-900 text-lg font-bold leading-tight tracking-tight">{siteName}</h1>
-              <span className="text-[#008a3e] text-xs font-extrabold tracking-[0.2em] uppercase">การลงทะเบียน</span>
+  return (
+    <div className="min-h-screen bg-white flex antialiased">
+      <aside className="hidden lg:flex lg:w-[46%] xl:w-[50%] relative overflow-hidden bg-gradient-to-br from-emerald-950 via-emerald-900 to-emerald-800 text-white p-12 xl:p-16 flex-col justify-between select-none">
+        <div
+          className="absolute inset-0 opacity-15"
+          style={{
+            backgroundImage: "radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px)",
+            backgroundSize: "28px 28px",
+          }}
+        />
+        <div className="absolute -right-24 -top-24 size-80 rounded-full bg-emerald-500/20 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -left-20 size-96 rounded-full bg-emerald-600/20 blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="size-13 rounded-full overflow-hidden border-2 border-white/20 bg-white/10 shadow-lg p-0.5">
+            <img
+              src={logoUrl || '/logo.svg'}
+              alt={siteName}
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xl font-black tracking-tight text-white">{siteName}</span>
+              <span className="material-symbols-outlined text-emerald-400 text-base" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
             </div>
-            <div className="size-10"></div>
+            <p className="text-xs font-medium text-emerald-200/90 tracking-wider uppercase">สมัครสมาชิกใหม่</p>
+          </div>
+        </div>
+
+        <div className="relative z-10 my-auto py-8">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-semibold backdrop-blur-md border border-white/15 text-emerald-200 mb-6">
+            <span className="material-symbols-outlined text-sm text-emerald-400">lock</span>
+            ข้อมูลปลอดภัย ไม่เปิดเผยต่อบุคคลภายนอก 100%
           </div>
 
-          <div className="flex flex-col gap-3 px-8 py-6">
-            <div className="flex justify-between items-end mb-1">
-              <div>
-                <p className="text-slate-900 text-xl font-extrabold leading-none">ข้อมูลส่วนตัว</p>
-                <p className="text-slate-500 text-xs font-medium mt-1">ขั้นตอนที่ 1 จาก 2</p>
-              </div>
-              <p className="text-[#008a3e] text-sm font-bold bg-[#008a3e]/10 px-4 py-1.5 rounded-full leading-normal">เสร็จสิ้น 50%</p>
+          <h2 className="text-3xl xl:text-4xl font-extrabold leading-tight tracking-tight text-white mb-6">
+            เปิดบัญชีง่าย ภายใน 1 นาที
+            <br />
+            <span className="text-emerald-300">เริ่มแทงหวยและรับรางวัลทันที</span>
+          </h2>
+
+          <ul className="space-y-4 text-sm text-emerald-100/90 font-medium">
+            <li className="flex items-center gap-3">
+              <span className="size-6 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 text-xs shrink-0 font-bold">✓</span>
+              <span>ฟรีค่าธรรมเนียมสมัครสมาชิก ไม่มีขั้นต่ำในการฝาก</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <span className="size-6 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 text-xs shrink-0 font-bold">✓</span>
+              <span>ระบบผูกบัญชีธนาคารอัตโนมัติ ถอนเงินเข้าบัญชีตรง ปลอดภัยสูงสุด</span>
+            </li>
+            <li className="flex items-center gap-3">
+              <span className="size-6 rounded-full bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 text-xs shrink-0 font-bold">✓</span>
+              <span>บริการลูกค้าตลอด 24 ชั่วโมง มีทีมงานดูแลช่วยเหลืออย่างมืออาชีพ</span>
+            </li>
+          </ul>
+
+          <div className="mt-10 grid grid-cols-3 gap-6 pt-8 border-t border-white/10">
+            <div>
+              <p className="text-2xl xl:text-3xl font-black text-white font-mono">0 บาท</p>
+              <p className="text-xs text-emerald-300/80 mt-1 font-medium">ค่าสมัคร</p>
             </div>
-            <div className="relative h-2 w-full rounded-full bg-slate-100 overflow-hidden">
-              <div className="absolute top-0 left-0 h-full rounded-full bg-[#008a3e] transition-all duration-500" style={{ width: '50%' }}></div>
+            <div>
+              <p className="text-2xl xl:text-3xl font-black text-white font-mono">1 นาที</p>
+              <p className="text-xs text-emerald-300/80 mt-1 font-medium">เปิดบัญชีเสร็จ</p>
+            </div>
+            <div>
+              <p className="text-2xl xl:text-3xl font-black text-white font-mono">24 ชม.</p>
+              <p className="text-xs text-emerald-300/80 mt-1 font-medium">ดูแลตลอดเวลา</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 text-xs text-emerald-300/60 flex items-center justify-between">
+          <p>© {new Date().getFullYear()} {siteName}. สงวนลิขสิทธิ์ทุกประการ</p>
+          <span>มาตรฐานความปลอดภัยระดับสูง</span>
+        </div>
+      </aside>
+
+      <main className="flex-1 flex flex-col justify-center items-center px-5 sm:px-8 py-10 min-h-screen bg-white">
+        <div className="w-full max-w-[440px] mx-auto">
+          <div className="lg:hidden flex flex-col items-center text-center mb-6">
+            <div className="w-14 h-14 rounded-full overflow-hidden border border-slate-200 bg-white shadow-xs p-0.5 mb-2">
+              <img
+                alt={siteName}
+                className="w-full h-full object-cover rounded-full"
+                src={logoUrl || '/logo.svg'}
+              />
+            </div>
+            <h1 className="text-xl font-bold text-slate-900 tracking-tight">{siteName}</h1>
+            <span className="text-[#008a3e] text-[11px] font-bold tracking-widest uppercase">การลงทะเบียนสมาชิก</span>
+          </div>
+
+          <div className="mb-6 p-4 rounded-2xl bg-slate-50 border border-slate-100">
+            <div className="flex justify-between items-center mb-2">
+              <div>
+                <p className="text-slate-900 text-sm font-bold">
+                  {step === 1 ? 'ขั้นตอนที่ 1: ข้อมูลส่วนตัว' : 'ขั้นตอนที่ 2: ข้อมูลบัญชีธนาคาร'}
+                </p>
+                <p className="text-slate-400 text-xs mt-0.5">
+                  {step === 1 ? 'กำหนดเบอร์และรหัสผ่าน' : 'สำหรับรับเงินรางวัลอัตโนมัติ'}
+                </p>
+              </div>
+              <span className="text-[#008a3e] text-xs font-bold bg-[#008a3e]/10 px-3 py-1 rounded-full">
+                {step === 1 ? '50%' : '100%'}
+              </span>
+            </div>
+            <div className="relative h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+              <div
+                className="absolute top-0 left-0 h-full rounded-full bg-[#008a3e] transition-all duration-500"
+                style={{ width: step === 1 ? '50%' : '100%' }}
+              />
             </div>
           </div>
 
           {error && (
-            <div className="mx-6 mb-4 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2">
-              <span className="material-symbols-outlined text-red-500 text-sm">error</span>
-              <p className="text-red-500 text-xs font-bold">{error}</p>
+            <div className="mb-6 p-4 bg-red-50 border border-red-200/80 rounded-2xl flex items-center gap-3">
+              <span className="material-symbols-outlined text-red-500 shrink-0 text-xl">error</span>
+              <p className="text-red-600 text-sm font-medium">{error}</p>
             </div>
           )}
 
-          <div className="flex-1 px-6 pb-12">
-            <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-none">
-              <h2 className="text-slate-900 text-2xl font-extrabold mb-8">สร้างบัญชีของคุณ</h2>
-              <form onSubmit={handleNextStep} className="space-y-6">
-                <div className="flex flex-col gap-2">
-                  <label className="text-slate-700 text-sm font-bold ml-4">หมายเลขโทรศัพท์</label>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-6 text-slate-400">
-                      <span className="material-symbols-outlined text-xl">phone_iphone</span>
-                    </div>
-                    <input 
-                      name="phone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      required
-                      className="flex w-full rounded-full border-slate-200 bg-slate-50/50 py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-400 focus:border-[#008a3e] focus:ring-2 focus:ring-[#008a3e]/20 transition-all outline-none" 
-                      placeholder="08X-XXX-XXXX" 
-                      type="tel" 
-                    />
-                  </div>
+          {step === 1 ? (
+            <form onSubmit={handleNextStep} className="space-y-4" noValidate>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">หมายเลขโทรศัพท์</label>
+                <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-[#008a3e] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#008a3e]/15">
+                  <span className="flex h-full items-center border-r border-slate-200 px-3.5 text-xs font-bold text-slate-500 bg-slate-100/70">
+                    โทร. +66
+                  </span>
+                  <input
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    required
+                    type="tel"
+                    placeholder="0812345678"
+                    className="h-full min-w-0 flex-1 bg-transparent px-3.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 font-medium"
+                  />
                 </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-slate-700 text-sm font-bold ml-4">ชื่อ-นามสกุล</label>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-6 text-slate-400">
-                      <span className="material-symbols-outlined text-xl">person</span>
-                    </div>
-                    <input 
-                      name="full_name"
-                      value={formData.full_name}
-                      onChange={handleInputChange}
-                      required
-                      className="flex w-full rounded-full border-slate-200 bg-slate-50/50 py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-400 focus:border-[#008a3e] focus:ring-2 focus:ring-[#008a3e]/20 transition-all outline-none" 
-                      placeholder="สมชาย มุ่งมั่น" 
-                      type="text" 
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2 mb-2">
-                  <p className="text-xs text-slate-500 text-center bg-slate-50 p-2 rounded-lg">
-                    รหัสผ่าน 4 หลักนี้จะใช้สำหรับเข้าสู่ระบบและถอนเงิน
-                  </p>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-2">
-                    <label className="text-slate-700 text-sm font-bold ml-4">ตั้งรหัสผ่าน (4 หลัก)</label>
-                    <input
-                      name="pin"
-                      value={formData.pin}
-                      onChange={handleInputChange}
-                      required
-                      inputMode="numeric"
-                      maxLength={4}
-                      className="flex w-full rounded-full border-slate-200 bg-slate-50/50 py-4 text-center text-xl font-bold tracking-[0.5em] text-slate-900 placeholder:text-slate-300 focus:border-[#008a3e] focus:ring-2 focus:ring-[#008a3e]/20 transition-all outline-none"
-                      placeholder="****"
-                      type="password"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="text-slate-700 text-sm font-bold ml-4">ยืนยันรหัสผ่าน</label>
-                    <input
-                      name="confirm_pin"
-                      value={formData.confirm_pin}
-                      onChange={handleInputChange}
-                      required
-                      inputMode="numeric"
-                      maxLength={4}
-                      className="flex w-full rounded-full border-slate-200 bg-slate-50/50 py-4 text-center text-xl font-bold tracking-[0.5em] text-slate-900 placeholder:text-slate-300 focus:border-[#008a3e] focus:ring-2 focus:ring-[#008a3e]/20 transition-all outline-none"
-                      placeholder="****"
-                      type="password"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <div className="flex justify-between px-4">
-                    <label className="text-slate-700 text-sm font-bold">รหัสแนะนำ</label>
-                    <span className="text-slate-400 text-xs italic font-medium">ไม่บังคับ</span>
-                  </div>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-6 text-slate-400">
-                      <span className="material-symbols-outlined text-xl">redeem</span>
-                    </div>
-                    <input 
-                      name="referral_code"
-                      value={formData.referral_code}
-                      onChange={handleInputChange}
-                      className="flex w-full rounded-full border-slate-200 bg-slate-50/50 py-4 pl-14 pr-6 text-slate-900 placeholder:text-slate-400 focus:border-[#008a3e] focus:ring-2 focus:ring-[#008a3e]/20 transition-all outline-none" 
-                      placeholder="เช่น: PREMIUM100" 
-                      type="text" 
-                    />
-                  </div>
-                </div>
-
-                <div className="mt-12 space-y-6">
-                  <button type="submit" className="w-full flex items-center justify-center gap-3 py-4 bg-[#008a3e] text-white font-extrabold text-lg rounded-full active:scale-[0.98] transition-all border-b-4 border-[#00602b]">
-                    <span>ถัดไป: ข้อมูลธนาคาร</span>
-                    <span className="material-symbols-outlined font-bold">arrow_forward</span>
-                  </button>
-                  <p className="text-center text-slate-400 text-xs px-4 leading-relaxed">
-                    เมื่อคลิกถัดไป แสดงว่าคุณยอมรับ <Link to="/terms" className="text-[#008a3e] underline font-bold">ข้อกำหนดการให้บริการ</Link> และ <Link to="/terms" className="text-[#008a3e] underline font-bold">นโยบายความเป็นส่วนตัว</Link> ของเรา
-                  </p>
-                </div>
-              </form>
-            </div>
-          </div>
-          
-          <div className="flex justify-center pb-4 pt-4">
-            <div className="w-32 h-1.5 bg-slate-100 rounded-full"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-[#f8faf8] min-h-screen flex justify-center items-start antialiased font-headline">
-      <div 
-        className="relative w-full max-w-[430px] min-h-screen flex flex-col overflow-hidden"
-        style={{
-          backgroundColor: '#f8faf8',
-          backgroundImage: 'radial-gradient(at 0% 0%, rgba(0, 138, 0, 0.03) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(0, 138, 0, 0.03) 0px, transparent 50%)'
-        }}
-      >
-        <header className="pt-12 px-6 pb-6 relative z-10">
-          <div className="flex items-center justify-between mb-8">
-            <button 
-              onClick={() => setStep(1)}
-              className="text-slate-900 p-2 -ml-2 hover:bg-[#008a00]/10 rounded-full transition-colors"
-            >
-              <span className="material-symbols-outlined text-[28px]">chevron_left</span>
-            </button>
-            <div className="flex flex-col items-center">
-              <span className="text-xs font-bold uppercase tracking-widest text-[#008a00] mb-1">ขั้นตอนที่ 2 จาก 2</span>
-              <div className="flex gap-1.5 items-center">
-                <div className="h-1.5 w-8 rounded-full bg-[#008a00]/20"></div>
-                <div className="h-1.5 w-12 rounded-full bg-[#008a00]"></div>
               </div>
-            </div>
-            <div className="w-10"></div>
-          </div>
-          <div className="flex flex-col items-center text-center space-y-3">
-            <img alt={`${siteName} Logo`} className="w-20 h-20 drop-shadow-sm" src={logoUrl || '/logo.svg'}/>
-            <div className="space-y-1">
-              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{siteName}</h1>
-              <p className="text-slate-500 text-sm max-w-[320px] mx-auto leading-relaxed">
-                ตั้งค่าข้อมูลธนาคารของคุณเพื่อรับรางวัลโดยอัตโนมัติและปลอดภัย
-              </p>
-            </div>
-          </div>
-        </header>
 
-        <main className="flex-1 px-4 pb-12 relative z-10">
-          <div className="bg-white rounded-2xl border border-slate-100 p-6 space-y-8 shadow-sm">
-            
-            {error && (
-              <div className="mb-2 p-3 bg-red-50 border border-red-100 rounded-xl flex items-center gap-2">
-                <span className="material-symbols-outlined text-red-500 text-sm">error</span>
-                <p className="text-red-500 text-xs font-bold">{error}</p>
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">ชื่อ-นามสกุล (ตรงกับบัญชีธนาคาร)</label>
+                <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-[#008a3e] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#008a3e]/15">
+                  <span className="flex h-full items-center pl-3.5 pr-2 text-slate-400">
+                    <span className="material-symbols-outlined text-lg">person</span>
+                  </span>
+                  <input
+                    name="full_name"
+                    value={formData.full_name}
+                    onChange={handleInputChange}
+                    required
+                    type="text"
+                    placeholder="นายสมชาย ใจดี"
+                    className="h-full min-w-0 flex-1 bg-transparent px-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 font-medium"
+                  />
+                </div>
               </div>
-            )}
 
-            <section>
-              <h3 className="text-sm font-semibold text-slate-800 mb-4 px-1 flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#008a00] text-lg">account_balance</span>
-                เลือกธนาคารของคุณ
-              </h3>
-              <div className="grid grid-cols-3 gap-3">
-                {banks.map((bank) => (
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">รหัสผ่าน PIN (4 หลัก)</label>
+                <div className="relative flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-[#008a3e] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#008a3e]/15">
+                  <input
+                    name="pin"
+                    type={showPassword ? 'text' : 'password'}
+                    inputMode="numeric"
+                    maxLength={4}
+                    placeholder="••••"
+                    value={formData.pin}
+                    onChange={handleInputChange}
+                    required
+                    className="h-full min-w-0 flex-1 bg-transparent px-4 text-center tracking-[0.5em] text-lg font-bold text-slate-900 outline-none placeholder:text-slate-300"
+                  />
                   <button
                     type="button"
-                    key={bank.name}
-                    onClick={() => setFormData(prev => ({ ...prev, bank_name: bank.name }))}
-                    className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 ${
-                      formData.bank_name === bank.name
-                      ? 'border-[#008a00] bg-[#008a00]/5'
-                      : 'border-slate-100 bg-slate-50/30 hover:border-[#008a00]/30'
-                    }`}
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 flex items-center text-slate-400 hover:text-slate-700 transition-colors p-1"
+                    tabIndex={-1}
                   >
-                    <div className="w-10 h-10 mb-2 rounded-lg overflow-hidden flex items-center justify-center bg-slate-100">
-                      {bank.image_url ? (
-                        <img src={bank.image_url} alt={bank.label} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-[#008a00] font-black text-xs">{bank.name}</span>
-                      )}
-                    </div>
-                    <span className="text-xs font-medium text-slate-700 text-center leading-tight">{bank.label}</span>
+                    <span className="material-symbols-outlined text-[20px]">
+                      {showPassword ? 'visibility' : 'visibility_off'}
+                    </span>
                   </button>
-                ))}
-                <button 
-                  onClick={() => setFormData(prev => ({ ...prev, bank_name: 'OTHER' }))}
-                  className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 ${
-                    formData.bank_name === 'OTHER' 
-                    ? 'border-[#008a00] bg-[#008a00]/5' 
-                    : 'border-slate-100 bg-slate-50/30 hover:border-[#008a00]/30'
-                  }`}
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">ยืนยันรหัสผ่าน PIN</label>
+                <div className="relative flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-[#008a3e] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#008a3e]/15">
+                  <input
+                    name="confirm_pin"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    inputMode="numeric"
+                    maxLength={4}
+                    placeholder="••••"
+                    value={formData.confirm_pin}
+                    onChange={handleInputChange}
+                    required
+                    className="h-full min-w-0 flex-1 bg-transparent px-4 text-center tracking-[0.5em] text-lg font-bold text-slate-900 outline-none placeholder:text-slate-300"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 flex items-center text-slate-400 hover:text-slate-700 transition-colors p-1"
+                    tabIndex={-1}
+                  >
+                    <span className="material-symbols-outlined text-[20px]">
+                      {showConfirmPassword ? 'visibility' : 'visibility_off'}
+                    </span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">รหัสผู้แนะนำ (ไม่บังคับ)</label>
+                <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-[#008a3e] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#008a3e]/15">
+                  <span className="flex h-full items-center pl-3.5 pr-2 text-slate-400">
+                    <span className="material-symbols-outlined text-lg">redeem</span>
+                  </span>
+                  <input
+                    name="referral_code"
+                    value={formData.referral_code}
+                    onChange={handleInputChange}
+                    type="text"
+                    placeholder="เช่น: FRIEND100"
+                    className="h-full min-w-0 flex-1 bg-transparent px-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 font-medium"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full flex items-center justify-center gap-2.5 h-12 text-white font-bold text-base rounded-2xl active:scale-[0.99] transition-all shadow-md shadow-emerald-900/20 cursor-pointer mt-6"
+                style={{ background: 'linear-gradient(to bottom, #15803d, #166534)' }}
+              >
+                <span>ถัดไป: ผูกบัญชีธนาคาร</span>
+                <span className="material-symbols-outlined text-lg">arrow_forward</span>
+              </button>
+            </form>
+          ) : (
+            <div className="space-y-5">
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="flex items-center gap-1 text-xs font-bold text-slate-600 hover:text-slate-900 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
                 >
-                  <div className="w-11 h-11 mb-2 rounded-lg bg-slate-200 flex items-center justify-center text-slate-500">
-                    <span className="material-symbols-outlined text-xl">add</span>
-                  </div>
-                  <span className="text-xs font-medium text-slate-700">อื่นๆ</span>
+                  <span className="material-symbols-outlined text-base">arrow_back</span>
+                  <span>ย้อนกลับไปแก้ไขข้อมูล</span>
                 </button>
               </div>
-            </section>
 
-            <section className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-800 px-1 flex items-center gap-2" htmlFor="account-name">
-                  <span className="material-symbols-outlined text-[#008a00] text-lg">person</span>
-                  ชื่อบัญชีธนาคาร
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                  เลือกธนาคารของคุณ
                 </label>
-                <input 
-                  id="account-name"
-                  name="bank_account_name"
-                  value={formData.bank_account_name}
-                  onChange={handleInputChange}
-                  required
-                  className="w-full h-14 bg-slate-50 border border-slate-200 rounded-xl px-4 text-base focus:outline-none focus:ring-2 focus:ring-[#008a00]/20 focus:border-[#008a00] transition-all placeholder:text-slate-400" 
-                  placeholder="ชื่อ-นามสกุล ตามหน้าสมุดบัญชี" 
-                  type="text"
-                />
+                <div className="grid grid-cols-3 gap-2.5">
+                  {banks.map((b) => (
+                    <button
+                      type="button"
+                      key={b.name}
+                      onClick={() => setFormData(prev => ({ ...prev, bank_name: b.name }))}
+                      className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer ${
+                        formData.bank_name === b.name
+                          ? 'border-[#008a3e] bg-[#008a3e]/5 text-[#008a3e] shadow-xs'
+                          : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 text-slate-700'
+                      }`}
+                    >
+                      <div className="w-9 h-9 rounded-xl overflow-hidden bg-white border border-slate-100 flex items-center justify-center p-1 mb-1.5">
+                        {b.image_url ? (
+                          <img src={b.image_url} alt={b.label} className="w-full h-full object-contain" />
+                        ) : (
+                          <span className="text-xs font-bold text-slate-800">{b.name}</span>
+                        )}
+                      </div>
+                      <span className="text-[11px] font-bold truncate max-w-full">{b.label}</span>
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, bank_name: 'OTHER' }))}
+                    className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer ${
+                      formData.bank_name === 'OTHER'
+                        ? 'border-[#008a3e] bg-[#008a3e]/5 text-[#008a3e] shadow-xs'
+                        : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 text-slate-700'
+                    }`}
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-slate-200 flex items-center justify-center text-slate-600 mb-1.5">
+                      <span className="material-symbols-outlined text-lg">add</span>
+                    </div>
+                    <span className="text-[11px] font-bold">อื่นๆ</span>
+                  </button>
+                </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold text-slate-800 px-1 flex items-center gap-2" htmlFor="account-number">
-                  <span className="material-symbols-outlined text-[#008a00] text-lg">payments</span>
-                  หมายเลขบัญชีธนาคาร
-                </label>
-                <div className="relative">
-                  <input 
-                    id="account-number"
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">ชื่อบัญชีธนาคาร</label>
+                <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-[#008a3e] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#008a3e]/15">
+                  <input
+                    name="bank_account_name"
+                    value={formData.bank_account_name}
+                    onChange={handleInputChange}
+                    required
+                    placeholder="ชื่อ-นามสกุล ตามหน้าสมุดบัญชี"
+                    className="h-full min-w-0 flex-1 bg-transparent px-3.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">หมายเลขบัญชีธนาคาร</label>
+                <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-[#008a3e] focus-within:bg-white focus-within:ring-4 focus-within:ring-[#008a3e]/15">
+                  <input
                     name="bank_account_number"
                     value={formData.bank_account_number}
                     onChange={handleInputChange}
                     required
-                    className="w-full h-14 bg-slate-50 border border-slate-200 rounded-xl px-4 text-lg focus:outline-none focus:ring-2 focus:ring-[#008a00]/20 focus:border-[#008a00] transition-all placeholder:text-slate-400" 
-                    placeholder="xxx-x-xxxxx-x" 
-                    type="text"
+                    placeholder="xxx-x-xxxxx-x"
+                    className="h-full min-w-0 flex-1 bg-transparent px-3.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 font-medium font-mono"
                   />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[#008a00]">
-                    <span className="material-symbols-outlined text-xl">verified_user</span>
-                  </div>
                 </div>
               </div>
 
-              <div className="bg-[#008a00]/5 border border-[#008a00]/10 rounded-xl p-4 flex gap-3">
-                <span className="material-symbols-outlined text-[#008a00] shrink-0">info</span>
-                <p className="text-[12px] leading-relaxed text-slate-600">
-                  โปรดตรวจสอบให้แน่ใจว่าชื่อบัญชีตรงกับชื่อที่ลงทะเบียนไว้เพื่อป้องกันความล่าช้าในการจ่ายเงิน
+              <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200/80 flex items-start gap-2.5">
+                <span className="material-symbols-outlined text-[#008a3e] text-lg shrink-0 mt-0.5">verified_user</span>
+                <p className="text-xs text-emerald-900 leading-relaxed font-medium">
+                  ชื่อบัญชีธนาคารต้องตรงกับชื่อที่ลงทะเบียนเพื่อความรวดเร็วในการถอนเงินรางวัลแบบอัตโนมัติ
                 </p>
               </div>
-            </section>
-          </div>
-        </main>
 
-        <footer className="mt-auto px-6 pb-12 pt-4 bg-white/50 backdrop-blur-md border-t border-slate-100/50 relative z-10">
-          <button 
-            onClick={handleRegister}
-            disabled={loading}
-            className="w-full h-14 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2 active:scale-[0.98] transition-all bg-[#008a00] hover:bg-[#007a00] shadow-lg shadow-[#008a00]/20 disabled:opacity-50"
-          >
-            {loading ? (
-              <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            ) : (
-              <>
-                <span>ยืนยันและสมัครสมาชิก</span>
-                <span className="material-symbols-outlined text-[24px]">arrow_forward</span>
-              </>
-            )}
-          </button>
-          <p className="text-center mt-6 text-xs text-slate-400">
-            Secure 256-bit SSL encrypted connection
-          </p>
-        </footer>
-
-        <div className="absolute -top-20 -right-20 w-64 h-64 bg-[#008a00]/5 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-[#008a00]/5 rounded-full blur-3xl pointer-events-none"></div>
-      </div>
+              <button
+                type="button"
+                onClick={handleRegister}
+                disabled={loading}
+                className="w-full flex items-center justify-center gap-2.5 h-12 text-white font-bold text-base rounded-2xl active:scale-[0.99] transition-all shadow-md shadow-emerald-900/20 disabled:opacity-50 cursor-pointer mt-6"
+                style={{ background: 'linear-gradient(to bottom, #15803d, #166534)' }}
+              >
+                {loading ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <span>ยืนยันและสมัครสมาชิก</span>
+                    <span className="material-symbols-outlined text-lg">check_circle</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 };
