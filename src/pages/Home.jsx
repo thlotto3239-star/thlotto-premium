@@ -159,10 +159,16 @@ const Home = () => {
         setPromotions(promoData || []);
         setArticles(articleData || []);
         setAnnouncements(announcementData || []);
-        // trending = รายการจาก trending_items + หวยหลักที่แอดมินเปิด show_in_trending
         const trendingMarkets = (marketsData || [])
           .filter(m => m.show_in_trending)
-          .map(m => ({ id: m.id, title: m.name, code: m.code, image_url: m.logo_url, link: `/betting?draw=${m.id}`, is_market: true }));
+          .map(m => ({
+            id: m.id,
+            title: m.name,
+            code: m.code,
+            image_url: m.logo_url,
+            link: m.code === 'THLOTTO_15M' ? '/lotto-15m' : `/betting?draw=${m.id}`,
+            is_market: true,
+          }));
         setTrending([...(trendingData || []), ...trendingMarkets]);
 
         // Initialize countdowns from accurate next_close_time
@@ -425,7 +431,7 @@ const Home = () => {
                       <span>{formatTime(timeLeft[lottery.id] || 0)}</span>
                     </div>
                     <button
-                      onClick={() => navigate(`/betting?draw=${lottery.id}`)}
+                      onClick={() => navigate(lottery.code === 'THLOTTO_15M' ? '/lotto-15m' : `/betting?draw=${lottery.id}`)}
                       className="w-full text-white py-2 rounded-full text-xs font-bold active:scale-95 transition-transform"
                       style={{ background: 'linear-gradient(to bottom, rgb(22, 68, 30), rgb(13, 121, 4))' }}
                     >แทงเลย</button>
