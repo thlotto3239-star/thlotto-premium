@@ -25,7 +25,7 @@ const BottomNav = () => {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 bg-white/90 border-t border-slate-100 px-2 pb-8 pt-3 z-50 shadow-lg"
+      className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/90 border-t border-slate-100 px-2 pb-8 pt-3 z-50 shadow-lg"
       style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
     >
       <div className="max-w-md mx-auto w-full relative flex justify-around items-end">

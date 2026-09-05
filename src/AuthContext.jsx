@@ -73,6 +73,10 @@ export const AuthProvider = ({ children }) => {
     return authService.signIn(phone, pin, rememberMe);
   };
 
+  const signInWithGoogle = async () => {
+    return authService.signInWithGoogle();
+  };
+
   const signUp = async (formData) => {
     return authService.signUp(formData);
   };
@@ -84,7 +88,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signUp, signOut, refreshProfile: () => loadProfile(user?.id) }}>
+    <AuthContext.Provider value={{ user, profile, loading, signIn, signInWithGoogle, signUp, signOut, refreshProfile: () => loadProfile(user?.id) }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,10 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { supabase } from '../supabaseClient';
 
+const NAV_ITEMS = [
+  { path: '/home', label: 'หน้าหลัก' },
+  { path: '/lotto-15m', label: 'ล็อตโต้ 15 นาที', badge: 'LIVE' },
+  { path: '/lottery-list', label: 'แทงหวย' },
+  { path: '/results', label: 'ผลรางวัล' },
+  { path: '/wallet', label: 'กระเป๋าเงิน' },
+  { path: '/profile', label: 'โปรไฟล์' },
+];
+
 const AppHeader = ({ announcements = [] }) => {
+  const location = useLocation();
   const { profile, user } = useAuth();
   const { settings } = useSettings();
   const [balance, setBalance] = useState(null);
@@ -64,9 +74,9 @@ const AppHeader = ({ announcements = [] }) => {
 
       {/* Main header */}
       <header className="sticky top-[34px] z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 px-4 py-3 shadow-xs">
-        <div className="max-w-6xl mx-auto w-full flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0 shrink-0">
-            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-slate-200 shadow-xs bg-white">
+        <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
+          <Link to="/home" className="flex items-center gap-2.5 min-w-0 shrink-0 group">
+            <div className="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-slate-200 shadow-xs bg-white group-hover:scale-105 transition-transform">
               <img
                 alt={settings.site_name || 'TH LOTTO'}
                 className="w-full h-full object-cover"
@@ -75,12 +85,37 @@ const AppHeader = ({ announcements = [] }) => {
             </div>
             <div className="shrink-0">
               <div className="flex items-center gap-1">
-                <h1 className="font-bold text-[16px] leading-tight whitespace-nowrap text-slate-900">{settings.site_name || 'TH LOTTO'}</h1>
+                <h1 className="font-bold text-[16px] leading-tight whitespace-nowrap text-slate-900 group-hover:text-brand-600 transition-colors">{settings.site_name || 'TH LOTTO'}</h1>
                 <span className="material-symbols-outlined text-primary text-[14px] shrink-0" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
               </div>
               <p className="text-primary text-[12px] font-semibold leading-tight whitespace-nowrap">Premium</p>
             </div>
-          </div>
+          </Link>
+
+          {/* Desktop Navigation Links (Visible on PC >= 1024px) */}
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
+            {NAV_ITEMS.map((item) => {
+              const isActive = location.pathname.startsWith(item.path);
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`relative px-3.5 py-2 rounded-xl text-xs xl:text-sm font-bold transition-all flex items-center gap-1.5 ${
+                    isActive
+                      ? 'bg-brand-50 text-brand-700 font-extrabold shadow-2xs border border-brand-200/50'
+                      : 'text-slate-600 hover:text-brand-700 hover:bg-slate-100/80'
+                  }`}
+                >
+                  <span>{item.label}</span>
+                  {item.badge && (
+                    <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold animate-pulse">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
 
           <div className="flex items-center gap-3 shrink-0">
             <div className="flex flex-col items-end">

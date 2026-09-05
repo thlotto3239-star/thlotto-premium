@@ -65,6 +65,20 @@ export async function signIn(phone, pin, rememberMe = false) {
 }
 
 /**
+ * Sign in ด้วย Google OAuth
+ */
+export async function signInWithGoogle() {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: `${window.location.origin}/home`,
+    },
+  });
+
+  return { data, error };
+}
+
+/**
  * Sign up (สมัครสมาชิก)
  */
 export async function signUp(formData) {
