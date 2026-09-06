@@ -283,415 +283,536 @@ const Home = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Auto-scroll banners
+  useEffect(() => {
+    if (!banners || banners.length <= 1) return;
+    const interval = setInterval(() => {
+      if (bannerSliderRef.current) {
+        const el = bannerSliderRef.current;
+        const cardWidth = el.firstElementChild ? el.firstElementChild.clientWidth + 16 : 400;
+        const maxScroll = el.scrollWidth - el.clientWidth;
+        if (el.scrollLeft >= maxScroll - 10) {
+          el.scrollTo({ left: 0, behavior: 'smooth' });
+        } else {
+          el.scrollBy({ left: cardWidth, behavior: 'smooth' });
+        }
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [banners]);
+
+  const handleScrollBanner = (direction) => {
+    if (bannerSliderRef.current) {
+      const el = bannerSliderRef.current;
+      const cardWidth = el.firstElementChild ? el.firstElementChild.clientWidth + 16 : 400;
+      el.scrollBy({ left: direction === 'left' ? -cardWidth : cardWidth, behavior: 'smooth' });
+    }
+  };
+
   return (
-    <div className="bg-white text-gray-900 pb-24 font-body min-h-screen">
+    <div className="bg-[#f8fafc] text-gray-900 pb-24 font-body min-h-screen antialiased">
 
       <AppHeader announcements={announcements} />
 
-      <main className="max-w-6xl mx-auto px-4 py-4 space-y-8">
+      <main className="max-w-[1700px] 2xl:max-w-[1850px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-6 space-y-7 sm:space-y-8">
 
-        {/* Hero Slider */}
+        {/* ════════════ 1. MULTI-BANNER CONTINUOUS SLIDER (ต่อกัน ตามขนาดรูปจริง) ════════════ */}
         <section className="relative group">
-          <div ref={bannerSliderRef} className="rounded-[2rem] sm:rounded-[2.5rem] aspect-[2/1] sm:aspect-[21/9] lg:aspect-[24/9] max-h-[360px] xl:max-h-[380px] relative overflow-hidden flex no-scrollbar snap-x snap-mandatory overflow-x-auto shadow-xs">
-            {banners.length > 0 ? banners.map((banner) => (
-              <div key={banner.id} className="min-w-full h-full relative snap-center flex-shrink-0">
-                <img alt={banner.title || 'Banner'} className="absolute inset-0 w-full h-full object-cover" src={banner.image_url} />
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 100%)' }}></div>
-                <div className="relative z-10 p-6 h-full flex flex-col justify-end text-white">
-                  <h2 className="text-2xl font-bold mb-1 leading-tight">{banner.title}</h2>
-                  <p className="text-sm text-white/90 font-light mb-3">{banner.description}</p>
-                  <Link to={banner.link_url || '/deposit'} className="bg-white text-primary w-fit px-6 py-2 rounded-full text-xs font-bold active:scale-95 transition-transform">รับสิทธิ์เลย</Link>
-                </div>
-              </div>
-            )) : (
-              <>
-                <div className="min-w-full h-full relative snap-center flex-shrink-0">
-                  <img alt="Slider 1" className="absolute inset-0 w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZH_m9ENZGN80NP3wd1NIVL-KiliSbBU7-mLDJ2AjbAmjTAsP_KhcF7bSZa_yGVXbhl9Znpr0FAdBqGDnlwcI9gP-z6i5F9tM1gp1_njxIJ2HHaAwIjF_YizgXU4S7UiiSlHg0cAQxa9A5F1jGnnSVnLJAg-X6jEPs6icfIlQmrUWcqV02GOnWaP5Ua4OJgHPhCXf4ZGa27CcKP6zGcYgUJD8nSkJrgkM3ktkhSqPLzaJxHYoPBTbaFKFy9sFJrXvzopUcvsLSDQ" />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 100%)' }}></div>
-                  <div className="relative z-10 p-6 h-full flex flex-col justify-end text-white">
-                    <h2 className="text-2xl font-bold mb-1 leading-tight">เพิ่มโชคเป็นสองเท่า</h2>
-                    <p className="text-sm text-white/90 font-light mb-3">ฝากเงินวันนี้ รับเครดิตเพิ่มทันที 10%</p>
-                    <Link to="/deposit" className="bg-white text-primary w-fit px-6 py-2 rounded-full text-xs font-bold active:scale-95 transition-transform">รับสิทธิ์เลย</Link>
-                  </div>
-                </div>
-                <div className="min-w-full h-full relative snap-center flex-shrink-0">
-                  <img alt="Slider 2" className="absolute inset-0 w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8sRUTX5blhRhXdM3K-EJl9-nyIHzOM8KnD931ewJE3TZ5sISdORqFnb2ZKnmKEmOMqQfo_PpAtFTwvNHDWb_Ut-ZF02gj5PZ8H11_H_poW0x70znwyhyCPztyMyPjfb3r8ZxEu7mN6K801aHN4DDXmm0xPfJiGp97701XAXaF23DawxuacLRRdcMWQ0idLgw6YK4mL2n-_yIejeKQydUjyww8ncFdP133iZ5RX1p5ic0TNi1waxZ21triA8BDsDDy5ESeKzXrsA" />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.1) 100%)' }}></div>
-                  <div className="relative z-10 p-6 h-full flex flex-col justify-end text-white">
-                    <h2 className="text-2xl font-bold mb-1 leading-tight">แนะนำเพื่อนรับโบนัส</h2>
-                    <p className="text-sm text-white/90 font-light mb-3">รับส่วนแบ่ง 0.6% จากยอดเดิมพัน</p>
-                    <Link to="/affiliate" className="bg-white text-primary w-fit px-6 py-2 rounded-full text-xs font-bold active:scale-95 transition-transform">แนะนำตอนนี้</Link>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Desktop Arrow Controls */}
-          <button
-            onClick={() => bannerSliderRef.current?.scrollBy({ left: -600, behavior: 'smooth' })}
-            className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 size-10 rounded-full bg-black/40 hover:bg-black/70 text-white items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer shadow-md"
-            title="ก่อนหน้า"
-          >
-            <span className="material-symbols-outlined text-2xl">chevron_left</span>
-          </button>
-          <button
-            onClick={() => bannerSliderRef.current?.scrollBy({ left: 600, behavior: 'smooth' })}
-            className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 size-10 rounded-full bg-black/40 hover:bg-black/70 text-white items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer shadow-md"
-            title="ถัดไป"
-          >
-            <span className="material-symbols-outlined text-2xl">chevron_right</span>
-          </button>
-        </section>
-
-        {/* Thai Government Lotto Card */}
-        <section>
-          <div className="rounded-[2.5rem] p-6 text-white" style={{ background: 'linear-gradient(135deg, rgb(22, 68, 30) 0%, rgb(13, 121, 4) 100%)' }}>
-            <div className="flex items-center justify-between gap-2 mb-6">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-12 h-12 rounded-full overflow-hidden shrink-0">
-                  <img alt="Seal" className="w-full h-full object-cover" src={govResult?.logo || 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Seal_of_the_Government_Lottery_Office.png/240px-Seal_of_the_Government_Lottery_Office.png'} />
-                </div>
-                <div className="min-w-0">
-                  <h3 className="text-xl font-bold whitespace-nowrap truncate">สลากกินแบ่งรัฐบาล</h3>
-                  <p className="text-white/80 text-xs whitespace-nowrap truncate">{govResult?.date ? formatThaiDate(govResult.date) : 'กำลังโหลด...'}</p>
-                </div>
-              </div>
-              <span className={`text-xs font-bold px-3 py-1.5 rounded-full whitespace-nowrap shrink-0 ${govResult && !isPending(govResult.main) ? 'bg-green-400 text-white' : 'bg-red-500 text-white'}`}>
-                {govResult && !isPending(govResult.main) ? 'ประกาศผลแล้ว' : 'รอประกาศผล'}
-              </span>
-            </div>
-            <div className="text-center mb-8">
-              <p className="text-xs text-white/80 mb-3 font-medium tracking-widest">รางวัลที่ 1</p>
-              {govResult ? (
-                <div className="flex justify-center gap-2">
-                  {govResult.main.replace(/\s/g, '').split('').map((n, i) => (
-                    <div key={i} className="w-11 h-11 bg-white rounded-full flex items-center justify-center text-primary font-bold text-xl">{n}</div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex justify-center gap-2">
-                  {[1,2,3,4,5,6].map(i => (
-                    <div key={i} className="w-11 h-11 bg-white/20 rounded-full animate-pulse" />
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="grid grid-cols-3 gap-2 text-center pt-6 border-t border-white/10">
-              <div>
-                <p className="text-xs text-white/60 mb-1">3 ตัวหน้า</p>
-                <p className="font-bold text-lg tracking-wider">{govResult ? govResult.top3 : '—'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-white/60 mb-1">2 ตัวล่าง</p>
-                <p className="font-bold text-lg tracking-wider">{govResult ? govResult.bot2 : '—'}</p>
-              </div>
-              <div>
-                <p className="text-xs text-white/60 mb-1">3 ตัวท้าย</p>
-                <p className="font-bold text-lg tracking-wider">{govResult ? govResult.col6 : '—'}</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Popular Lotteries */}
-        <section>
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold">หวยยอดนิยม</h2>
-              <span className="material-icons text-primary text-[20px]">trending_up</span>
+              <span className="material-symbols-outlined text-emerald-600 text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>campaign</span>
+              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">กิจกรรม & โปรโมชั่นพิเศษ</h2>
             </div>
-            <Link to="/lottery-list" className="bg-accent-red text-white px-4 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-              <span>ดูทั้งหมด</span>
-              <span className="material-icons text-[14px]">chevron_right</span>
-            </Link>
-          </div>
-          <div className="flex gap-5 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4 sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 sm:mx-0 sm:px-0">
-            {loading ? (
-              Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="min-w-[120px] flex flex-col items-center gap-3">
-                  <div className="w-24 h-24 rounded-full bg-gray-100 animate-pulse" />
-                  <div className="h-3 w-16 bg-gray-100 rounded animate-pulse" />
-                </div>
-              ))
-            ) : (popularLotteries.length > 0 || instantCfg?.show_popular) ? (
-              <>
-                {/* การ์ดหวย 1 นาที (แสดงเมื่อแอดมินเปิด toggle ยอดนิยม) */}
-                {instantCfg?.show_popular && (
-                  <div className="min-w-[120px] flex flex-col items-center">
-                    <div className="w-16 h-16 rounded-full overflow-hidden mb-3 border border-gray-100 shrink-0 bg-primary/10 flex items-center justify-center">
-                      {instantCfg.logo_url
-                        ? <img alt={instantCfg.name} className="w-full h-full object-cover" src={instantCfg.logo_url} />
-                        : <span className="material-icons text-primary text-3xl">timer</span>}
-                    </div>
-                    <h3 className="font-bold text-sm mb-1 text-center whitespace-nowrap truncate w-full">{instantCfg.name}</h3>
-                    <div className="flex items-center gap-1 text-accent-red text-xs font-bold mb-3">
-                      <span className="material-icons text-[12px]">bolt</span>
-                      <span>ทุก 1 นาที</span>
-                    </div>
-                    <button
-                      onClick={() => navigate('/instant-lottery')}
-                      className="w-full text-white py-2 rounded-full text-xs font-bold active:scale-95 transition-transform"
-                      style={{ background: 'linear-gradient(to bottom, rgb(22, 68, 30), rgb(13, 121, 4))' }}
-                    >แทงเลย</button>
-                  </div>
-                )}
-                {popularLotteries.map((lottery) => (
-                  <div key={lottery.id} className="min-w-[120px] flex flex-col items-center">
-                    <div className="w-16 h-16 rounded-full overflow-hidden mb-3 border border-gray-100 shrink-0">
-                      <img alt={lottery.name} className="w-full h-full object-cover" src={lottery.logo_url} />
-                    </div>
-                    <h3 className="font-bold text-sm mb-1 text-center whitespace-nowrap truncate w-full">{lottery.name}</h3>
-                    <div className="flex items-center gap-1 text-accent-red text-xs font-bold mb-3">
-                      <span className="material-icons text-[12px]">schedule</span>
-                      <span>{formatTime(timeLeft[lottery.id] || 0)}</span>
-                    </div>
-                    <button
-                      onClick={() => navigate(lottery.code === 'THLOTTO_15M' ? '/lotto-15m' : `/betting?draw=${lottery.id}`)}
-                      className="w-full text-white py-2 rounded-full text-xs font-bold active:scale-95 transition-transform"
-                      style={{ background: 'linear-gradient(to bottom, rgb(22, 68, 30), rgb(13, 121, 4))' }}
-                    >แทงเลย</button>
-                  </div>
-                ))}
-              </>
-            ) : (
-              <p className="text-gray-400 text-xs py-4 italic">ไม่มีหวยยอดนิยมในขณะนี้</p>
-            )}
-          </div>
-        </section>
-
-        {/* Trending Section (มาแรง) */}
-        <section>
-          <div className="flex items-center gap-2 mb-5">
-            <span className="material-icons text-accent-red">local_fire_department</span>
-            <h2 className="text-lg font-bold">มาแรง</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* การ์ดหวย 1 นาที (แสดงเมื่อแอดมินเปิด toggle มาแรง) */}
-            {instantCfg?.show_trending && (
-              <div
-                className="bg-white rounded-xl overflow-hidden border border-gray-50 flex items-center p-4 gap-4 cursor-pointer active:scale-[0.98] transition-all"
-                onClick={() => navigate('/instant-lottery')}
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleScrollBanner('left')}
+                className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-emerald-700 flex items-center justify-center transition-all shadow-2xs cursor-pointer"
+                title="ก่อนหน้า"
               >
-                <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-primary/10 flex items-center justify-center">
-                  {instantCfg.logo_url
-                    ? <img src={instantCfg.logo_url} alt={instantCfg.name} className="w-full h-full object-cover" />
-                    : <span className="material-icons text-primary text-5xl">timer</span>}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-bold text-md">{instantCfg.name}</h4>
-                    <span className="bg-accent-red text-white text-[8px] px-2 py-0.5 rounded-full font-bold">HOT</span>
-                  </div>
-                  <p className="text-xs text-slate-400 whitespace-nowrap">ออกผลทุก 1 นาที ตลอด 24 ชั่วโมง</p>
-                  <button
-                    className="text-white px-5 py-1.5 rounded-full text-xs font-bold mt-3"
-                    style={{ background: 'linear-gradient(to bottom, rgb(22, 68, 30), rgb(13, 121, 4))' }}
-                  >เล่นเลย</button>
-                </div>
-              </div>
-            )}
-            {/* รายการมาแรงอื่นๆ จาก trending_items (กรองหวย 1 นาทีออก — toggle ควบคุมแยก) */}
-            {trending.filter(item => item.link !== '/instant-lottery').map((item) => (
-              <div
-                key={item.id}
-                className="bg-white rounded-xl overflow-hidden border border-gray-50 flex items-center p-4 gap-4 cursor-pointer active:scale-[0.98] transition-all"
-                onClick={() => navigate(item.link || '/lottery-list')}
+                <span className="material-symbols-outlined text-base">chevron_left</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleScrollBanner('right')}
+                className="w-8 h-8 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-emerald-700 flex items-center justify-center transition-all shadow-2xs cursor-pointer"
+                title="ถัดไป"
               >
-                <div className="w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-primary/10 flex items-center justify-center">
-                  {item.image_url
-                    ? <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
-                    : <span className="material-icons text-primary text-5xl">timer</span>
-                  }
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="font-bold text-md">{item.title}</h4>
-                    <span className="bg-accent-red text-white text-[8px] px-2 py-0.5 rounded-full font-bold">HOT</span>
-                  </div>
-                  <p className="text-xs text-slate-400 whitespace-nowrap">{item.code}</p>
-                  <button
-                    className="text-white px-5 py-1.5 rounded-full text-xs font-bold mt-3"
-                    style={{ background: 'linear-gradient(to bottom, rgb(22, 68, 30), rgb(13, 121, 4))' }}
-                  >เล่นเลย</button>
-                </div>
-              </div>
-            ))}
-            {/* ไม่มีรายการเลย */}
-            {!instantCfg?.show_trending && trending.length === 0 && (
-              <p className="text-gray-400 text-xs py-4 italic text-center">ไม่มีรายการมาแรงในขณะนี้</p>
-            )}
-          </div>
-        </section>
-
-        {/* Special Promotions */}
-        <section>
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold">โปรโมชั่นพิเศษ</h2>
-              <span className="material-icons text-primary text-[20px]">loyalty</span>
-            </div>
-            <Link to="/promotions" className="bg-accent-red text-white px-4 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-              <span>ดูทั้งหมด</span>
-              <span className="material-icons text-[14px]">chevron_right</span>
-            </Link>
-          </div>
-          <div ref={promoSliderRef} className="rounded-xl overflow-hidden flex no-scrollbar snap-x snap-mandatory overflow-x-auto" id="promo-slider">
-            {promotions.length > 0 ? promotions.map((promo) => (
-              <div key={promo.id} className="min-w-full relative snap-center flex-shrink-0 cursor-pointer" onClick={() => setSelectedPromo(promo)}>
-                {promo.image_url ? (
-                  <div className="h-40 relative overflow-hidden">
-                    <img src={promo.image_url} alt={promo.title} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/30 p-6 flex flex-col justify-between text-white">
-                      <div>
-                        <h3 className="text-xl font-bold mb-1">{promo.title}</h3>
-                        <p className="text-white/90 text-sm line-clamp-2">{promo.description}</p>
-                      </div>
-                      <div className="flex justify-end">
-                        <button className="bg-white text-primary px-4 py-1.5 rounded-full text-xs font-bold">รับโปรโมชั่น</button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-40 p-6 flex flex-col justify-between text-white" style={{ background: 'linear-gradient(to right, #1a7e2a, #0e5b29)' }}>
-                    <div>
-                      <h3 className="text-xl font-bold mb-1">{promo.title}</h3>
-                      <p className="text-white/80 text-sm">{promo.description}</p>
-                    </div>
-                    <div className="flex justify-end">
-                      <button className="bg-white text-primary px-4 py-1.5 rounded-full text-xs font-bold">รับโปรโมชั่น</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )) : (
-              <>
-                <div className="min-w-full relative snap-center flex-shrink-0">
-                  <div className="h-40 p-6 flex flex-col justify-between text-white" style={{ background: 'linear-gradient(to right, #1a7e2a, #0e5b29)' }}>
-                    <div>
-                      <h3 className="text-xl font-bold mb-1">แนะนำเพื่อน รับโบนัส</h3>
-                      <div className="flex items-center gap-2">
-                        <span className="text-accent-gold font-black text-3xl">0.6%</span>
-                        <span className="bg-white/20 px-2 py-0.5 rounded text-xs font-bold">จากยอดเดิมพัน</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p className="text-xs text-white/80">รับส่วนแบ่งไม่อั้น ยิ่งชวนยิ่งได้</p>
-                      <Link to="/affiliate" className="bg-white text-primary px-4 py-1.5 rounded-full text-xs font-bold">รับโปรโมชั่น</Link>
-                    </div>
-                  </div>
-                </div>
-                <div className="min-w-full relative snap-center flex-shrink-0">
-                  <div className="h-40 p-6 flex flex-col justify-between text-white" style={{ background: 'linear-gradient(to right, #ef4444, #7f1d1d)' }}>
-                    <div>
-                      <h3 className="text-xl font-bold mb-1">สมาชิกใหม่ รับเครดิตฟรี</h3>
-                      <div className="flex items-center gap-2">
-                        <span className="text-white font-black text-3xl">100</span>
-                        <span className="bg-white/20 px-2 py-0.5 rounded text-xs font-bold">บาททันที</span>
-                      </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <p className="text-xs text-white/80">เพียงฝากครั้งแรกขั้นต่ำ 300 บาท</p>
-                      <Link to="/deposit" className="bg-white text-accent-red px-4 py-1.5 rounded-full text-xs font-bold">รับโปรโมชั่น</Link>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </section>
-
-        {/* Special Payout Rates */}
-        {payoutRates.length > 0 && (
-        <section className="rounded-[2.5rem] p-6 overflow-hidden relative bg-emerald-treasury">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-white">อัตราจ่ายพิเศษ</h2>
-            <div className="bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
-              <span className="text-xs text-white font-bold">สูงสุด {Number(payoutRates[0].value).toLocaleString()}</span>
-            </div>
-          </div>
-          <div className="overflow-hidden">
-            <div className="flex animate-marquee-payout whitespace-nowrap gap-3">
-              {[...payoutRates, ...payoutRates].map((item, i) => (
-                <div key={i} className="min-w-[140px] bg-white rounded-2xl flex flex-col items-center justify-center p-4 text-center shrink-0">
-                  <p className="text-xs text-gray-400 font-bold mb-1">{item.label}</p>
-                  <p className="text-2xl font-black text-accent-red leading-tight">{Number(item.value).toLocaleString()}</p>
-                  <p className="text-xs text-gray-400 font-bold mb-3">บาทละ</p>
-                  <div className="flex items-center gap-1.5">
-                    <img className="w-3.5 h-3.5 rounded-full" src="https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png" alt="TH-LOTTO" />
-                    <span className="text-[8px] font-black text-emerald-treasury">TH-LOTTO</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-        )}
-
-        {/* Lucky Wheel Banner */}
-        <section>
-          <div className="relative rounded-xl overflow-hidden h-44 cursor-pointer active:scale-[0.98] transition-transform" onClick={() => navigate('/lucky-wheel')}>
-            <img alt="Lucky Wheel" className="absolute inset-0 w-full h-full object-cover" src={luckyWheelBanner || 'https://placehold.co/800x400/1a7e2a/white?text=Lucky+Wheel'} />
-            <div className="absolute inset-0 bg-black/10"></div>
-            <div className="absolute bottom-4 right-6">
-              <button className="bg-white text-primary px-8 py-2 rounded-full font-bold text-sm shadow-xl flex items-center gap-2">
-                <span className="material-icons text-sm">casino</span>
-                หมุนเลย!
+                <span className="material-symbols-outlined text-base">chevron_right</span>
               </button>
             </div>
           </div>
-        </section>
 
-        {/* Articles & News */}
-        <section>
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold">บทความและข่าวสาร</h2>
-              <span className="material-icons text-primary text-[20px]">newspaper</span>
-            </div>
-            <Link to="/articles" className="bg-accent-red text-white px-4 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-              <span>ดูทั้งหมด</span>
-              <span className="material-icons text-[14px]">chevron_right</span>
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {articles.length > 0 ? articles.map((article) => (
-              <div key={article.id} onClick={() => navigate(`/articles/${article.id}`)} className="bg-white rounded-3xl overflow-hidden border border-slate-200/80 group cursor-pointer active:scale-[0.98] hover:shadow-md hover:border-brand-200 transition-all flex flex-col justify-between">
-                <div className="h-44 relative overflow-hidden">
-                  <img alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src={article.image_url || 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&auto=format&fit=crop'} />
-                  <div className="absolute top-4 left-4">
-                    <span className="bg-accent-red text-white text-[11px] font-extrabold px-3 py-1 rounded-full uppercase shadow-xs">{article.category || 'ข่าวประกาศ'}</span>
-                  </div>
-                </div>
-                <div className="p-5 flex flex-col justify-between flex-1">
-                  <div>
-                    <h3 className="font-extrabold text-slate-900 text-sm sm:text-base mb-2 group-hover:text-brand-600 transition-colors line-clamp-1">{article.title}</h3>
-                    <p className="text-xs text-slate-500 line-clamp-2 mb-4 leading-relaxed">{article.sub_content || article.content?.slice(0, 120) || ''}</p>
-                  </div>
-                  <div className="text-brand-600 text-xs font-extrabold flex items-center gap-1 pt-2 border-t border-slate-100">
-                    อ่านต่อ <span className="material-icons text-sm">arrow_forward</span>
+          {/* Continuous Multi-Card Track */}
+          <div
+            ref={bannerSliderRef}
+            className="flex gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory py-1 select-none"
+          >
+            {banners.length > 0 ? banners.map((banner) => (
+              <div
+                key={banner.id}
+                className="w-full sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] flex-shrink-0 snap-start relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs hover:shadow-md transition-all group/banner cursor-pointer border border-slate-200/80 bg-slate-900"
+                onClick={() => banner.link_url && navigate(banner.link_url)}
+              >
+                {/* Banner Image at True Proportion */}
+                <div className="aspect-[16/9] w-full relative overflow-hidden">
+                  <img
+                    alt={banner.title || 'Banner'}
+                    className="w-full h-full object-cover group-hover/banner:scale-105 transition-transform duration-500"
+                    src={banner.image_url}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent"></div>
+                  <div className="absolute inset-0 p-4 sm:p-5 flex flex-col justify-end text-white z-10">
+                    <h3 className="text-base sm:text-lg font-black leading-tight drop-shadow mb-1 line-clamp-1">{banner.title}</h3>
+                    {banner.description && (
+                      <p className="text-xs text-white/90 line-clamp-1 font-medium mb-2.5 drop-shadow-xs">{banner.description}</p>
+                    )}
+                    <div className="flex items-center justify-between pt-1">
+                      <Link
+                        to={banner.link_url || '/deposit'}
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-white text-emerald-800 hover:bg-emerald-50 px-4 py-1.5 rounded-full text-xs font-black active:scale-95 transition-transform shadow-sm inline-flex items-center gap-1"
+                      >
+                        <span>รับสิทธิ์เลย</span>
+                        <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                      </Link>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-white/70 bg-white/10 px-2 py-0.5 rounded-md backdrop-blur-xs">
+                        OFFICIAL
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             )) : (
-              <div className="bg-white rounded-3xl overflow-hidden border border-slate-200/80 group">
-                <div className="h-44 relative overflow-hidden">
-                  <img alt="News" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcxihAZw-dkDidV--5la9GBHlrPK0Pc3wOHcbDeloFUkGCMVE7i-1DDPJfrPGq52WodowfWE4uUikQGLoT5GdcUVJs4xGeP-yy4j7knWToBPN0iRE0vRDXKOtQZYQFEnG12ZJPVluLDBVZgSmJSIr0hRGkKTEjeJb5DNMR9ULeg2x0UaEZcjuAtGVCoOhKACACS9XNfl9RhqV9iJICPX9Xrt3S5MgcpDiHUqtTCo9MkinUYkX43Q-iEzF7yHHc0NEeM1FpJCv2ZA" />
-                  <div className="absolute top-4 left-4">
-                    <span className="bg-accent-red text-white text-[11px] font-extrabold px-3 py-1 rounded-full uppercase shadow-xs">ข่าวประกาศ</span>
+              <>
+                <div className="w-full sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] flex-shrink-0 snap-start relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs border border-slate-200 bg-slate-900">
+                  <div className="aspect-[16/9] w-full relative">
+                    <img alt="Slider 1" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCZH_m9ENZGN80NP3wd1NIVL-KiliSbBU7-mLDJ2AjbAmjTAsP_KhcF7bSZa_yGVXbhl9Znpr0FAdBqGDnlwcI9gP-z6i5F9tM1gp1_njxIJ2HHaAwIjF_YizgXU4S7UiiSlHg0cAQxa9A5F1jGnnSVnLJAg-X6jEPs6icfIlQmrUWcqV02GOnWaP5Ua4OJgHPhCXf4ZGa27CcKP6zGcYgUJD8nSkJrgkM3ktkhSqPLzaJxHYoPBTbaFKFy9sFJrXvzopUcvsLSDQ" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-5 flex flex-col justify-end text-white">
+                      <h3 className="text-base sm:text-lg font-black">เพิ่มโชคเป็นสองเท่า</h3>
+                      <p className="text-xs text-white/80 mb-2">ฝากเงินวันนี้ รับเครดิตเพิ่มทันที 10%</p>
+                      <Link to="/deposit" className="w-fit bg-white text-emerald-800 px-4 py-1.5 rounded-full text-xs font-black">รับสิทธิ์เลย</Link>
+                    </div>
                   </div>
                 </div>
-                <div className="p-5">
-                  <h3 className="font-extrabold text-slate-900 text-sm sm:text-base mb-2">ตรวจสอบรางวัลใหญ่ งวดล่าสุด และวิธีขึ้นเงินรางวัล</h3>
-                  <p className="text-xs text-slate-500 line-clamp-2 mb-4 leading-relaxed">ตรวจสอบรายชื่อผู้โชคดีที่ได้รับรางวัลใหญ่และวิธีการขึ้นเงินรางวัลที่สะดวกที่สุดผ่านระบบอัตโนมัติ...</p>
-                  <button className="text-brand-600 text-xs font-extrabold flex items-center gap-1 pt-2 border-t border-slate-100">
-                    อ่านต่อ <span className="material-icons text-sm">arrow_forward</span>
-                  </button>
+                <div className="w-full sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] flex-shrink-0 snap-start relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs border border-slate-200 bg-slate-900">
+                  <div className="aspect-[16/9] w-full relative">
+                    <img alt="Slider 2" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8sRUTX5blhRhXdM3K-EJl9-nyIHzOM8KnD931ewJE3TZ5sISdORqFnb2ZKnmKEmOMqQfo_PpAtFTwvNHDWb_Ut-ZF02gj5PZ8H11_H_poW0x70znwyhyCPztyMyPjfb3r8ZxEu7mN6K801aHN4DDXmm0xPfJiGp97701XAXaF23DawxuacLRRdcMWQ0idLgw6YK4mL2n-_yIejeKQydUjyww8ncFdP133iZ5RX1p5ic0TNi1waxZ21triA8BDsDDy5ESeKzXrsA" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent p-5 flex flex-col justify-end text-white">
+                      <h3 className="text-base sm:text-lg font-black">แนะนำเพื่อนรับโบนัส</h3>
+                      <p className="text-xs text-white/80 mb-2">รับส่วนแบ่ง 0.6% จากยอดเดิมพัน</p>
+                      <Link to="/affiliate" className="w-fit bg-white text-emerald-800 px-4 py-1.5 rounded-full text-xs font-black">แนะนำตอนนี้</Link>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         </section>
+
+        {/* ════════════ 2. THREE-LAYOUT PC DASHBOARD GRID ════════════ */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+
+          {/* ──────── LAYOUT 1: ฝั่งซ้าย (สลากกินแบ่งรัฐบาล & Fast Games) ──────── */}
+          <div className="lg:col-span-4 space-y-6">
+
+            {/* Thai Government Lotto Ticket Card */}
+            <div
+              className="rounded-3xl p-5 sm:p-6 text-white relative overflow-hidden shadow-sm"
+              style={{ background: 'linear-gradient(135deg, rgb(22, 68, 30) 0%, rgb(13, 121, 4) 100%)' }}
+            >
+              <div className="flex items-center justify-between gap-2 mb-5">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="size-11 rounded-full overflow-hidden shrink-0 border-2 border-white/30 bg-white/10 p-0.5">
+                    <img
+                      alt="Seal"
+                      className="w-full h-full object-cover"
+                      src={govResult?.logo || 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Seal_of_the_Government_Lottery_Office.png/240px-Seal_of_the_Government_Lottery_Office.png'}
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-base sm:text-lg font-black tracking-tight truncate">สลากกินแบ่งรัฐบาล</h3>
+                    <p className="text-white/80 text-xs truncate">{govResult?.date ? formatThaiDate(govResult.date) : 'งวดประจำวันที่ 1 และ 16'}</p>
+                  </div>
+                </div>
+                <span className={`text-[11px] font-extrabold px-3 py-1 rounded-full whitespace-nowrap shrink-0 shadow-2xs ${govResult && !isPending(govResult.main) ? 'bg-emerald-400 text-slate-900' : 'bg-red-500 text-white'}`}>
+                  {govResult && !isPending(govResult.main) ? '● ประกาศผลแล้ว' : '● รอผลออก 15:30'}
+                </span>
+              </div>
+
+              {/* 6-Digit Prize 1 Balls */}
+              <div className="text-center mb-6 bg-black/15 rounded-2xl p-4 border border-white/10 backdrop-blur-xs">
+                <p className="text-xs text-white/80 mb-2.5 font-bold tracking-widest uppercase">รางวัลที่ 1</p>
+                {govResult ? (
+                  <div className="flex justify-center gap-1.5 sm:gap-2">
+                    {govResult.main.replace(/\s/g, '').split('').map((n, i) => (
+                      <div key={i} className="size-10 sm:size-11 bg-white rounded-full flex items-center justify-center text-primary font-black text-xl shadow-md">
+                        {n}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex justify-center gap-1.5 sm:gap-2">
+                    {[1, 2, 3, 4, 5, 6].map(i => (
+                      <div key={i} className="size-10 sm:size-11 bg-white/20 rounded-full animate-pulse" />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 3 Front / 2 Bottom / 3 Bottom */}
+              <div className="grid grid-cols-3 gap-2 text-center pt-4 border-t border-white/15">
+                <div className="bg-white/10 rounded-xl p-2.5">
+                  <p className="text-[11px] text-white/70 mb-0.5 font-semibold">3 ตัวหน้า</p>
+                  <p className="font-black text-base sm:text-lg tracking-wider">{govResult ? govResult.top3 : 'xxx'}</p>
+                </div>
+                <div className="bg-white/10 rounded-xl p-2.5">
+                  <p className="text-[11px] text-white/70 mb-0.5 font-semibold">2 ตัวล่าง</p>
+                  <p className="font-black text-base sm:text-lg tracking-wider text-amber-300">{govResult ? govResult.bot2 : 'xx'}</p>
+                </div>
+                <div className="bg-white/10 rounded-xl p-2.5">
+                  <p className="text-[11px] text-white/70 mb-0.5 font-semibold">3 ตัวท้าย</p>
+                  <p className="font-black text-base sm:text-lg tracking-wider">{govResult ? govResult.col6 : 'xxx'}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
+                <Link to="/results" className="text-xs font-bold text-white/90 hover:text-white inline-flex items-center gap-1">
+                  <span>ตรวจผลสลากทั้งหมด</span>
+                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                </Link>
+                <Link
+                  to="/betting?draw=gov"
+                  className="bg-white text-emerald-800 hover:bg-emerald-50 px-4 py-1.5 rounded-full text-xs font-black shadow-sm"
+                >
+                  แทงรัฐบาล
+                </Link>
+              </div>
+            </div>
+
+            {/* Fast Game 1: หวยไทย 1 นาที (Instant Lotto Live Card) */}
+            {instantCfg && (
+              <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs hover:border-emerald-300 transition-all">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="size-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-primary shrink-0">
+                      {instantCfg.logo_url ? (
+                        <img src={instantCfg.logo_url} alt={instantCfg.name} className="w-full h-full object-cover rounded-2xl" />
+                      ) : (
+                        <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>timer</span>
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="font-black text-sm text-slate-900">{instantCfg.name}</h4>
+                        <span className="bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full">FAST</span>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-0.5">ออกผลทุก 1 นาที ตลอด 24 ชั่วโมง</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-slate-50 rounded-2xl p-3.5 border border-slate-100 flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                    <span className="size-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>รอบปัจจุบันกำลังรับแทง</span>
+                  </div>
+                  <span className="text-xs font-black text-emerald-700 bg-emerald-100/70 px-2.5 py-0.5 rounded-full">
+                    พร้อมเดิมพัน
+                  </span>
+                </div>
+                <button
+                  onClick={() => navigate('/instant-lottery')}
+                  className="w-full py-3 rounded-2xl text-white font-black text-xs sm:text-sm tracking-wider shadow-sm active:scale-95 transition-transform cursor-pointer"
+                  style={{ background: 'linear-gradient(to right, rgb(22, 68, 30), rgb(13, 121, 4))' }}
+                >
+                  แทงหวย 1 นาที ตอนนี้
+                </button>
+              </div>
+            )}
+
+            {/* Fast Game 2: ล็อตโต้ 15 นาที (Lotto 15M Live Studio) */}
+            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs hover:border-emerald-300 transition-all">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="size-12 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                    <span className="material-symbols-outlined text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>bolt</span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <h4 className="font-black text-sm text-slate-900">ล็อตโต้ 15 นาที</h4>
+                      <span className="bg-emerald-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full animate-pulse">LIVE</span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5">ออกผลรางวัลสดทุก 15 นาที</p>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate('/lotto-15m')}
+                className="w-full py-2.5 rounded-2xl border border-slate-200 text-slate-700 hover:border-primary hover:text-primary font-black text-xs tracking-wide transition-colors cursor-pointer mt-1"
+              >
+                เข้าชมถ่ายทอดสด & แทงสด
+              </button>
+            </div>
+
+          </div>
+
+          {/* ──────── LAYOUT 2: ตรงกลาง (ตลาดหวยเปิดรับแทง & ยอดนิยม & ข่าวสาร) ──────── */}
+          <div className="lg:col-span-5 space-y-6">
+
+            {/* Popular Lotteries Section */}
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-xs space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-emerald-600 text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>confirmation_number</span>
+                  <h2 className="text-base sm:text-lg font-black text-slate-900">ตลาดหวยยอดนิยม</h2>
+                </div>
+                <Link to="/lottery-list" className="text-xs font-bold text-brand-600 hover:underline inline-flex items-center gap-0.5">
+                  <span>ดูทั้งหมด ({popularLotteries.length})</span>
+                  <span className="material-symbols-outlined text-sm">chevron_right</span>
+                </Link>
+              </div>
+
+              {/* 2-Column Market Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {loading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="h-28 rounded-2xl bg-slate-100 animate-pulse" />
+                  ))
+                ) : popularLotteries.length > 0 ? (
+                  popularLotteries.slice(0, 6).map((lottery) => (
+                    <div
+                      key={lottery.id}
+                      className="bg-slate-50/70 hover:bg-white rounded-2xl p-4 border border-slate-200/80 hover:border-emerald-300 hover:shadow-xs transition-all flex flex-col justify-between cursor-pointer group/market"
+                      onClick={() => navigate(lottery.code === 'THLOTTO_15M' ? '/lotto-15m' : `/betting?draw=${lottery.id}`)}
+                    >
+                      <div className="flex items-start gap-3 mb-2">
+                        <div className="size-11 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-white shadow-2xs">
+                          <img alt={lottery.name} className="w-full h-full object-cover" src={lottery.logo_url} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 group-hover/market:text-primary transition-colors truncate">
+                            {lottery.name}
+                          </h4>
+                          <div className="flex items-center gap-1 text-[11px] text-red-500 font-bold mt-1">
+                            <span className="material-symbols-outlined text-xs">schedule</span>
+                            <span>{formatTime(timeLeft[lottery.id] || 0)}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between">
+                        <span className="text-[11px] font-bold text-slate-500">
+                          {lottery.payout_rate ? `จ่าย ฿${Number(lottery.payout_rate).toLocaleString()}` : 'อัตราจ่ายสูงสุด'}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(lottery.code === 'THLOTTO_15M' ? '/lotto-15m' : `/betting?draw=${lottery.id}`);
+                          }}
+                          className="px-4 py-1.5 rounded-xl text-white text-xs font-black shadow-xs active:scale-95 transition-transform"
+                          style={{ background: 'linear-gradient(to right, rgb(22, 68, 30), rgb(13, 121, 4))' }}
+                        >
+                          แทงเลย
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-2 py-8 text-center text-xs text-slate-400">ไม่มีหวยยอดนิยมในขณะนี้</div>
+                )}
+              </div>
+            </div>
+
+            {/* Trending Items (มาแรง) */}
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-xs space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-amber-500 text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>
+                  <h2 className="text-base sm:text-lg font-black text-slate-900">รายการมาแรง</h2>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                {trending.filter(item => item.link !== '/instant-lottery').slice(0, 4).map((item) => (
+                  <div
+                    key={item.id}
+                    className="bg-slate-50 hover:bg-white rounded-2xl p-3.5 border border-slate-200/80 hover:border-emerald-300 hover:shadow-xs transition-all flex items-center gap-3 cursor-pointer"
+                    onClick={() => navigate(item.link || '/lottery-list')}
+                  >
+                    <div className="size-12 rounded-xl overflow-hidden shrink-0 bg-primary/10 flex items-center justify-center border border-slate-100">
+                      {item.image_url ? (
+                        <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="material-symbols-outlined text-primary text-2xl">timer</span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="font-extrabold text-xs text-slate-900 truncate">{item.title}</h4>
+                        <span className="bg-red-500 text-white text-[8px] px-1.5 py-0.2 rounded-full font-black">HOT</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 truncate mt-0.5">{item.code}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Articles & News (บทความ) */}
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-xs space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-emerald-600 text-xl">newspaper</span>
+                  <h2 className="text-base sm:text-lg font-black text-slate-900">บทความและข่าวสาร</h2>
+                </div>
+                <Link to="/articles" className="text-xs font-bold text-brand-600 hover:underline">
+                  ดูทั้งหมด
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {articles.slice(0, 2).map((article) => (
+                  <div
+                    key={article.id}
+                    onClick={() => navigate(`/articles/${article.id}`)}
+                    className="rounded-2xl border border-slate-200/80 overflow-hidden hover:border-emerald-300 transition-all cursor-pointer group flex flex-col justify-between"
+                  >
+                    <div className="aspect-[16/9] w-full relative overflow-hidden bg-slate-100">
+                      <img
+                        alt={article.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        src={article.image_url || 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&auto=format&fit=crop'}
+                      />
+                      <span className="absolute top-2.5 left-2.5 bg-red-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-xs">
+                        {article.category || 'ข่าวประกาศ'}
+                      </span>
+                    </div>
+                    <div className="p-3.5">
+                      <h4 className="font-black text-xs sm:text-sm text-slate-900 line-clamp-1 group-hover:text-primary transition-colors mb-1">
+                        {article.title}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                        {article.sub_content || article.content?.slice(0, 80) || ''}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+          {/* ──────── LAYOUT 3: ฝั่งขวา (อัตราจ่ายพิเศษ, สิทธิประโยชน์, วงล้อ, โปรโมชั่น) ──────── */}
+          <div className="lg:col-span-3 space-y-6">
+
+            {/* Special Payout Rates Vertical Widget */}
+            {payoutRates.length > 0 && (
+              <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-amber-500 text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>monetization_on</span>
+                    <h3 className="text-sm sm:text-base font-black text-slate-900">อัตราจ่ายสูงสุด</h3>
+                  </div>
+                  <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    บาทละ 2 ล้าน
+                  </span>
+                </div>
+
+                {/* Rates List */}
+                <div className="space-y-2">
+                  {payoutRates.slice(0, 6).map((item, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between bg-slate-50 hover:bg-emerald-50/50 p-2.5 rounded-xl border border-slate-100 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="size-6 rounded-lg bg-emerald-100/70 text-emerald-800 flex items-center justify-center text-[10px] font-black">
+                          {i + 1}
+                        </span>
+                        <span className="text-xs font-bold text-slate-700">{item.label}</span>
+                      </div>
+                      <span className="text-xs font-black text-amber-600">
+                        บาทละ ฿{Number(item.value).toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Lucky Wheel Widget */}
+            <div
+              className="relative rounded-3xl overflow-hidden p-5 text-white shadow-xs cursor-pointer active:scale-[0.98] transition-transform group"
+              style={{ background: 'linear-gradient(135deg, #15803d 0%, #166534 100%)' }}
+              onClick={() => navigate('/lucky-wheel')}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-2.5 py-0.5 rounded-full">
+                  FREE DAILY SPIN
+                </span>
+                <span className="material-symbols-outlined text-amber-300 text-2xl group-hover:rotate-45 transition-transform">
+                  casino
+                </span>
+              </div>
+              <h3 className="text-lg font-black leading-tight mb-1">วงล้อเสี่ยงโชค</h3>
+              <p className="text-xs text-white/80 font-medium mb-4">หมุนรับเครดิตและทองคำฟรีทุกวัน</p>
+              <button
+                type="button"
+                className="w-full py-2.5 rounded-xl bg-white text-emerald-800 font-black text-xs shadow-md group-hover:bg-emerald-50 transition-colors"
+              >
+                เข้าสู่หน้าหมุนวงล้อ
+              </button>
+            </div>
+
+            {/* Active Promotions Vertical Stack */}
+            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-emerald-600 text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>loyalty</span>
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">โปรโมชั่นสมาชิก</h3>
+                </div>
+                <Link to="/promotions" className="text-xs font-bold text-brand-600 hover:underline">
+                  ทั้งหมด
+                </Link>
+              </div>
+
+              <div className="space-y-3">
+                {/* Affiliate Perk */}
+                <div
+                  className="rounded-2xl p-4 text-white cursor-pointer active:scale-95 transition-transform"
+                  style={{ background: 'linear-gradient(135deg, #047857 0%, #065f46 100%)' }}
+                  onClick={() => navigate('/affiliate')}
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-200 mb-1">AFFILIATE PARTNER</p>
+                  <h4 className="font-black text-sm mb-1">แนะนำเพื่อน รับคอม 0.6%</h4>
+                  <p className="text-xs text-emerald-100/90 leading-snug">รับส่วนแบ่งไม่อั้น ยิ่งชวนมากยิ่งได้มาก</p>
+                </div>
+
+                {/* Promo from DB if available */}
+                {promotions.slice(0, 2).map((promo) => (
+                  <div
+                    key={promo.id}
+                    className="bg-slate-50 hover:bg-white rounded-2xl p-3.5 border border-slate-200/80 hover:border-emerald-300 transition-all cursor-pointer flex flex-col justify-between"
+                    onClick={() => setSelectedPromo(promo)}
+                  >
+                    <div>
+                      <h4 className="font-black text-xs text-slate-900 line-clamp-1 mb-1">{promo.title}</h4>
+                      <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">{promo.description}</p>
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-slate-200/50 flex items-center justify-between">
+                      <span className="text-[10px] font-black text-emerald-700">สิทธิ์พิเศษ</span>
+                      <span className="text-[11px] font-bold text-primary flex items-center gap-0.5">
+                        ดูเงื่อนไข <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+        </div>
 
       </main>
 
