@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import AppHeader from '../components/AppHeader';
-import BottomNav from '../components/BottomNav';
+import PageWrapper from '../components/PageWrapper';
 
 const LotteryList = () => {
   const navigate = useNavigate();
@@ -71,29 +71,48 @@ const LotteryList = () => {
   });
 
   return (
-    <div className="bg-white min-h-screen text-slate-900">
+    <PageWrapper>
       <AppHeader />
 
-      {/* Header */}
-      <header className="sticky top-12 z-50 bg-white/80 border-b border-primary/5 px-6 py-4 flex items-center justify-between" style={{ backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}>
-        <button onClick={() => navigate(-1)} className="flex items-center justify-center text-slate-400 hover:opacity-70 transition-opacity">
-          <span className="material-symbols-outlined text-3xl">chevron_left</span>
-        </button>
-        <h1 className="text-xl font-extrabold tracking-tight text-slate-900">รายการหวยรายวัน</h1>
-        <div className="w-8"></div>
-      </header>
+      {/* Page Header / Breadcrumb */}
+      <div className="bg-white/80 border-b border-slate-100 px-4 lg:px-8 py-3.5 sticky top-[72px] lg:top-[34px] z-40 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="size-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-all active:scale-95"
+            >
+              <span className="material-symbols-outlined text-xl">chevron_left</span>
+            </button>
+            <div>
+              <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 flex items-center gap-2">
+                <span>รายการหวยทั้งหมด</span>
+                <span className="text-xs font-semibold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-full border border-brand-200/60 hidden sm:inline">
+                  {filteredLotteries.length} ตลาด
+                </span>
+              </h1>
+              <p className="text-[11px] text-slate-400 font-medium">เปิดรับแทง 24 ชม. อัตราจ่ายมาตรฐานสูงสุด</p>
+            </div>
+          </div>
 
-      {/* Filter Tabs */}
-      <div className="mt-4 px-4 overflow-x-auto no-scrollbar">
-        <div className="flex gap-3 pb-2 w-max min-w-full">
+          <div className="flex items-center gap-2">
+            <span className="size-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span className="text-xs font-bold text-slate-600 hidden sm:inline">ระบบรับแทงเปิดทำการปกติ</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter Tabs Container */}
+      <div className="max-w-7xl mx-auto w-full px-4 lg:px-8 mt-4">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
           {tabs.map((tab) => (
             <button
               key={tab.value}
               onClick={() => setActiveTab(tab.value)}
-              className={`px-6 py-2.5 rounded-full font-bold text-sm whitespace-nowrap shrink-0 transition-all ${
+              className={`px-5 py-2 rounded-xl font-bold text-xs whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                 activeTab === tab.value
-                  ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                  : 'bg-white text-slate-600 border border-slate-100 hover:bg-slate-50'
+                  ? 'bg-brand-600 text-white shadow-xs font-extrabold'
+                  : 'bg-white text-slate-600 border border-slate-200/80 hover:bg-slate-50'
               }`}
             >
               {tab.label}
@@ -102,81 +121,92 @@ const LotteryList = () => {
         </div>
       </div>
 
-      <main className="px-6 mt-6 pb-32 space-y-4">
+      {/* Main Content Grid */}
+      <main className="max-w-7xl mx-auto w-full px-4 lg:px-8 mt-5 pb-32">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 animate-pulse">กำลังโหลด...</p>
+            <div className="w-10 h-10 border-3 border-brand-600/20 border-t-brand-600 rounded-full animate-spin"></div>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 animate-pulse">กำลังโหลดตลาดหวย...</p>
           </div>
         ) : filteredLotteries.length > 0 ? (
-          filteredLotteries.map((draw) => (
-            <div
-              key={draw.id}
-              onClick={() => { if (draw.is_open) navigate(`/betting?draw=${draw.id}`); }}
-              className={`bg-white rounded-[2.5rem] p-6 border border-primary/5 group transition-all ${draw.is_open ? 'cursor-pointer active:scale-[0.99]' : 'cursor-not-allowed opacity-70'}`}
-              style={{ boxShadow: '0 10px 30px -5px rgba(26, 127, 43, 0.08)' }}
-            >
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="size-14 rounded-2xl bg-slate-50 overflow-hidden flex items-center justify-center">
-                    {draw.logo_url ? (
-                      <img alt={draw.name} className="w-full h-full object-cover" src={draw.logo_url} />
-                    ) : (
-                      <span className="material-symbols-outlined text-primary text-3xl">confirmation_number</span>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-[1.1rem] font-extrabold text-slate-900">{draw.name}</h3>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <span className={`size-2 rounded-full ${draw.is_open ? 'bg-emerald-500' : 'bg-red-400'}`}></span>
-                      <span className={`text-xs font-bold ${draw.is_open ? 'text-emerald-500' : 'text-red-400'}`}>
-                        {draw.is_open ? 'เปิดรับแทง' : 'ปิดรับแล้ว'}
-                      </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {filteredLotteries.map((draw) => (
+              <div
+                key={draw.id}
+                onClick={() => { if (draw.is_open) navigate(`/betting?draw=${draw.id}`); }}
+                className={`bg-white rounded-3xl p-5 border border-slate-200/80 group transition-all duration-200 shadow-2xs hover:shadow-md hover:border-brand-300 flex flex-col justify-between ${
+                  draw.is_open ? 'cursor-pointer active:scale-[0.99]' : 'cursor-not-allowed opacity-75'
+                }`}
+              >
+                <div>
+                  <div className="flex justify-between items-start gap-3 mb-4">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="size-13 rounded-2xl bg-slate-50 overflow-hidden flex items-center justify-center border border-slate-100 shrink-0 group-hover:scale-105 transition-transform">
+                        {draw.logo_url ? (
+                          <img alt={draw.name} className="w-full h-full object-cover" src={draw.logo_url} />
+                        ) : (
+                          <span className="material-symbols-outlined text-brand-600 text-2xl">confirmation_number</span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-base font-extrabold text-slate-900 group-hover:text-brand-600 transition-colors truncate">
+                          {draw.name}
+                        </h3>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className={`size-2 rounded-full ${draw.is_open ? 'bg-emerald-500 animate-pulse' : 'bg-red-400'}`}></span>
+                          <span className={`text-[11px] font-bold ${draw.is_open ? 'text-emerald-600' : 'text-red-500'}`}>
+                            {draw.is_open ? 'เปิดรับแทง' : 'ปิดรับแล้ว'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-right shrink-0 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">อัตราจ่าย</p>
+                      <p className="text-sm font-extrabold text-slate-900">
+                        บาทละ <span className="text-brand-600 font-mono">{draw.payout_3top || '900'}</span>
+                      </p>
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-0.5">อัตราจ่าย</p>
-                  <p className="text-lg font-extrabold text-slate-900">บาทละ <span className="text-primary">{draw.payout_3top}</span></p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between pt-5 border-t border-slate-100">
-                <div className="flex flex-col">
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5">ปิดรับใน</p>
-                  <div className="flex items-center gap-1.5">
-                    <span className={`material-symbols-outlined text-base ${timeLeft[draw.id] <= 3600 ? 'text-red-500' : 'text-slate-700'}`}>schedule</span>
-                    <span className={`font-body tabular-nums font-bold text-base ${timeLeft[draw.id] <= 3600 ? 'text-red-500' : 'text-slate-700'}`}>
-                      {formatTime(timeLeft[draw.id] || 0)}
-                    </span>
+
+                <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-2">
+                  <div className="flex flex-col">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">ปิดรับใน</p>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`material-symbols-outlined text-base ${timeLeft[draw.id] <= 3600 && timeLeft[draw.id] > 0 ? 'text-red-500 animate-pulse' : 'text-slate-700'}`}>schedule</span>
+                      <span className={`font-mono font-bold text-sm ${timeLeft[draw.id] <= 3600 && timeLeft[draw.id] > 0 ? 'text-red-600' : 'text-slate-700'}`}>
+                        {formatTime(timeLeft[draw.id] || 0)}
+                      </span>
+                    </div>
                   </div>
+
+                  <button
+                    disabled={!draw.is_open}
+                    onClick={(e) => { e.stopPropagation(); if (draw.is_open) navigate(`/betting?draw=${draw.id}`); }}
+                    className={`px-7 py-2.5 rounded-xl font-extrabold text-xs transition-all shadow-xs ${
+                      draw.is_open
+                        ? 'bg-brand-600 hover:bg-brand-700 text-white active:scale-95 cursor-pointer'
+                        : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                    }`}
+                  >
+                    {draw.is_open ? 'แทงเลย' : 'ปิดรับแล้ว'}
+                  </button>
                 </div>
-                <button
-                  disabled={!draw.is_open}
-                  onClick={(e) => { e.stopPropagation(); if (draw.is_open) navigate(`/betting?draw=${draw.id}`); }}
-                  className={`px-10 py-3.5 rounded-full font-extrabold text-sm transition-all ${
-                    draw.is_open
-                      ? 'bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 active:scale-95'
-                      : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                  }`}
-                >
-                  {draw.is_open ? 'แทงเลย' : 'ปิดรับแล้ว'}
-                </button>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         ) : (
-          <div className="py-32 text-center space-y-4 opacity-40">
-            <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto border-2 border-dashed border-slate-200">
-              <span className="material-symbols-outlined text-slate-300 text-4xl">confirmation_number</span>
+          <div className="py-24 text-center space-y-3 bg-white rounded-3xl border border-slate-200/70 p-8 max-w-md mx-auto">
+            <div className="size-16 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto border border-dashed border-slate-200">
+              <span className="material-symbols-outlined text-slate-400 text-3xl">confirmation_number</span>
             </div>
-            <p className="text-sm font-extrabold text-slate-900 uppercase tracking-widest">ไม่มีหวยเปิดรับแทง</p>
-            <p className="text-xs text-slate-400">ขณะนี้ทุกตลาดปิดทำการชั่วคราว</p>
+            <p className="text-sm font-extrabold text-slate-800">ไม่มีหวยเปิดรับแทงในหมวดนี้</p>
+            <p className="text-xs text-slate-400">กรุณาเลือกหมวดหมู่อื่น หรือรอรอบเปิดรับแทงถัดไป</p>
           </div>
         )}
       </main>
-
-      <BottomNav />
-    </div>
+    </PageWrapper>
   );
 };
 

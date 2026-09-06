@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import BottomNav from '../components/BottomNav';
+import PageWrapper from '../components/PageWrapper';
 
 const STATIC_SECTIONS = [
   {
@@ -103,7 +103,7 @@ const Terms = () => {
   }, []);
 
   return (
-    <div className="bg-white min-h-screen text-slate-900 font-body flex flex-col">
+    <PageWrapper>
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-100 flex items-center gap-3 px-4 h-16">
         <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-slate-100 active:scale-95 transition-all">
@@ -211,8 +211,7 @@ const Terms = () => {
         </div>
       </div>
 
-      <BottomNav />
-    </div>
+    </PageWrapper>
   );
 };
 

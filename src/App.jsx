@@ -69,6 +69,7 @@ function App() {
             <Route path="/" element={<RootRedirect />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/registration-success" element={<RegistrationSuccess />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Protected Routes */}
@@ -82,8 +83,9 @@ function App() {
           <Route path="/upload-slip" element={<ProtectedRoute><UploadSlip /></ProtectedRoute>} />
           <Route path="/withdrawal" element={<ProtectedRoute><Withdrawal /></ProtectedRoute>} />
           <Route path="/withdrawal-confirm" element={<ProtectedRoute><WithdrawalConfirm /></ProtectedRoute>} />
-          <Route path="/registration-success" element={<ProtectedRoute><RegistrationSuccess /></ProtectedRoute>} />
           <Route path="/betting" element={<ProtectedRoute><Betting /></ProtectedRoute>} />
+          <Route path="/betting/:marketId" element={<ProtectedRoute><Betting /></ProtectedRoute>} />
+          <Route path="/bet/:marketId" element={<ProtectedRoute><Betting /></ProtectedRoute>} />
           <Route path="/lottery-list" element={<ProtectedRoute><LotteryList /></ProtectedRoute>} />
           <Route path="/bet-history" element={<ProtectedRoute><BetHistory /></ProtectedRoute>} />
           <Route path="/wallet" element={<ProtectedRoute><Wallet /></ProtectedRoute>} />

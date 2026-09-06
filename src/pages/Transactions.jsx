@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import BottomNav from '../components/BottomNav';
+import PageWrapper from '../components/PageWrapper';
 import { useAuth } from '../AuthContext';
 
 const brandGradient = 'linear-gradient(135deg, #1a7e2a 0%, #2ecc71 100%)';
@@ -130,7 +130,7 @@ const Transactions = () => {
     : transactions.filter(t => t.type === activeFilter);
 
   return (
-    <div className="bg-white text-slate-800 min-h-screen flex flex-col">
+    <PageWrapper>
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md px-4 pt-6 pb-4 flex items-center justify-between border-b border-slate-50">
         <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-slate-50 transition-colors">
@@ -239,9 +239,7 @@ const Transactions = () => {
           )}
         </div>
       </main>
-
-      <BottomNav />
-    </div>
+    </PageWrapper>
   );
 };
 

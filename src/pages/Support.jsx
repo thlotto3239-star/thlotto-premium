@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import PageWrapper from '../components/PageWrapper';
 
 const FAQ_ITEMS = [
   {
@@ -58,7 +59,8 @@ const Support = () => {
   const toggleFaq = (i) => setOpenFaq(prev => prev === i ? null : i);
 
   return (
-    <div className="bg-slate-50 min-h-screen flex flex-col max-w-[430px] mx-auto">
+    <PageWrapper>
+      <div className="max-w-2xl mx-auto w-full">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-100 flex items-center gap-3 px-4 h-16">
         <button
@@ -188,7 +190,8 @@ const Support = () => {
         </div>
 
       </main>
-    </div>
+      </div>
+    </PageWrapper>
   );
 };
 

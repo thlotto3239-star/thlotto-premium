@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import BottomNav from '../components/BottomNav';
+import PageWrapper from '../components/PageWrapper';
 import { supabase } from '../supabaseClient';
 
 const Profile = () => {
@@ -48,8 +48,8 @@ const Profile = () => {
   };
 
   return (
-    <div className="bg-background-light text-slate-900 font-thai">
-      <div className="relative flex min-h-screen w-full max-w-md mx-auto flex-col pb-24 shadow-2xl bg-white">
+    <PageWrapper>
+      <div className="w-full max-w-xl mx-auto bg-white min-h-screen flex flex-col shadow-2xl lg:shadow-none lg:border lg:border-slate-100 lg:my-0">
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-8 pb-4">
           <button onClick={() => navigate(-1)} className="flex items-center justify-center size-10 rounded-full bg-slate-100">
@@ -211,9 +211,8 @@ const Profile = () => {
           </button>
           <p className="mt-4 text-center text-xs text-slate-300">v{__APP_VERSION__}</p>
         </div>
-        <BottomNav />
       </div>
-    </div>
+    </PageWrapper>
   );
 };
 

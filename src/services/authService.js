@@ -181,7 +181,40 @@ export async function fetchProfile(userId) {
   }
 
   const walletData = walletRes.data || {};
-  return { ...profileRes.data, ...walletData };
+  let currentProfile = profileRes.data;
+
+  // ซิงค์ข้อมูล Gmail อัตโนมัติ (ชื่อและรูปโปรไฟล์) เมื่อล็อกอินผ่าน Google
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    const u = userData?.user;
+    if (u && (u.app_metadata?.provider === 'google' || u.user_metadata?.avatar_url || u.user_metadata?.picture)) {
+      const meta = u.user_metadata || {};
+      const googleAvatar = meta.avatar_url || meta.picture || '';
+      const googleName = meta.full_name || meta.name || '';
+
+      const needsAvatar = googleAvatar && (!currentProfile.avatar_url || currentProfile.avatar_url !== googleAvatar);
+      const needsName = googleName && (!currentProfile.full_name || currentProfile.full_name === 'สมาชิกใหม่' || currentProfile.full_name.startsWith('TH'));
+
+      if (needsAvatar || needsName) {
+        const updatePayload = {};
+        if (needsAvatar) updatePayload.avatar_url = googleAvatar;
+        if (needsName) updatePayload.full_name = googleName;
+
+        const { data: updated } = await supabase
+          .from('profiles')
+          .update(updatePayload)
+          .eq('id', userId)
+          .select()
+          .single();
+
+        if (updated) currentProfile = updated;
+      }
+    }
+  } catch (err) {
+    logger.warn('Google metadata sync skipped:', err.message);
+  }
+
+  return { ...currentProfile, ...walletData };
 }
 
 /**

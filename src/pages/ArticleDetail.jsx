@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import BottomNav from '../components/BottomNav';
+import PageWrapper from '../components/PageWrapper';
 
 const FALLBACK_IMG = 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&auto=format&fit=crop';
 
@@ -62,7 +62,7 @@ const ArticleDetail = () => {
   }
 
   return (
-    <div className="bg-white min-h-screen text-slate-900">
+    <PageWrapper>
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 border-b border-slate-100 px-6 py-4 flex items-center gap-4" style={{ backdropFilter: 'blur(20px)' }}>
         <button onClick={() => navigate(-1)} className="text-slate-400 shrink-0">
@@ -138,8 +138,7 @@ const ArticleDetail = () => {
         )}
       </main>
 
-      <BottomNav />
-    </div>
+    </PageWrapper>
   );
 };
 

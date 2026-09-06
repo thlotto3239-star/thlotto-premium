@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BottomNav from '../components/BottomNav';
+import PageWrapper from '../components/PageWrapper';
 import { useAuth } from '../AuthContext';
 import { fetchNotifications, subscribeNotifications, markAsRead as markAsReadService, markAllAsRead as markAllAsReadService } from '../services/notificationService';
 import logger from '../services/logger';
@@ -129,7 +129,7 @@ const Notifications = () => {
   );
 
   return (
-    <div className="bg-white min-h-screen text-slate-900 pb-32">
+    <PageWrapper>
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-6 h-16 flex items-center justify-between">
         <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-50 text-slate-700">
@@ -203,8 +203,7 @@ const Notifications = () => {
         )}
       </main>
 
-      <BottomNav />
-    </div>
+    </PageWrapper>
   );
 };
 

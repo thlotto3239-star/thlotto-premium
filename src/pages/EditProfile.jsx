@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import BottomNav from '../components/BottomNav';
+import PageWrapper from '../components/PageWrapper';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
 import { useModal } from '../contexts/ModalContext';
@@ -86,7 +86,7 @@ const EditProfile = () => {
   };
 
   return (
-    <div className="bg-white text-slate-900 min-h-screen pb-32">
+    <PageWrapper>
       {/* Header */}
       <header className="fixed top-0 w-full z-50 flex justify-between items-center px-4 h-16 bg-white border-b border-zinc-100">
         <div className="flex items-center gap-3">
@@ -272,8 +272,7 @@ const EditProfile = () => {
         </section>
       </main>
 
-      <BottomNav />
-    </div>
+    </PageWrapper>
   );
 };
 

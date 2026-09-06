@@ -147,18 +147,20 @@ const Withdrawal = () => {
   return (
     <div className="bg-white min-h-screen text-slate-900 flex flex-col">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md px-6 pt-12 pb-4 flex items-center justify-between border-b border-slate-100">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-50 text-[#1a7e2a]"
-        >
-          <span className="material-symbols-outlined">arrow_back_ios_new</span>
-        </button>
-        <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">ถอนเงิน</h1>
-        <div className="w-10"></div>
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md px-6 py-4 border-b border-slate-100">
+        <div className="max-w-2xl mx-auto w-full flex items-center justify-between">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-50 text-[#1a7e2a] hover:bg-slate-100 transition-colors cursor-pointer"
+          >
+            <span className="material-symbols-outlined">arrow_back_ios_new</span>
+          </button>
+          <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">ถอนเงิน</h1>
+          <div className="w-11"></div>
+        </div>
       </header>
 
-      <main className="flex-1 px-6 pt-6 pb-36">
+      <main className="flex-1 px-6 pt-6 pb-36 max-w-2xl mx-auto w-full">
         {/* Promo Turnover Warning */}
         {promoStatus && (
           <div className={`mb-4 rounded-2xl p-4 border ${promoStatus.turnover_completed >= promoStatus.turnover_required ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
@@ -271,25 +273,27 @@ const Withdrawal = () => {
       </main>
 
       {/* Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 p-6 bg-white/95 backdrop-blur-lg border-t border-slate-100">
-        <button
-          onClick={handleWithdrawal}
-          disabled={loading || !amount || parseFloat(amount) < minWithdraw}
-          className="w-full h-16 rounded-full flex items-center justify-center gap-3 text-white text-lg font-extrabold active:scale-[0.98] transition-all disabled:opacity-50"
-          style={{ background: 'linear-gradient(135deg, #1a7e2a 0%, #156321 100%)' }}
-        >
-          {loading ? (
-            <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-          ) : (
-            <>
-              <span className="material-symbols-outlined">payments</span>
-              ยืนยันการถอนเงิน
-            </>
-          )}
-        </button>
-        <div className="mt-3 flex items-center justify-center gap-1.5 opacity-40">
-          <span className="material-symbols-outlined text-[12px]">lock</span>
-          <span className="text-xs font-bold uppercase tracking-widest text-slate-900">Secure SSL 256-bit Encryption</span>
+      <footer className="fixed bottom-0 left-0 right-0 lg:left-64 xl:left-72 p-6 bg-white/95 backdrop-blur-lg border-t border-slate-100 z-30">
+        <div className="max-w-2xl mx-auto w-full">
+          <button
+            onClick={handleWithdrawal}
+            disabled={loading || !amount || parseFloat(amount) < minWithdraw}
+            className="w-full h-16 rounded-full flex items-center justify-center gap-3 text-white text-lg font-extrabold active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+            style={{ background: 'linear-gradient(135deg, #1a7e2a 0%, #156321 100%)' }}
+          >
+            {loading ? (
+              <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            ) : (
+              <>
+                <span className="material-symbols-outlined">payments</span>
+                ยืนยันการถอนเงิน
+              </>
+            )}
+          </button>
+          <div className="mt-3 flex items-center justify-center gap-1.5 opacity-40">
+            <span className="material-symbols-outlined text-[12px]">lock</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-900">Secure SSL 256-bit Encryption</span>
+          </div>
         </div>
       </footer>
 

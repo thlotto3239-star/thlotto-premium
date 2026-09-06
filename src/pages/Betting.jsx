@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams, useNavigate, Link } from 'react-router-dom';
+import { useSearchParams, useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../AuthContext';
 import { useModal } from '../contexts/ModalContext';
@@ -31,7 +31,8 @@ const Betting = () => {
   const { showSuccess, showError, showConfirm } = useModal();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const drawId = searchParams.get('draw');
+  const { marketId: paramMarketId } = useParams();
+  const drawId = searchParams.get('draw') || paramMarketId;
   const [draw, setDraw] = useState(null);
   const [liveStreamUrl, setLiveStreamUrl] = useState('');
   const [isMuted, setIsMuted] = useState(true);
@@ -256,424 +257,575 @@ const Betting = () => {
     );
   };
 
+  // Keyboard listener for desktop PC numpad & keys
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (timeLeft.isExpired) return;
+
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+        handleNumpadClick(e.key);
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        handleBackspace();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        handleClear();
+      } else if (e.key === 'Enter') {
+        if (cart.length > 0 && !loading) {
+          e.preventDefault();
+          handleSubmit();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentDigits, digitLimit, cart, timeLeft.isExpired, loading]);
+
   const lastCartItem = cart[cart.length - 1];
 
+  // Helper to render Category buttons
+  const renderCategoryRow = (codes, opts = {}) => {
+    const available = codes.map(c => categories.find(cat => cat.code === c)).filter(Boolean);
+    if (available.length === 0) return null;
+    const cols = opts.fullWidth ? 1 : Math.min(available.length, 2);
+    const colsClass = cols === 1 ? 'grid-cols-1' : 'grid-cols-2';
+    return (
+      <div className={`grid ${colsClass} gap-2`}>
+        {available.map(cat => {
+          const isActive = currentCategory === cat.code;
+          const dashed = opts.dashed;
+          const fullW = opts.fullWidth;
+          return (
+            <button
+              key={cat.code}
+              type="button"
+              onClick={() => handleCategoryChange(cat)}
+              className={`flex flex-col items-center justify-center ${fullW ? 'p-3.5' : 'p-3'} rounded-2xl transition-all active:scale-95 text-center cursor-pointer ${
+                isActive
+                  ? 'text-white ring-2 ring-primary/40 shadow-sm'
+                  : dashed
+                    ? 'bg-white border-2 border-dashed border-slate-200 text-slate-600 hover:border-primary/40'
+                    : 'bg-white border border-slate-200/80 text-slate-700 hover:border-primary/40'
+              }`}
+              style={isActive ? { background: 'linear-gradient(135deg, rgb(22,68,30), rgb(13,121,4))' } : {}}
+            >
+              <span className={`${fullW ? 'text-sm' : 'text-xs'} font-black ${dashed ? 'uppercase tracking-wide' : ''}`}>{cat.name}</span>
+              <span className={`${fullW ? 'text-xs' : 'text-[11px]'} font-medium ${isActive ? 'text-white/80' : 'text-slate-400'}`}>
+                บาทละ {cat.rate?.toLocaleString()}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // Reusable Numpad Component
+  const renderNumpad = () => (
+    <div className="grid grid-cols-3 gap-2.5 sm:gap-3 select-none">
+      {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => handleNumpadClick(n.toString())}
+          className="h-14 sm:h-16 flex items-center justify-center bg-white rounded-2xl text-2xl font-black border border-slate-200/80 text-slate-800 hover:bg-emerald-50/50 hover:border-emerald-300 active:scale-95 transition-all shadow-2xs cursor-pointer"
+        >
+          {n}
+        </button>
+      ))}
+      <button
+        type="button"
+        onClick={handleBackspace}
+        className="h-14 sm:h-16 flex items-center justify-center bg-red-50 text-red-500 rounded-2xl border border-red-100 hover:bg-red-100/70 active:scale-95 transition-all cursor-pointer"
+        title="ลบหลักล่าสุด (Backspace)"
+      >
+        <span className="material-symbols-outlined text-2xl sm:text-3xl">backspace</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => handleNumpadClick('0')}
+        className="h-14 sm:h-16 flex items-center justify-center bg-white rounded-2xl text-2xl font-black border border-slate-200/80 text-slate-800 hover:bg-emerald-50/50 hover:border-emerald-300 active:scale-95 transition-all shadow-2xs cursor-pointer"
+      >
+        0
+      </button>
+      <button
+        type="button"
+        onClick={handleClear}
+        className="h-14 sm:h-16 flex items-center justify-center bg-emerald-50 text-primary rounded-2xl font-black border border-emerald-200 hover:bg-emerald-100/80 active:scale-95 transition-all text-xs tracking-wider uppercase cursor-pointer"
+        title="ล้างตัวเลข (Esc)"
+      >
+        ล้าง
+      </button>
+    </div>
+  );
+
   return (
-    <div className="bg-white min-h-screen font-display text-slate-900 antialiased overflow-x-hidden">
+    <div className="bg-[#f8fafc] min-h-screen font-display text-slate-900 antialiased">
       <audio ref={audioRef} preload="auto">
-        <source src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3" type="audio/mpeg"/>
+        <source src="https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3" type="audio/mpeg" />
       </audio>
 
-      <div className="relative flex min-h-screen w-full max-w-[430px] mx-auto flex-col bg-white">
-
-        {/* ── HEADER ── */}
-        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md px-4 pt-6 pb-2">
-          {/* Top bar */}
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center justify-center size-11 rounded-full bg-slate-100 active:scale-90 transition-transform"
-            >
-              <span className="material-symbols-outlined text-slate-600">chevron_left</span>
-            </button>
-            <h1 className="text-lg font-extrabold tracking-tight text-slate-900 uppercase">
-              {draw?.name || 'TH-LOTTO Premium'}
-            </h1>
-            <div className="size-10"></div>
-          </div>
-
-          {/* Live Stream */}
-          <div className="relative overflow-hidden rounded-2xl bg-slate-900 aspect-video mb-4">
-            {embedUrl ? (
-              <>
-                <iframe
-                  key={streamKey}
-                  src={embedUrl}
-                  className="absolute inset-0 w-full h-full"
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                  allowFullScreen
-                  title="Live Stream"
-                  frameBorder="0"
-                />
-                {/* LIVE badge */}
-                <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-red-600 text-white px-2.5 py-1 rounded-full text-xs font-black animate-pulse pointer-events-none">
-                  <div className="size-2 rounded-full bg-white"></div> ถ่ายทอดสด
-                </div>
-                {/* Mute toggle */}
-                <button
-                  onClick={handleToggleMute}
-                  className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold active:scale-95 transition-all"
-                >
-                  <span className="material-symbols-outlined text-[16px]">
-                    {isMuted ? 'volume_off' : 'volume_up'}
-                  </span>
-                  {isMuted ? 'เปิดเสียง' : 'ปิดเสียง'}
-                </button>
-              </>
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                <div className="size-14 rounded-full bg-white/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-white text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>live_tv</span>
-                </div>
-                <p className="text-white/50 text-xs font-bold">ยังไม่มีการถ่ายทอดสด</p>
-                <p className="text-white/30 text-xs">แอดมินยังไม่ได้ตั้งค่าลิงค์สตรีม</p>
-              </div>
-            )}
-          </div>
-
-          {/* Countdown */}
-          <div className="flex items-center justify-between border border-yellow-400/20 p-4 rounded-2xl mb-4 bg-slate-50/50">
-            <div>
-              <p className={`text-xs font-black uppercase tracking-[0.1em] mb-1 ${timeLeft.isExpired ? 'text-red-500 animate-pulse' : 'text-yellow-500'}`}>
-                {timeLeft.isExpired ? 'ปิดรับแทงแล้ว!' : 'งวดถัดไปเปิดรับแทง'}
-              </p>
-              <p className="text-sm font-bold text-slate-700">{draw?.name || 'สลากกินแบ่งรัฐบาล'}</p>
+      {/* ── CLOSED OVERLAY ── */}
+      {timeLeft.isExpired && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+          <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-slate-100 animate-in zoom-in-95">
+            <div className="size-20 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5 border border-red-100">
+              <span className="material-symbols-outlined text-red-500 text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
             </div>
-            {!timeLeft.isExpired ? (
-              <div className="flex items-center gap-1.5">
-                {[
-                  ...(parseInt(timeLeft.d || '0') > 0 ? [{ val: timeLeft.d, label: 'วัน' }] : []),
-                  { val: timeLeft.h, label: 'ชม.' }, { val: timeLeft.m, label: 'นาที' }, { val: timeLeft.s, label: 'วิ' }
-                ].map((t, i) => (
-                  <React.Fragment key={i}>
-                    {i > 0 && <span className="text-lg font-black text-slate-300">:</span>}
-                    <div className="flex flex-col items-center justify-center bg-white size-[54px] rounded-xl border border-slate-100">
-                      <span className="text-xl font-black text-slate-900 leading-none">{t.val}</span>
-                      <span className="text-xs font-bold text-slate-400 mt-1.5">{t.label}</span>
-                    </div>
-                  </React.Fragment>
+            <h2 className="text-xl font-black text-slate-900 mb-2">ปิดรับแทงแล้ว</h2>
+            <p className="text-sm text-slate-500 mb-6">ตลาดหวยนี้หมดเวลารับแทงของงวดนี้แล้ว<br />กรุณาเลือกตลาดที่ยังเปิดรับแทง</p>
+            <button
+              onClick={() => navigate('/lottery-list', { replace: true })}
+              className="w-full py-4 rounded-2xl font-extrabold text-white text-sm shadow-lg shadow-emerald-900/20 cursor-pointer"
+              style={{ background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' }}
+            >
+              กลับไปเลือกตลาดหวย
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── RESPONSIVE CONTAINER ── */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+        {/* Breadcrumb & Navigation */}
+        <div className="flex items-center justify-between gap-3 mb-5">
+          <button
+            onClick={() => navigate('/lottery-list')}
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs sm:text-sm font-bold transition-all shadow-2xs cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-base">arrow_back</span>
+            <span>กลับไปตลาดหวย</span>
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <span className="size-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              {draw?.name || 'TH-LOTTO Premium'}
+            </span>
+          </div>
+        </div>
+
+        {/* ── DUAL COLUMN GRID FOR PC / SINGLE COL ON MOBILE ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 pb-36 lg:pb-12">
+          
+          {/* ════ LEFT COLUMN: Live Stream, Countdown, Category, Number Display ════ */}
+          <div className="lg:col-span-7 space-y-5">
+
+            {/* Live Stream / Broadcast Video */}
+            <div className="relative overflow-hidden rounded-2xl bg-slate-900 aspect-video shadow-md border border-slate-800">
+              {embedUrl ? (
+                <>
+                  <iframe
+                    key={streamKey}
+                    src={embedUrl}
+                    className="absolute inset-0 w-full h-full"
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    allowFullScreen
+                    title="Live Stream"
+                    frameBorder="0"
+                  />
+                  <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-red-600 text-white px-2.5 py-1 rounded-full text-xs font-black animate-pulse pointer-events-none shadow-md">
+                    <div className="size-2 rounded-full bg-white"></div> ถ่ายทอดสด
+                  </div>
+                  <button
+                    onClick={handleToggleMute}
+                    className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 bg-black/70 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold active:scale-95 transition-all hover:bg-black/80 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">
+                      {isMuted ? 'volume_off' : 'volume_up'}
+                    </span>
+                    {isMuted ? 'เปิดเสียง' : 'ปิดเสียง'}
+                  </button>
+                </>
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center">
+                  <div className="size-14 rounded-full bg-white/10 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-white text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>live_tv</span>
+                  </div>
+                  <p className="text-white font-bold text-sm">การถ่ายทอดสดผลรางวัล</p>
+                  <p className="text-white/50 text-xs">จะเปิดอัตโนมัติเมื่อถึงเวลาออกรางวัล</p>
+                </div>
+              )}
+            </div>
+
+            {/* Countdown Banner */}
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-center sm:text-left">
+                <p className={`text-xs font-black uppercase tracking-[0.1em] mb-0.5 ${timeLeft.isExpired ? 'text-red-500 animate-pulse' : 'text-amber-600'}`}>
+                  {timeLeft.isExpired ? '● ปิดรับแทงแล้ว' : '● นับถอยหลังปิดรับแทง'}
+                </p>
+                <p className="text-sm font-bold text-slate-800">{draw?.name || 'สลากกินแบ่งรัฐบาล'}</p>
+              </div>
+              {!timeLeft.isExpired ? (
+                <div className="flex items-center gap-1.5">
+                  {[
+                    ...(parseInt(timeLeft.d || '0') > 0 ? [{ val: timeLeft.d, label: 'วัน' }] : []),
+                    { val: timeLeft.h, label: 'ชม.' },
+                    { val: timeLeft.m, label: 'นาที' },
+                    { val: timeLeft.s, label: 'วิ' }
+                  ].map((t, i) => (
+                    <React.Fragment key={i}>
+                      {i > 0 && <span className="text-lg font-black text-slate-300">:</span>}
+                      <div className="flex flex-col items-center justify-center bg-slate-50 size-[50px] sm:size-[54px] rounded-xl border border-slate-200">
+                        <span className="text-lg sm:text-xl font-black text-slate-900 leading-none">{t.val}</span>
+                        <span className="text-[10px] font-bold text-slate-400 mt-1">{t.label}</span>
+                      </div>
+                    </React.Fragment>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-200">
+                  <span className="material-symbols-outlined text-red-500 text-base">lock</span>
+                  <span className="text-xs font-black text-red-600">งวดนี้ปิดรับแทงแล้ว</span>
+                </div>
+              )}
+            </div>
+
+            {/* Category Selection */}
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-black text-slate-800 flex items-center gap-2">
+                  <span className="w-1.5 h-4 rounded-full bg-primary inline-block"></span>
+                  เลือกประเภทการแทง
+                </h2>
+                <span className="text-xs font-bold text-slate-400">เลือกประเภทก่อนกดเลข</span>
+              </div>
+              <div className="space-y-3">
+                {renderCategoryRow(['6DIGIT'], { fullWidth: true })}
+                {renderCategoryRow(['4TOP'], { fullWidth: true })}
+                {renderCategoryRow(['3TOP', '3TODE'])}
+                {renderCategoryRow(['3FRONT', '3BOTTOM'])}
+                {renderCategoryRow(['2TOP', '2BOTTOM'])}
+                {renderCategoryRow(['RUN_UP', 'RUN_DOWN'], { dashed: true })}
+              </div>
+            </div>
+
+            {/* Number Display & Bet Amount Quick Select */}
+            <div
+              className={`flex flex-col gap-3 rounded-2xl p-5 transition-all duration-300 border-2 ${
+                isSuccessAnimating
+                  ? 'bg-emerald-50/70 border-emerald-400 scale-[1.01]'
+                  : 'bg-white border-dashed border-emerald-200 shadow-xs'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-black text-primary tracking-wider uppercase">
+                  ตัวเลขที่กำลังเลือก ({currentCat?.name || currentCategory})
+                </p>
+                <span className="text-[11px] font-bold text-slate-400 hidden sm:inline">
+                  คีย์ผ่านแป้นพิมพ์ 0-9 ได้ทันที
+                </span>
+              </div>
+
+              {/* Balls */}
+              <div className="flex flex-wrap gap-2.5 sm:gap-3 justify-center py-2">
+                {Array.from({ length: digitLimit }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`size-14 sm:size-16 flex items-center justify-center rounded-full transition-all duration-300 border-2 ${
+                      currentDigits[i]
+                        ? 'bg-white border-primary shadow-md shadow-emerald-900/10 scale-105'
+                        : 'bg-slate-50 border-slate-200 animate-pulse'
+                    }`}
+                  >
+                    <span className={`text-2xl sm:text-3xl font-black ${currentDigits[i] ? 'text-slate-900' : 'text-slate-300'}`}>
+                      {currentDigits[i] || '_'}
+                    </span>
+                  </div>
                 ))}
               </div>
-            ) : (
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-100">
-                <span className="material-symbols-outlined text-red-500 text-base">lock</span>
-                <span className="text-xs font-black text-red-500">ปิดแล้ว</span>
-              </div>
-            )}
-          </div>
-        </header>
 
-        {/* ── CLOSED OVERLAY ── */}
-        {timeLeft.isExpired && (
-          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm px-8 max-w-[430px] mx-auto">
-            <div className="bg-white rounded-3xl p-8 w-full text-center shadow-2xl">
-              <div className="size-20 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5">
-                <span className="material-symbols-outlined text-red-500 text-5xl" style={{ fontVariationSettings: "'FILL' 1" }}>lock</span>
+              {/* Quick Amount Selector */}
+              <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2">
+                <span className="text-xs font-bold text-slate-500">ยอดเดิมพันต่องวด:</span>
+                <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                  {[10, 20, 50, 100, 200, 500].map(amt => (
+                    <button
+                      key={amt}
+                      type="button"
+                      onClick={() => setBetAmount(amt)}
+                      className={`h-8 px-3 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                        betAmount === amt
+                          ? 'text-white shadow-sm'
+                          : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100'
+                      }`}
+                      style={betAmount === amt ? { background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' } : {}}
+                    >
+                      ฿{amt}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <h2 className="text-xl font-black text-slate-900 mb-2">ปิดรับแทงแล้ว</h2>
-              <p className="text-sm text-slate-400 mb-6">ตลาดหวยนี้หมดเวลารับแทงแล้ว<br/>กรุณาเลือกตลาดที่ยังเปิดรับแทง</p>
-              <button
-                onClick={() => navigate('/lottery-list', { replace: true })}
-                className="w-full py-4 rounded-full font-extrabold text-white text-sm"
-                style={{ background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' }}
-              >
-                กลับไปเลือกตลาด
-              </button>
+
+              <p className="text-center text-[11px] font-medium text-slate-400 italic">
+                ช่องตัวเลขจะเคลียร์อัตโนมัติเมื่อเปลี่ยนประเภท และบันทึกลงโพยทันทีเมื่อกดครบหลัก
+              </p>
+            </div>
+
+            {/* Mobile Numpad (Shown only on small screens) */}
+            <div className="lg:hidden bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
+              {renderNumpad()}
+            </div>
+
+          </div>
+
+          {/* ════ RIGHT COLUMN: Desktop Numpad & Live Slip Console ════ */}
+          <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-5 lg:self-start">
+
+            {/* Desktop Numpad Console (Hidden on mobile) */}
+            <div className="hidden lg:block bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-slate-400 text-lg">dialpad</span>
+                  <h3 className="text-sm font-black text-slate-800">แป้นกดตัวเลข</h3>
+                </div>
+                <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                  รองรับแป้นพิมพ์ PC
+                </span>
+              </div>
+              {renderNumpad()}
+            </div>
+
+            {/* Desktop Live Slip Card (Hidden on mobile, mobile uses slide drawer) */}
+            <div className="hidden lg:flex flex-col bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+              <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-emerald-600 text-lg">receipt_long</span>
+                  <h3 className="text-sm font-black text-slate-800">โพยหวยของคุณ ({cart.length})</h3>
+                </div>
+                {cart.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setCart([])}
+                    className="text-xs font-bold text-red-500 hover:text-red-600 hover:underline cursor-pointer"
+                  >
+                    ล้างโพย
+                  </button>
+                )}
+              </div>
+
+              {/* Items List */}
+              <div className="p-4 max-h-[340px] overflow-y-auto space-y-2 no-scrollbar">
+                {cart.length === 0 ? (
+                  <div className="py-10 text-center flex flex-col items-center justify-center gap-2 text-slate-400">
+                    <span className="material-symbols-outlined text-4xl text-slate-300">touch_app</span>
+                    <p className="text-xs font-bold text-slate-500">ยังไม่มีรายการในโพย</p>
+                    <p className="text-[11px]">กดตัวเลขบนแป้นพิมพ์หรือคลิกปุ่มเพื่อเพิ่มรายการ</p>
+                  </div>
+                ) : (
+                  cart.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100 hover:border-emerald-200 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-sm">
+                          {item.numbers}
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-500">{categories.find(c => c.code === item.type)?.name}</p>
+                          {editingIdx === idx ? (
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <input
+                                autoFocus
+                                className="w-20 text-xs font-black border border-primary rounded px-2 py-0.5 text-center bg-white"
+                                value={editAmount}
+                                onChange={e => setEditAmount(e.target.value)}
+                                onBlur={() => handleSaveAmount(idx)}
+                                onKeyDown={e => e.key === 'Enter' && handleSaveAmount(idx)}
+                              />
+                            </div>
+                          ) : (
+                            <span className="text-xs font-black text-slate-800">฿ {item.amount}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleEditAmount(idx)}
+                          className="px-2 py-1 bg-white rounded-lg border border-slate-200 text-[11px] font-bold text-slate-600 hover:text-primary transition-colors cursor-pointer"
+                        >
+                          แก้ไข
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveFromCart(idx)}
+                          className="text-slate-300 hover:text-red-500 transition-colors p-1 cursor-pointer"
+                          title="ลบรายการ"
+                        >
+                          <span className="material-symbols-outlined text-lg">delete</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Total & Submit in Desktop Slip Card */}
+              <div className="p-4 border-t border-slate-100 bg-slate-50/70 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase">ยอดรวมสุทธิ</span>
+                  <span className="text-2xl font-black text-amber-600">
+                    ฿ {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={loading || cart.length === 0 || timeLeft.isExpired}
+                  className="w-full py-4 text-white font-black rounded-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 tracking-wider disabled:opacity-50 shadow-md shadow-emerald-900/20 cursor-pointer text-base"
+                  style={{ background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' }}
+                >
+                  {loading ? (
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
+                      ส่งโพยหวย (Enter)
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* ── MOBILE CART FOOTER (Only shown on screens < lg) ── */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30">
+        {/* Cart Modal (slide up) */}
+        {showCartModal && (
+          <div className="bg-white rounded-t-[2.5rem] border-t border-slate-200 px-6 pt-5 pb-4 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-slate-400 text-base">receipt_long</span>
+                <h3 className="text-xs font-black text-slate-800">รายการทั้งหมด ({cart.length})</h3>
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setCart([])} className="text-xs font-black text-red-500">ล้างทั้งหมด</button>
+                <button onClick={() => setShowCartModal(false)} className="text-slate-400">
+                  <span className="material-symbols-outlined text-xl">expand_more</span>
+                </button>
+              </div>
+            </div>
+            <div className="max-h-52 overflow-y-auto space-y-2 no-scrollbar">
+              {cart.map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl">
+                  <div className="flex items-center gap-3">
+                    <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-sm font-black text-primary">{item.numbers}</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-slate-400">{categories.find(c => c.code === item.type)?.name}</p>
+                      {editingIdx === idx ? (
+                        <div className="flex items-center gap-1">
+                          <input
+                            autoFocus
+                            className="w-20 text-xs font-black border border-primary rounded-lg px-2 py-0.5 text-center"
+                            value={editAmount}
+                            onChange={e => setEditAmount(e.target.value)}
+                            onBlur={() => handleSaveAmount(idx)}
+                            onKeyDown={e => e.key === 'Enter' && handleSaveAmount(idx)}
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-xs font-black text-slate-700">฿ {item.amount}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleEditAmount(idx)}
+                      className="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-100"
+                    >
+                      <span className="text-xs font-bold text-slate-400">แก้ไข</span>
+                      <span className="material-symbols-outlined text-primary text-sm">edit</span>
+                    </button>
+                    <button onClick={() => handleRemoveFromCart(idx)} className="text-slate-300 hover:text-red-400 transition-colors">
+                      <span className="material-symbols-outlined text-lg">delete</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
-        {/* ── MAIN ── */}
-        <main className="flex-1 px-4 flex flex-col gap-5 pb-[240px]">
-
-          {/* Category Selection */}
-          {(() => {
-            // Helper: render row ของปุ่ม — ข้ามที่ไม่มีใน categories ของ market นี้
-            const renderRow = (codes, opts = {}) => {
-              const available = codes.map(c => categories.find(cat => cat.code === c)).filter(Boolean);
-              if (available.length === 0) return null;
-              const cols = opts.fullWidth ? 1 : Math.min(available.length, 2);
-              const colsClass = cols === 1 ? 'grid-cols-1' : 'grid-cols-2';
-              return (
-                <div className={`grid ${colsClass} gap-2`}>
-                  {available.map(cat => {
-                    const isActive = currentCategory === cat.code;
-                    const dashed = opts.dashed;
-                    const fullW = opts.fullWidth;
-                    return (
-                      <button
-                        key={cat.code}
-                        onClick={() => handleCategoryChange(cat)}
-                        className={`flex flex-col items-center justify-center ${fullW ? 'p-3.5' : 'p-3'} rounded-2xl transition-all active:scale-95 ${
-                          isActive
-                            ? 'text-white ring-1 ring-primary/30'
-                            : dashed
-                              ? 'bg-white border-2 border-dashed border-slate-200 text-slate-600'
-                              : 'bg-white border border-slate-100 text-slate-700'
-                        }`}
-                        style={isActive ? { background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' } : {}}
-                      >
-                        <span className={`${fullW ? 'text-sm' : 'text-xs'} font-black ${dashed ? 'uppercase tracking-wide' : ''}`}>{cat.name}</span>
-                        <span className={`${fullW ? 'text-xs' : 'text-xs'} font-medium ${isActive ? 'text-white/70' : 'text-slate-400'}`}>
-                          บาทละ {cat.rate?.toLocaleString()}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              );
-            };
-
-            return (
-              <div className="space-y-4">
-                <h2 className="text-sm font-black text-slate-800 pl-1 border-l-4 border-primary ml-1">เลือกประเภทการแทง</h2>
-                <div className="flex flex-col gap-3">
-                  {/* แถวบนสุด: 6 ตัวตรง หรือ 4 ตัวตรง (รัฐบาล / ลาว-ฮานอย-มาเลย์) */}
-                  {renderRow(['6DIGIT'], { fullWidth: true })}
-                  {renderRow(['4TOP'], { fullWidth: true })}
-                  {/* 3 บน / 3 โต๊ด */}
-                  {renderRow(['3TOP', '3TODE'])}
-                  {/* 3 หน้า / 3 ล่าง (เฉพาะรัฐบาล + ลาว) */}
-                  {renderRow(['3FRONT', '3BOTTOM'])}
-                  {/* 2 บน / 2 ล่าง */}
-                  {renderRow(['2TOP', '2BOTTOM'])}
-                  {/* วิ่งบน / วิ่งล่าง */}
-                  {renderRow(['RUN_UP', 'RUN_DOWN'], { dashed: true })}
-                </div>
+        {/* Main Footer Bar (Mobile) */}
+        <div className="bg-white/95 backdrop-blur-xl rounded-t-[2.5rem] border-t border-slate-200 px-6 pt-4 pb-7 shadow-lg">
+          {/* Last item preview */}
+          {lastCartItem && !showCartModal && (
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-slate-400 text-sm">receipt_long</span>
+                <h3 className="text-xs font-black text-slate-800">
+                  รายการที่เลือก ({cart.length})
+                </h3>
               </div>
-            );
-          })()}
-
-          {/* Number Display */}
-          <div
-            className={`flex flex-col gap-3 min-h-[130px] border-2 border-dashed rounded-[2rem] p-5 transition-all duration-300 ${
-              isSuccessAnimating
-                ? 'bg-primary/10 border-primary/40 scale-[1.01]'
-                : 'bg-primary/5 border-primary/20'
-            }`}
-          >
-            <p className="text-xs font-black text-primary tracking-[0.1em] text-center uppercase">
-              ตัวเลขที่คุณเลือก ({currentCat?.name || currentCategory})
-            </p>
-            <div className="flex flex-wrap gap-3 justify-center">
-              {Array.from({ length: digitLimit }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`size-16 flex items-center justify-center rounded-full transition-all duration-300 border-2 ${
-                    currentDigits[i]
-                      ? 'bg-white border-primary shadow-lg shadow-primary/10'
-                      : 'bg-slate-100/50 border-slate-200 animate-pulse'
-                  }`}
-                >
-                  <span className={`text-3xl font-black ${currentDigits[i] ? 'text-slate-900' : 'text-slate-300'}`}>
-                    {currentDigits[i] || '_'}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Bet amount quick-select */}
-            <div className="flex items-center justify-center gap-2 mt-1">
-              {[10, 20, 50, 100, 200, 500].map(amt => (
-                <button
-                  key={amt}
-                  onClick={() => setBetAmount(amt)}
-                  className={`h-8 px-3 rounded-xl text-xs font-black transition-all ${
-                    betAmount === amt
-                      ? 'text-white shadow-md'
-                      : 'bg-white border border-slate-100 text-slate-500'
-                  }`}
-                  style={betAmount === amt ? { background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' } : {}}
-                >
-                  {amt}
-                </button>
-              ))}
-            </div>
-            <p className="text-center text-xs font-medium text-slate-400 italic">
-              ช่องตัวเลขจะเคลียร์อัตโนมัติเมื่อเปลี่ยนประเภท และบันทึกทันทีเมื่อกดครบหลัก
-            </p>
-          </div>
-
-          {/* Numpad */}
-          <div className="grid grid-cols-3 gap-3">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
               <button
-                key={n}
-                onClick={() => handleNumpadClick(n.toString())}
-                className="h-16 flex items-center justify-center bg-white rounded-2xl text-2xl font-black border border-slate-100 active:bg-slate-50 transition-colors"
+                onClick={() => setShowCartModal(true)}
+                className="text-xs font-black text-primary"
               >
-                {n}
+                ดูรายการทั้งหมด
               </button>
-            ))}
-            <button
-              onClick={handleBackspace}
-              className="h-16 flex items-center justify-center bg-red-50 text-red-500 rounded-2xl border border-red-100 active:scale-95 transition-transform"
-            >
-              <span className="material-symbols-outlined text-3xl">backspace</span>
-            </button>
-            <button
-              onClick={() => handleNumpadClick('0')}
-              className="h-16 flex items-center justify-center bg-white rounded-2xl text-2xl font-black border border-slate-100 active:bg-slate-50 transition-colors"
-            >
-              0
-            </button>
-            <button
-              onClick={handleClear}
-              className="h-16 flex items-center justify-center bg-primary/10 text-primary rounded-2xl font-black border border-primary/20 active:scale-95 transition-transform text-xs tracking-wider uppercase"
-            >
-              ล้างทั้งหมด
-            </button>
-          </div>
-        </main>
-
-        {/* ── CART FOOTER (always visible) ── */}
-        <div className="fixed bottom-0 left-0 right-0 max-w-[430px] mx-auto z-30">
-          {/* Cart Modal (slide up) */}
-          {showCartModal && (
-            <div className="bg-white rounded-t-[2.5rem] border-t border-slate-100 px-6 pt-5 pb-4 shadow-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-slate-400 text-base">receipt_long</span>
-                  <h3 className="text-xs font-black text-slate-800">รายการทั้งหมด ({cart.length})</h3>
+            </div>
+          )}
+          {!showCartModal && lastCartItem && (
+            <div className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl mb-4 ring-1 ring-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="size-9 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-sm font-black text-primary">{lastCartItem.numbers}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <button onClick={() => setCart([])} className="text-xs font-black text-red-400">ล้างทั้งหมด</button>
-                  <button onClick={() => setShowCartModal(false)} className="text-slate-400">
-                    <span className="material-symbols-outlined text-xl">expand_more</span>
-                  </button>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-slate-400">{categories.find(c => c.code === lastCartItem.type)?.name}</span>
+                  <span className="text-xs font-black text-slate-700">฿ {lastCartItem.amount}</span>
                 </div>
               </div>
-              <div className="max-h-52 overflow-y-auto space-y-2 no-scrollbar">
-                {cart.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl">
-                    <div className="flex items-center gap-3">
-                      <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <span className="text-sm font-black text-primary">{item.numbers}</span>
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-slate-400">{categories.find(c => c.code === item.type)?.name}</p>
-                        {editingIdx === idx ? (
-                          <div className="flex items-center gap-1">
-                            <input
-                              autoFocus
-                              className="w-20 text-xs font-black border border-primary rounded-lg px-2 py-0.5 text-center"
-                              value={editAmount}
-                              onChange={e => setEditAmount(e.target.value)}
-                              onBlur={() => handleSaveAmount(idx)}
-                              onKeyDown={e => e.key === 'Enter' && handleSaveAmount(idx)}
-                            />
-                          </div>
-                        ) : (
-                          <span className="text-xs font-black text-slate-700">฿ {item.amount}</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleEditAmount(idx)}
-                        className="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-100"
-                      >
-                        <span className="text-xs font-bold text-slate-400">แก้ไข</span>
-                        <span className="material-symbols-outlined text-primary text-sm">edit</span>
-                      </button>
-                      <button onClick={() => handleRemoveFromCart(idx)} className="text-slate-300 hover:text-red-400 transition-colors">
-                        <span className="material-symbols-outlined text-lg">delete</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <button
+                onClick={() => handleEditAmount(cart.length - 1)}
+                className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200"
+              >
+                <span className="text-xs font-bold text-slate-500 uppercase">เปลี่ยนราคา</span>
+                <span className="material-symbols-outlined text-primary text-sm">edit</span>
+              </button>
+            </div>
+          )}
+          {!lastCartItem && !showCartModal && (
+            <div className="flex items-center justify-center gap-2 mb-3 py-1">
+              <span className="material-symbols-outlined text-slate-300 text-base">touch_app</span>
+              <p className="text-xs font-bold text-slate-400">กดตัวเลขเพื่อเพิ่มรายการในโพย</p>
             </div>
           )}
 
-          {/* Main Footer Bar */}
-          <div className="bg-white/95 backdrop-blur-xl rounded-t-[2.5rem] border-t border-slate-100 px-6 pt-5 pb-8">
-            {/* Last item preview */}
-            {lastCartItem && !showCartModal && (
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-slate-400 text-sm">receipt_long</span>
-                  <h3 className="text-xs font-black text-slate-800">
-                    รายการที่เลือก ({cart.length})
-                  </h3>
-                </div>
-                <button
-                  onClick={() => setShowCartModal(true)}
-                  className="text-xs font-black text-primary"
-                >
-                  ดูรายการทั้งหมด
-                </button>
-              </div>
-            )}
-            {!showCartModal && lastCartItem && (
-              <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl mb-5 ring-1 ring-slate-100/50">
-                <div className="flex items-center gap-3">
-                  <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-sm font-black text-primary">{lastCartItem.numbers}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-slate-400">{categories.find(c => c.code === lastCartItem.type)?.name}</span>
-                    <span className="text-xs font-black text-slate-700">฿ {lastCartItem.amount}</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => handleEditAmount(cart.length - 1)}
-                  className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-xl border border-slate-100"
-                >
-                  <span className="text-xs font-bold text-slate-400 uppercase">เปลี่ยนราคา</span>
-                  <span className="material-symbols-outlined text-primary text-sm">edit</span>
-                </button>
-              </div>
-            )}
-            {!lastCartItem && !showCartModal && (
-              <div className="flex items-center justify-center gap-2 mb-4 py-3">
-                <span className="material-symbols-outlined text-slate-300 text-lg">touch_app</span>
-                <p className="text-xs font-bold text-slate-400">กดตัวเลขเพื่อเพิ่มรายการในโพย</p>
-              </div>
-            )}
-
-            {/* Total + Submit */}
-            <div className="flex items-center gap-4">
-              <div className="flex flex-col">
-                <span className="text-xs font-black text-slate-400 tracking-[0.1em] mb-0.5 uppercase">ยอดรวมทั้งหมด</span>
-                <span className="text-2xl font-black text-yellow-500 flex items-center gap-1">
-                  ฿ {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-              <button
-                onClick={handleSubmit}
-                disabled={loading || cart.length === 0 || timeLeft.isExpired}
-                className="flex-1 py-4 text-white font-black rounded-2xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 tracking-wider disabled:opacity-50"
-                style={{ background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' }}
-              >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
-                    ส่งโพย
-                  </>
-                )}
-              </button>
+          {/* Total + Submit */}
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black text-slate-400 tracking-wider uppercase">ยอดรวมทั้งหมด</span>
+              <span className="text-xl font-black text-amber-600">
+                ฿ {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </span>
             </div>
+            <button
+              onClick={handleSubmit}
+              disabled={loading || cart.length === 0 || timeLeft.isExpired}
+              className="flex-1 py-3.5 text-white font-black rounded-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 tracking-wider disabled:opacity-50 shadow-md shadow-emerald-900/20"
+              style={{ background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' }}
+            >
+              {loading ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
+                  ส่งโพย ({cart.length})
+                </>
+              )}
+            </button>
           </div>
         </div>
-
-        {/* ── BOTTOM NAV ── */}
-        <nav className="sticky bottom-0 bg-white/95 backdrop-blur-xl border-t border-slate-100 flex justify-around items-center pt-3 pb-8 px-4 z-40">
-          <Link to="/home" className="flex flex-col items-center gap-1 group">
-            <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">home</span>
-            <span className="text-xs font-black text-slate-400 group-hover:text-primary tracking-tight">หน้าหลัก</span>
-          </Link>
-          <Link to="/lottery-list" className="flex flex-col items-center gap-1 group relative">
-            <div className="absolute -top-1.5 size-1.5 rounded-full bg-primary"></div>
-            <span className="material-symbols-outlined text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>confirmation_number</span>
-            <span className="text-xs font-black text-primary tracking-tight">แทงหวย</span>
-          </Link>
-          <Link to="/results" className="flex flex-col items-center gap-1 group">
-            <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">leaderboard</span>
-            <span className="text-xs font-black text-slate-400 group-hover:text-primary tracking-tight">ผลรางวัล</span>
-          </Link>
-          <Link to="/wallet" className="flex flex-col items-center gap-1 group">
-            <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">account_balance_wallet</span>
-            <span className="text-xs font-black text-slate-400 group-hover:text-primary tracking-tight">กระเป๋าเงิน</span>
-          </Link>
-          <Link to="/profile" className="flex flex-col items-center gap-1 group">
-            <span className="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">person</span>
-            <span className="text-xs font-black text-slate-400 group-hover:text-primary tracking-tight">โปรไฟล์</span>
-          </Link>
-        </nav>
       </div>
+
     </div>
   );
 };

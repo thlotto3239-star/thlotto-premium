@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
-import BottomNav from '../components/BottomNav';
+import PageWrapper from '../components/PageWrapper';
 
 const DepositSuccess = () => {
   const navigate = useNavigate();
@@ -21,8 +21,8 @@ const DepositSuccess = () => {
   const createdAt = location.state?.createdAt ? new Date(location.state.createdAt) : new Date();
 
   return (
-    <div className="bg-white font-display text-slate-800 antialiased overflow-x-hidden min-h-screen flex flex-col">
-      <div className="relative flex min-h-screen flex-col max-w-[430px] mx-auto w-full">
+    <PageWrapper>
+      <div className="relative flex flex-col max-w-xl mx-auto w-full">
         {/* Header */}
         <header className="flex items-center justify-between px-6 py-4">
           <button
@@ -109,9 +109,8 @@ const DepositSuccess = () => {
           </div>
         </main>
 
-        <BottomNav />
       </div>
-    </div>
+    </PageWrapper>
   );
 };
 

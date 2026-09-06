@@ -66,7 +66,7 @@ const Deposit = () => {
         <h1 className="text-xl font-bold text-slate-900 tracking-tight flex-1 text-center pr-10">ฝากเงิน</h1>
       </header>
 
-      <main className="flex-1 px-6 pt-6 pb-36">
+      <main className="flex-1 max-w-2xl mx-auto w-full px-6 pt-6 pb-36">
         {/* Promo Banner */}
         {isPromoDeposit && (
           <div className="mb-6 flex items-center gap-3 bg-primary/5 border border-primary/20 rounded-2xl px-5 py-4">
@@ -145,22 +145,24 @@ const Deposit = () => {
       </main>
 
       {/* Footer Button */}
-      <footer className="fixed bottom-0 left-0 right-0 p-6 bg-white/95 backdrop-blur-lg border-t border-slate-100">
-        <button
-          onClick={() => {
-            if (isPromoDeposit) {
-              navigate('/upload-slip', { state: { amount, promoCode, promoName } });
-            } else {
-              navigate('/qr-payment', { state: { amount } });
-            }
-          }}
-          disabled={!amount || parseFloat(amount) < minDeposit}
-          className="w-full h-16 rounded-full flex items-center justify-center gap-3 text-white text-lg font-extrabold active:scale-[0.98] transition-all disabled:opacity-50"
-          style={{ background: 'linear-gradient(135deg, #1a7e2a 0%, #2db340 100%)' }}
-        >
-          ถัดไป
-          <span className="material-symbols-outlined">arrow_forward</span>
-        </button>
+      <footer className="fixed bottom-0 left-0 right-0 lg:left-64 xl:left-72 p-4 sm:p-6 bg-white/95 backdrop-blur-lg border-t border-slate-100 z-40">
+        <div className="max-w-2xl mx-auto w-full">
+          <button
+            onClick={() => {
+              if (isPromoDeposit) {
+                navigate('/upload-slip', { state: { amount, promoCode, promoName } });
+              } else {
+                navigate('/qr-payment', { state: { amount } });
+              }
+            }}
+            disabled={!amount || parseFloat(amount) < minDeposit}
+            className="w-full h-14 sm:h-16 rounded-2xl flex items-center justify-center gap-3 text-white text-base sm:text-lg font-extrabold active:scale-[0.98] transition-all disabled:opacity-50 shadow-xs cursor-pointer"
+            style={{ background: 'linear-gradient(135deg, #1a7e2a 0%, #2db340 100%)' }}
+          >
+            ถัดไป
+            <span className="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </div>
       </footer>
     </div>
   );

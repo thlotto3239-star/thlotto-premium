@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import BottomNav from '../components/BottomNav';
+import PageWrapper from '../components/PageWrapper';
 import AppHeader from '../components/AppHeader';
 import { supabase } from '../supabaseClient';
 
@@ -107,10 +107,10 @@ const Results = () => {
   const pending = (row) => isPending(row.result_status);
 
   return (
-    <div className="bg-white min-h-screen text-slate-900 font-body flex flex-col">
+    <PageWrapper>
       <AppHeader />
 
-      <main className="flex-1 overflow-y-auto px-6 pb-40">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-8 py-4">
         {/* หัวข้อ + Tabs */}
         <div className="text-center mb-4 mt-2">
           <h1 className="text-lg font-bold text-slate-900">ผลรางวัลประจำวัน</h1>
@@ -190,18 +190,21 @@ const Results = () => {
 
             {/* ── FOREIGN ── */}
             {foreignRows.length > 0 && (
-              <section className="mb-4">
-                <h3 className="text-base font-bold text-slate-900 mb-4">หวยต่างประเทศ</h3>
-                <div className="space-y-3">
+              <section className="mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="w-1.5 h-4 bg-brand-600 rounded-full"></span>
+                  <h3 className="text-base font-extrabold text-slate-900">หวยต่างประเทศ</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {foreignRows.map((r) => (
-                    <div key={r.code} className="bg-white p-3 sm:p-4 rounded-2xl border border-slate-100">
-                      <div className="flex items-start justify-between gap-2 mb-3">
+                    <div key={r.code} className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-brand-200 transition-all flex flex-col justify-between">
+                      <div className="flex items-start justify-between gap-2 mb-3.5">
                         <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden flex items-center justify-center bg-slate-50 shrink-0">
+                          <div className="w-10 h-10 rounded-2xl overflow-hidden flex items-center justify-center bg-slate-50 border border-slate-100 shrink-0">
                             {r.logo_url ? <img alt={r.name} className="w-full h-full object-cover" src={r.logo_url} /> : <span className="material-symbols-outlined text-slate-400 text-lg">flag</span>}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-bold text-slate-900 text-xs sm:text-sm truncate">{r.name}</h4>
+                            <h4 className="font-extrabold text-slate-900 text-sm truncate">{r.name}</h4>
                             <SubDate row={r} />
                           </div>
                         </div>
@@ -214,9 +217,9 @@ const Results = () => {
                           ['2 บน', pending(r) ? 'xx' : (r.result_2top || 'xx'), false],
                           ['2 ล่าง', pending(r) ? 'xx' : (r.result_2bottom || 'xx'), true],
                         ].map(([label, val, accent]) => (
-                          <div key={label} className={`text-center p-1.5 rounded-xl border ${accent ? 'bg-primary/5 border-primary/10' : 'bg-slate-50 border-slate-100'}`}>
-                            <p className={`text-[7px] font-bold uppercase ${accent ? 'text-primary' : 'text-slate-400'}`}>{label}</p>
-                            <p className={`text-xs font-bold ${accent ? 'text-primary' : 'text-slate-800'}`}>{val}</p>
+                          <div key={label} className={`text-center p-2 rounded-xl border ${accent ? 'bg-brand-50/60 border-brand-200/80' : 'bg-slate-50 border-slate-100'}`}>
+                            <p className={`text-[8px] font-extrabold uppercase ${accent ? 'text-brand-700' : 'text-slate-400'}`}>{label}</p>
+                            <p className={`text-xs font-black font-mono mt-0.5 ${accent ? 'text-brand-700' : 'text-slate-800'}`}>{val}</p>
                           </div>
                         ))}
                       </div>
@@ -228,16 +231,16 @@ const Results = () => {
 
             {/* ── STOCK ── */}
             {stockRows.length > 0 && (
-              <section className="mb-4">
-                <div className="pt-4 pb-2">
-                  <h3 className="text-sm font-bold text-slate-600 flex items-center gap-2">
-                    <span className="w-1 h-4 bg-primary rounded-full"></span>
+              <section className="mb-6">
+                <div className="pt-2 pb-3">
+                  <h3 className="text-sm font-extrabold text-slate-700 flex items-center gap-2">
+                    <span className="w-1.5 h-4 bg-amber-500 rounded-full"></span>
                     ผลหุ้นรายวัน
                   </h3>
                 </div>
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                   {stockRows.map((r) => (
-                    <div key={r.code} className="bg-white p-3 rounded-2xl border border-slate-100 flex items-center justify-between gap-2">
+                    <div key={r.code} className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         {r.logo_url ? <img alt={r.name} className="w-8 h-8 rounded-full object-cover shrink-0" src={r.logo_url} />
                           : <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-slate-400 text-sm">show_chart</span></div>}
@@ -355,7 +358,7 @@ const Results = () => {
                   <span className="w-1 h-4 bg-primary rounded-full"></span>
                   {fmtDate(date)}
                 </h3>
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                   {otherResults.filter(r => r.draw_date === date)
                     .sort((a, b) => sortOrder(a) - sortOrder(b))
                     .map((r, i) => {
@@ -429,8 +432,7 @@ const Results = () => {
         )}
       </main>
 
-      <BottomNav />
-    </div>
+    </PageWrapper>
   );
 };
 

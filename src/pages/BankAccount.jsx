@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
-import BottomNav from '../components/BottomNav';
+import PageWrapper from '../components/PageWrapper';
 
 const BANK_COLORS = {
   KBANK:      { bg: '#1BA74E', text: '#fff' },
@@ -51,7 +51,7 @@ const BankAccount = () => {
     : '—';
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-900 font-body flex flex-col">
+    <PageWrapper>
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-100 flex items-center gap-3 px-4 h-16">
         <button
@@ -216,9 +216,7 @@ const BankAccount = () => {
           ติดต่อเจ้าหน้าที่
         </button>
       </div>
-
-      <BottomNav />
-    </div>
+    </PageWrapper>
   );
 };
 

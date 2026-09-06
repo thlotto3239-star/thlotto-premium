@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
 import { Link, useNavigate } from 'react-router-dom';
-import BottomNav from '../components/BottomNav';
+import PageWrapper from '../components/PageWrapper';
 import AppHeader from '../components/AppHeader';
 
 const Wallet = () => {
@@ -96,8 +96,8 @@ const Wallet = () => {
     : null;
 
   return (
-    <div className="bg-[#f6f8f6] min-h-screen flex justify-center items-start text-slate-900 font-thai">
-      <div className="w-full max-w-md bg-white min-h-screen flex flex-col relative overflow-hidden">
+    <PageWrapper>
+      <div className="w-full max-w-2xl mx-auto bg-white min-h-screen flex flex-col relative overflow-hidden lg:border-x lg:border-slate-100">
         <AppHeader />
         <header className="pt-4 pb-4 px-6 flex flex-col items-center">
           <div className="w-full flex justify-between items-center mb-6">
@@ -339,13 +339,8 @@ const Wallet = () => {
           </div>
         </section>
 
-        <BottomNav />
-
-        {/* Decorative bg */}
-        <div className="absolute -top-24 -right-24 size-64 bg-primary/5 rounded-full blur-3xl -z-10"></div>
-        <div className="absolute top-1/2 -left-24 size-48 bg-gold-premium/5 rounded-full blur-3xl -z-10"></div>
       </div>
-    </div>
+    </PageWrapper>
   );
 };
 

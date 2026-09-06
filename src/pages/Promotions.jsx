@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../AuthContext';
-import BottomNav from '../components/BottomNav';
+import PageWrapper from '../components/PageWrapper';
 
 const BADGE_COLORS = {
   HOT: 'bg-red-500',
@@ -57,7 +57,7 @@ const Promotions = () => {
   }, [user]);
 
   return (
-    <div className="bg-slate-50 min-h-screen text-slate-900">
+    <PageWrapper>
       <header className="sticky top-0 z-50 bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between">
         <button onClick={() => navigate(-1)} className="text-slate-400">
           <span className="material-symbols-outlined text-3xl">chevron_left</span>
@@ -236,8 +236,7 @@ const Promotions = () => {
         </div>
       )}
 
-      <BottomNav />
-    </div>
+    </PageWrapper>
   );
 };
 

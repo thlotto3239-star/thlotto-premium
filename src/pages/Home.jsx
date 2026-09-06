@@ -291,8 +291,8 @@ const Home = () => {
       <main className="max-w-6xl mx-auto px-4 py-4 space-y-8">
 
         {/* Hero Slider */}
-        <section>
-          <div ref={bannerSliderRef} className="rounded-[2.5rem] aspect-[2/1] relative overflow-hidden flex no-scrollbar snap-x snap-mandatory overflow-x-auto">
+        <section className="relative group">
+          <div ref={bannerSliderRef} className="rounded-[2rem] sm:rounded-[2.5rem] aspect-[2/1] sm:aspect-[21/9] lg:aspect-[24/9] max-h-[360px] xl:max-h-[380px] relative overflow-hidden flex no-scrollbar snap-x snap-mandatory overflow-x-auto shadow-xs">
             {banners.length > 0 ? banners.map((banner) => (
               <div key={banner.id} className="min-w-full h-full relative snap-center flex-shrink-0">
                 <img alt={banner.title || 'Banner'} className="absolute inset-0 w-full h-full object-cover" src={banner.image_url} />
@@ -326,6 +326,22 @@ const Home = () => {
               </>
             )}
           </div>
+
+          {/* Desktop Arrow Controls */}
+          <button
+            onClick={() => bannerSliderRef.current?.scrollBy({ left: -600, behavior: 'smooth' })}
+            className="hidden sm:flex absolute left-4 top-1/2 -translate-y-1/2 z-20 size-10 rounded-full bg-black/40 hover:bg-black/70 text-white items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer shadow-md"
+            title="ก่อนหน้า"
+          >
+            <span className="material-symbols-outlined text-2xl">chevron_left</span>
+          </button>
+          <button
+            onClick={() => bannerSliderRef.current?.scrollBy({ left: 600, behavior: 'smooth' })}
+            className="hidden sm:flex absolute right-4 top-1/2 -translate-y-1/2 z-20 size-10 rounded-full bg-black/40 hover:bg-black/70 text-white items-center justify-center backdrop-blur-xs transition-all opacity-0 group-hover:opacity-100 cursor-pointer shadow-md"
+            title="ถัดไป"
+          >
+            <span className="material-symbols-outlined text-2xl">chevron_right</span>
+          </button>
         </section>
 
         {/* Thai Government Lotto Card */}
@@ -450,7 +466,7 @@ const Home = () => {
             <span className="material-icons text-accent-red">local_fire_department</span>
             <h2 className="text-lg font-bold">มาแรง</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* การ์ดหวย 1 นาที (แสดงเมื่อแอดมินเปิด toggle มาแรง) */}
             {instantCfg?.show_trending && (
               <div
@@ -638,39 +654,43 @@ const Home = () => {
               <span className="material-icons text-[14px]">chevron_right</span>
             </Link>
           </div>
-          {articles.length > 0 ? articles.map((article) => (
-            <div key={article.id} onClick={() => navigate(`/articles/${article.id}`)} className="bg-white rounded-xl overflow-hidden border border-gray-50 group mb-4 cursor-pointer active:scale-[0.98] transition-all">
-              <div className="h-44 relative">
-                <img alt={article.title} className="w-full h-full object-cover" src={article.image_url || 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&auto=format&fit=crop'} />
-                <div className="absolute top-4 left-4">
-                  <span className="bg-accent-red text-white text-xs font-bold px-3 py-1 rounded-full uppercase">{article.category || 'ข่าวประกาศ'}</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {articles.length > 0 ? articles.map((article) => (
+              <div key={article.id} onClick={() => navigate(`/articles/${article.id}`)} className="bg-white rounded-3xl overflow-hidden border border-slate-200/80 group cursor-pointer active:scale-[0.98] hover:shadow-md hover:border-brand-200 transition-all flex flex-col justify-between">
+                <div className="h-44 relative overflow-hidden">
+                  <img alt={article.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src={article.image_url || 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&auto=format&fit=crop'} />
+                  <div className="absolute top-4 left-4">
+                    <span className="bg-accent-red text-white text-[11px] font-extrabold px-3 py-1 rounded-full uppercase shadow-xs">{article.category || 'ข่าวประกาศ'}</span>
+                  </div>
+                </div>
+                <div className="p-5 flex flex-col justify-between flex-1">
+                  <div>
+                    <h3 className="font-extrabold text-slate-900 text-sm sm:text-base mb-2 group-hover:text-brand-600 transition-colors line-clamp-1">{article.title}</h3>
+                    <p className="text-xs text-slate-500 line-clamp-2 mb-4 leading-relaxed">{article.sub_content || article.content?.slice(0, 120) || ''}</p>
+                  </div>
+                  <div className="text-brand-600 text-xs font-extrabold flex items-center gap-1 pt-2 border-t border-slate-100">
+                    อ่านต่อ <span className="material-icons text-sm">arrow_forward</span>
+                  </div>
                 </div>
               </div>
-              <div className="p-6">
-                <h3 className="font-bold text-md mb-2">{article.title}</h3>
-                <p className="text-xs text-gray-400 line-clamp-2 mb-4 leading-relaxed">{article.sub_content || article.content?.slice(0, 120) || ''}</p>
-                <div className="text-primary text-sm font-bold flex items-center gap-1">
-                  อ่านต่อ <span className="material-icons text-sm">arrow_forward</span>
+            )) : (
+              <div className="bg-white rounded-3xl overflow-hidden border border-slate-200/80 group">
+                <div className="h-44 relative overflow-hidden">
+                  <img alt="News" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcxihAZw-dkDidV--5la9GBHlrPK0Pc3wOHcbDeloFUkGCMVE7i-1DDPJfrPGq52WodowfWE4uUikQGLoT5GdcUVJs4xGeP-yy4j7knWToBPN0iRE0vRDXKOtQZYQFEnG12ZJPVluLDBVZgSmJSIr0hRGkKTEjeJb5DNMR9ULeg2x0UaEZcjuAtGVCoOhKACACS9XNfl9RhqV9iJICPX9Xrt3S5MgcpDiHUqtTCo9MkinUYkX43Q-iEzF7yHHc0NEeM1FpJCv2ZA" />
+                  <div className="absolute top-4 left-4">
+                    <span className="bg-accent-red text-white text-[11px] font-extrabold px-3 py-1 rounded-full uppercase shadow-xs">ข่าวประกาศ</span>
+                  </div>
+                </div>
+                <div className="p-5">
+                  <h3 className="font-extrabold text-slate-900 text-sm sm:text-base mb-2">ตรวจสอบรางวัลใหญ่ งวดล่าสุด และวิธีขึ้นเงินรางวัล</h3>
+                  <p className="text-xs text-slate-500 line-clamp-2 mb-4 leading-relaxed">ตรวจสอบรายชื่อผู้โชคดีที่ได้รับรางวัลใหญ่และวิธีการขึ้นเงินรางวัลที่สะดวกที่สุดผ่านระบบอัตโนมัติ...</p>
+                  <button className="text-brand-600 text-xs font-extrabold flex items-center gap-1 pt-2 border-t border-slate-100">
+                    อ่านต่อ <span className="material-icons text-sm">arrow_forward</span>
+                  </button>
                 </div>
               </div>
-            </div>
-          )) : (
-            <div className="bg-white rounded-xl overflow-hidden border border-gray-50 group">
-              <div className="h-44 relative">
-                <img alt="News" className="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcxihAZw-dkDidV--5la9GBHlrPK0Pc3wOHcbDeloFUkGCMVE7i-1DDPJfrPGq52WodowfWE4uUikQGLoT5GdcUVJs4xGeP-yy4j7knWToBPN0iRE0vRDXKOtQZYQFEnG12ZJPVluLDBVZgSmJSIr0hRGkKTEjeJb5DNMR9ULeg2x0UaEZcjuAtGVCoOhKACACS9XNfl9RhqV9iJICPX9Xrt3S5MgcpDiHUqtTCo9MkinUYkX43Q-iEzF7yHHc0NEeM1FpJCv2ZA" />
-                <div className="absolute top-4 left-4">
-                  <span className="bg-accent-red text-white text-xs font-bold px-3 py-1 rounded-full uppercase">ข่าวประกาศ</span>
-                </div>
-              </div>
-              <div className="p-6">
-                <h3 className="font-bold text-md mb-2">ตรวจสอบรางวัลใหญ่ งวดล่าสุด และวิธีขึ้นเงินรางวัล</h3>
-                <p className="text-xs text-gray-400 line-clamp-2 mb-4 leading-relaxed">ตรวจสอบรายชื่อผู้โชคดีที่ได้รับรางวัลใหญ่และวิธีการขึ้นเงินรางวัลที่สะดวกที่สุดผ่านระบบอัตโนมัติ...</p>
-                <button className="text-primary text-sm font-bold flex items-center gap-1">
-                  อ่านต่อ <span className="material-icons text-sm">arrow_forward</span>
-                </button>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </section>
 
       </main>

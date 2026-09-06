@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import Lotto15MLiveStudio from '../components/Lotto15MLiveStudio';
-import BottomNav from '../components/BottomNav';
+import PageWrapper from '../components/PageWrapper';
 import AppHeader from '../components/AppHeader';
 import { 
   ArrowLeft, 
@@ -32,7 +32,7 @@ export default function Lotto15M() {
   const marketId = "2ecc136e-0734-4be0-9e26-cf3149cb84cd";
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col pb-24 lg:pb-12 selection:bg-brand-600 selection:text-white antialiased">
+    <PageWrapper>
       {/* Universal Desktop & Mobile Header */}
       <AppHeader />
 
@@ -187,8 +187,6 @@ export default function Lotto15M() {
         </div>
       </main>
 
-      {/* Bottom Navigation Dock (Visible only on Mobile & Tablet < 1024px) */}
-      <BottomNav />
-    </div>
+    </PageWrapper>
   );
 }
