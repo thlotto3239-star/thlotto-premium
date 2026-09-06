@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
 import PageWrapper from '../components/PageWrapper';
+import { useModal } from '../contexts/ModalContext';
 
 const BANK_COLORS = {
   KBANK:      { bg: '#1BA74E', text: '#fff' },
@@ -28,6 +29,7 @@ const maskAccountNumber = (acc) => {
 
 const BankAccount = () => {
   const { profile } = useAuth();
+  const { showSuccess } = useModal();
   const navigate = useNavigate();
   const [bankInfo, setBankInfo] = useState(null);
 
@@ -50,171 +52,220 @@ const BankAccount = () => {
     ? new Intl.DateTimeFormat('th-TH', { year: 'numeric', month: 'short' }).format(new Date(profile.created_at))
     : '—';
 
+  const copyAcc = () => {
+    if (profile?.bank_account_number) {
+      navigator.clipboard.writeText(profile.bank_account_number);
+      showSuccess('คัดลอกสำเร็จ', 'คัดลอกเลขที่บัญชีแล้ว');
+    }
+  };
+
   return (
     <PageWrapper>
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-100 flex items-center gap-3 px-4 h-16">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 rounded-full hover:bg-slate-100 active:scale-95 transition-all"
-        >
-          <span className="material-symbols-outlined">arrow_back</span>
-        </button>
-        <h1 className="font-extrabold text-lg tracking-tight">บัญชีธนาคาร</h1>
-      </header>
-
-      <div className="flex-1 px-5 py-8 pb-32 max-w-md mx-auto w-full">
-
-        {/* ── Premium Bank Card ── */}
-        <div
-          className="relative w-full rounded-[28px] overflow-hidden shadow-2xl"
-          style={{ aspectRatio: '1.586 / 1', background: `linear-gradient(135deg, ${bankColor.bg}ee 0%, ${bankColor.bg} 100%)` }}
-        >
-          {/* Decorative blobs */}
-          <div className="absolute -top-12 -right-12 w-56 h-56 rounded-full bg-white/10 blur-sm" />
-          <div className="absolute -bottom-10 -left-10 w-44 h-44 rounded-full bg-black/10 blur-sm" />
-          <div className="absolute top-1/2 right-8 -translate-y-1/2 w-32 h-32 rounded-full bg-white/5" />
-
-          {/* Chip pattern */}
-          <div className="absolute left-6 top-[38%] w-9 h-7 rounded-md border-2 opacity-40"
-               style={{ borderColor: bankColor.text + '80' }}>
-            <div className="absolute inset-x-0 top-1/2 h-px" style={{ background: bankColor.text + '60' }} />
-            <div className="absolute inset-y-0 left-1/3 w-px" style={{ background: bankColor.text + '60' }} />
+      {/* Page Header / Breadcrumb */}
+      <div className="bg-white/80 border-b border-slate-100 px-4 sm:px-6 lg:px-8 py-3.5 sticky top-[72px] lg:top-[34px] z-40 backdrop-blur-md">
+        <div className="max-w-[1720px] 2xl:max-w-[1850px] mx-auto w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="size-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-all active:scale-95 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-xl">chevron_left</span>
+            </button>
+            <div>
+              <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 flex items-center gap-2">
+                <span>บัญชีธนาคารของคุณ</span>
+                <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/70">
+                  Verified Bank
+                </span>
+              </h1>
+              <p className="text-[11px] text-slate-400 font-medium">บัญชีธนาคารที่ผูกไว้สำหรับรับเงินรางวัลและถอนเงินอัตโนมัติ</p>
+            </div>
           </div>
 
-          {/* Card Content */}
-          <div className="relative z-10 h-full flex flex-col justify-between p-6" style={{ color: bankColor.text }}>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/edit-profile')}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-sm">edit</span>
+              <span>แก้ไขบัญชี</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
-            {/* Top row — bank logo + DEBIT label */}
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                {bankInfo?.image_url ? (
-                  <div className="size-11 rounded-xl bg-white shadow-lg flex items-center justify-center overflow-hidden p-1 shrink-0">
-                    <img
-                      src={bankInfo.image_url}
-                      alt={bankInfo.name}
-                      className="w-full h-full object-contain"
-                      onError={e => { e.target.style.display = 'none'; }}
-                    />
+      {/* Main 3-Column Layout */}
+      <div className="max-w-[1720px] 2xl:max-w-[1850px] mx-auto w-full px-4 sm:px-6 lg:px-8 mt-6 pb-28 lg:pb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+          {/* ════ COLUMN 1 (Left 4 Cols on PC): 3D Bank Smart Card ════ */}
+          <aside className="lg:col-span-4 xl:col-span-4 space-y-4">
+            <div
+              className="relative w-full rounded-[28px] overflow-hidden shadow-xl"
+              style={{ aspectRatio: '1.586 / 1', background: `linear-gradient(135deg, ${bankColor.bg}ee 0%, ${bankColor.bg} 100%)` }}
+            >
+              {/* Decorative blobs */}
+              <div className="absolute -top-12 -right-12 size-56 rounded-full bg-white/10 blur-sm pointer-events-none" />
+              <div className="absolute -bottom-10 -left-10 size-44 rounded-full bg-black/10 blur-sm pointer-events-none" />
+
+              {/* Card Content */}
+              <div className="relative z-10 h-full flex flex-col justify-between p-6" style={{ color: bankColor.text }}>
+                {/* Top row */}
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    {bankInfo?.image_url ? (
+                      <div className="size-11 rounded-xl bg-white shadow-md flex items-center justify-center overflow-hidden p-1 shrink-0">
+                        <img
+                          src={bankInfo.image_url}
+                          alt={bankInfo.name}
+                          className="size-full object-contain"
+                        />
+                      </div>
+                    ) : (
+                      <div className="size-11 rounded-xl bg-white/20 flex items-center justify-center font-black text-sm">
+                        {bankCode || 'BNK'}
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-extrabold text-sm leading-tight drop-shadow-xs">
+                        {bankInfo?.name || profile?.bank_name || 'ยังไม่ผูกบัญชี'}
+                      </p>
+                      <p className="text-[10px] opacity-75 font-mono tracking-wider">SAVINGS ACCOUNT</p>
+                    </div>
                   </div>
-                ) : (
-                  <div className="size-11 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
-                    <span className="font-extrabold text-sm tracking-tight" style={{ color: bankColor.text }}>
-                      {bankCode.slice(0, 3)}
-                    </span>
-                  </div>
-                )}
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-60">BANK</p>
-                  <p className="font-bold text-sm leading-tight truncate max-w-[150px]">
-                    {bankInfo?.name || bankCode || 'ไม่ระบุธนาคาร'}
+
+                  <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full bg-black/20 backdrop-blur-xs">
+                    DEBIT
+                  </span>
+                </div>
+
+                {/* Account Number */}
+                <div className="space-y-1 my-auto">
+                  <p className="font-mono text-xl sm:text-2xl font-black tracking-widest drop-shadow-xs">
+                    {maskAccountNumber(profile?.bank_account_number)}
                   </p>
                 </div>
-              </div>
-              <div className="flex flex-col items-end gap-1 mt-0.5">
-                <span className="text-xs font-extrabold tracking-[0.3em] uppercase opacity-40">DEBIT</span>
-                <div className="flex gap-0.5">
-                  <div className="w-4 h-4 rounded-full bg-white/30" />
-                  <div className="w-4 h-4 rounded-full bg-white/20 -ml-2" />
+
+                {/* Bottom row */}
+                <div className="flex items-end justify-between text-xs">
+                  <div>
+                    <p className="text-[9px] uppercase tracking-wider opacity-70 mb-0.5">CARD HOLDER</p>
+                    <p className="font-extrabold tracking-wide uppercase drop-shadow-xs">
+                      {profile?.bank_account_name || profile?.full_name || 'ACCOUNT HOLDER'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[9px] uppercase tracking-wider opacity-70 mb-0.5">MEMBER SINCE</p>
+                    <p className="font-mono font-bold">{memberDate}</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Account Number */}
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-50 mb-1">ACCOUNT NO.</p>
-              <p className="tabular-nums text-[1.2rem] font-bold tracking-[0.22em]">
-                {maskAccountNumber(profile?.bank_account_number)}
-              </p>
-            </div>
-
-            {/* Bottom row */}
-            <div className="flex items-end justify-between">
-              <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-50 mb-0.5">ACCOUNT HOLDER</p>
-                <p className="font-bold text-sm truncate max-w-[160px]">
-                  {profile?.full_name || '—'}
-                </p>
+            {/* Account Status Card */}
+            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400">สถานะการผูกบัญชี</span>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60">
+                  พร้อมรับเงิน
+                </span>
               </div>
-              <div className="text-right shrink-0 ml-4">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-50 mb-0.5">MEMBER SINCE</p>
-                <p className="font-bold text-sm">{memberDate}</p>
+              <p className="text-xs text-slate-600 leading-relaxed">
+                บัญชีนี้ใช้สำหรับระบบถอนเงินออโต้ ยอดเงินจะถูกโอนเข้าบัญชีนี้โดยตรง
+              </p>
+            </div>
+          </aside>
+
+          {/* ════ COLUMN 2 (Center 5 Cols on PC): Detailed Account Specs ════ */}
+          <main className="lg:col-span-5 space-y-4">
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs space-y-4">
+              <h3 className="text-sm font-extrabold text-slate-900 pb-3 border-b border-slate-100 flex items-center gap-2">
+                <span className="material-symbols-outlined text-emerald-700 text-lg">badge</span>
+                <span>รายละเอียดข้อมูลบัญชีธนาคาร</span>
+              </h3>
+
+              <div className="space-y-3 text-xs">
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">ธนาคาร</span>
+                    <span className="font-extrabold text-slate-900 text-sm">{bankInfo?.name || profile?.bank_name || '—'}</span>
+                  </div>
+                  <span className="font-mono font-bold text-slate-500 bg-white px-2.5 py-1 rounded-xl border border-slate-200/80">
+                    {profile?.bank_name || 'N/A'}
+                  </span>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 flex items-center justify-between">
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">เลขที่บัญชี</span>
+                    <span className="font-mono font-black text-slate-900 text-base">{profile?.bank_account_number || '—'}</span>
+                  </div>
+                  {profile?.bank_account_number && (
+                    <button
+                      onClick={copyAcc}
+                      className="size-9 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 transition-all active:scale-95 cursor-pointer shadow-2xs"
+                      title="คัดลอกเลขบัญชี"
+                    >
+                      <span className="material-symbols-outlined text-base">content_copy</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
+                  <span className="text-slate-400 text-[11px] block">ชื่อเจ้าของบัญชี</span>
+                  <span className="font-extrabold text-slate-900 text-sm">
+                    {profile?.bank_account_name || profile?.full_name || '—'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => navigate('/edit-profile')}
+                  className="w-full h-12 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xs"
+                >
+                  <span className="material-symbols-outlined text-base">edit</span>
+                  <span>เปลี่ยนหรือแก้ไขบัญชีธนาคาร</span>
+                </button>
               </div>
             </div>
-          </div>
-        </div>
+          </main>
 
-        {/* ── Bank Info Detail ── */}
-        <div className="mt-6 bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
-          <div className="flex items-center gap-4 px-5 py-4 border-b border-slate-50">
-            <div className="size-10 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden"
-                 style={{ background: bankColor.bg + '15' }}>
-              {bankInfo?.image_url ? (
-                <img src={bankInfo.image_url} alt="" className="size-7 object-contain" />
-              ) : (
-                <span className="material-symbols-outlined text-[18px]" style={{ color: bankColor.bg }}>account_balance</span>
-              )}
+          {/* ════ COLUMN 3 (Right 3 Cols on PC): Quick Banking Shortcuts & SLA ════ */}
+          <aside className="hidden xl:block xl:col-span-3 space-y-4">
+            {/* Direct Withdrawal Shortcut */}
+            <div className="bg-gradient-to-br from-emerald-800 to-emerald-950 rounded-3xl p-5 text-white shadow-md space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-emerald-300 text-xl">payments</span>
+                <h4 className="text-xs font-extrabold">ต้องการถอนเงิน?</h4>
+              </div>
+              <p className="text-[11px] text-emerald-200 leading-relaxed">
+                เงินจะถูกโอนเข้าบัญชีนี้โดยอัตโนมัติภายใน 5-15 นาที ตลอด 24 ชม.
+              </p>
+              <Link
+                to="/withdrawal"
+                className="block py-2.5 rounded-xl bg-white hover:bg-emerald-50 text-emerald-900 font-extrabold text-xs text-center transition-all shadow-xs"
+              >
+                ไปหน้าถอนเงิน
+              </Link>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">ธนาคาร</p>
-              <p className="font-extrabold text-slate-900 text-sm truncate">{bankInfo?.name || bankCode || '—'}</p>
-            </div>
-            <span className="text-xs font-bold px-3 py-1 rounded-full" style={{ background: bankColor.bg + '15', color: bankColor.bg }}>
-              {bankCode}
-            </span>
-          </div>
 
-          <div className="flex items-center gap-4 px-5 py-4 border-b border-slate-50">
-            <div className="size-10 rounded-2xl bg-slate-50 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-slate-400 text-[18px]">credit_card</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">เลขที่บัญชี</p>
-              <p className="font-extrabold text-slate-900 text-sm tabular-nums tracking-wider">
-                {profile?.bank_account_number || '—'}
+            {/* Safety Rules */}
+            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs space-y-2.5 text-xs text-slate-600">
+              <h4 className="font-extrabold text-slate-400 uppercase tracking-wider text-[11px]">
+                ข้อกำหนดความปลอดภัย
+              </h4>
+              <p className="leading-relaxed">
+                1 บัญชีผู้ใช้สามารถผูกได้ 1 บัญชีธนาคารเท่านั้น เพื่อความปลอดภัยจากการถูกสวมรอย
+              </p>
+              <p className="leading-relaxed">
+                หากต้องการเปลี่ยนชื่อบัญชี กรุณาติดต่อฝ่ายบริการลูกค้าเพื่อยืนยันตัวตน
               </p>
             </div>
-          </div>
+          </aside>
 
-          <div className="flex items-center gap-4 px-5 py-4 border-b border-slate-50">
-            <div className="size-10 rounded-2xl bg-slate-50 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-slate-400 text-[18px]">person</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">ชื่อบัญชี</p>
-              <p className="font-extrabold text-slate-900 text-sm">{profile?.full_name || '—'}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 px-5 py-4">
-            <div className="size-10 rounded-2xl bg-slate-50 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-slate-400 text-[18px]">verified_user</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">สถานะ</p>
-              <p className="font-extrabold text-emerald-600 text-sm flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span>
-                ยืนยันแล้ว
-              </p>
-            </div>
-          </div>
         </div>
-
-        {/* Notice */}
-        <div className="mt-5 bg-amber-50 border border-amber-100 rounded-2xl p-4 flex items-start gap-3">
-          <span className="material-symbols-outlined text-amber-500 text-[18px] mt-0.5 shrink-0">info</span>
-          <p className="text-xs text-amber-700 leading-relaxed">
-            หากต้องการเปลี่ยนแปลงข้อมูลบัญชีธนาคาร กรุณาติดต่อเจ้าหน้าที่ผ่านช่องทางสนับสนุน
-          </p>
-        </div>
-
-        <button
-          onClick={() => navigate('/support')}
-          className="mt-4 w-full flex items-center justify-center gap-2 py-4 rounded-full border border-slate-200 bg-white text-slate-700 font-bold text-sm active:scale-[0.98] transition-all shadow-sm"
-        >
-          <span className="material-symbols-outlined text-[18px]">contact_support</span>
-          ติดต่อเจ้าหน้าที่
-        </button>
       </div>
     </PageWrapper>
   );

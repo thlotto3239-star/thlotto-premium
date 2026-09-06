@@ -388,7 +388,7 @@ const Betting = () => {
       )}
 
       {/* ── RESPONSIVE CONTAINER ── */}
-      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
+      <div className="w-full max-w-[1720px] 2xl:max-w-[1850px] mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
         {/* Breadcrumb & Navigation */}
         <div className="flex items-center justify-between gap-3 mb-5">
           <button
@@ -406,11 +406,11 @@ const Betting = () => {
           </div>
         </div>
 
-        {/* ── DUAL COLUMN GRID FOR PC / SINGLE COL ON MOBILE ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 pb-36 lg:pb-12">
+        {/* ── 3-PANE COCKPIT GRID FOR PC WIDESCREEN / DUAL ON LG / SINGLE ON MOBILE ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pb-36 lg:pb-12">
           
-          {/* ════ LEFT COLUMN: Live Stream, Countdown, Category, Number Display ════ */}
-          <div className="lg:col-span-7 space-y-5">
+          {/* ════ LEFT COLUMN (Pane 1): Live Stream, Countdown, Market Info & Rates ════ */}
+          <div className="lg:col-span-5 xl:col-span-3 space-y-4">
 
             {/* Live Stream / Broadcast Video */}
             <div className="relative overflow-hidden rounded-2xl bg-slate-900 aspect-video shadow-md border border-slate-800">
@@ -481,6 +481,27 @@ const Betting = () => {
                 </div>
               )}
             </div>
+
+            {/* Payout Rates Quick Card on Left Pane */}
+            <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-2.5">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-emerald-600 text-sm">stars</span>
+                อัตราจ่ายตลาดนี้
+              </h3>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {categories.slice(0, 6).map((c) => (
+                  <div key={c.code} className="p-2 bg-slate-50 rounded-xl flex items-center justify-between border border-slate-100">
+                    <span className="font-bold text-slate-700 text-[11px]">{c.name}</span>
+                    <span className="font-mono font-black text-emerald-700 text-xs">฿{c.rate}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+          </div>
+
+          {/* ════ CENTER COLUMN (Pane 2): Category Selection, Number Display & Numpad ════ */}
+          <div className="lg:col-span-7 xl:col-span-5 space-y-4">
 
             {/* Category Selection */}
             <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-4">
@@ -563,31 +584,26 @@ const Betting = () => {
               </p>
             </div>
 
-            {/* Mobile Numpad (Shown only on small screens) */}
-            <div className="lg:hidden bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs">
-              {renderNumpad()}
-            </div>
-
-          </div>
-
-          {/* ════ RIGHT COLUMN: Desktop Numpad & Live Slip Console ════ */}
-          <div className="lg:col-span-5 space-y-5 lg:sticky lg:top-5 lg:self-start">
-
-            {/* Desktop Numpad Console (Hidden on mobile) */}
-            <div className="hidden lg:block bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-3">
+            {/* Interactive Numpad Console */}
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-slate-400 text-lg">dialpad</span>
                   <h3 className="text-sm font-black text-slate-800">แป้นกดตัวเลข</h3>
                 </div>
                 <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
-                  รองรับแป้นพิมพ์ PC
+                  รองรับแป้นพิมพ์ PC (0-9)
                 </span>
               </div>
               {renderNumpad()}
             </div>
 
-            {/* Desktop Live Slip Card (Hidden on mobile, mobile uses slide drawer) */}
+          </div>
+
+          {/* ════ RIGHT COLUMN (Pane 3): Desktop Live Slip Console ════ */}
+          <div className="lg:col-span-12 xl:col-span-4 space-y-4 lg:sticky lg:top-5 lg:self-start">
+
+            {/* Desktop Live Slip Card */}
             <div className="hidden lg:flex flex-col bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
               <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <div className="flex items-center gap-2">

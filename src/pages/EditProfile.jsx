@@ -19,7 +19,7 @@ const EditProfile = () => {
     bank_account_number: profile?.bank_account_number || '',
     bank_account_name: profile?.bank_account_name || '',
   });
-  const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.phone}`;
+  const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.phone || 'user'}`;
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
@@ -76,7 +76,7 @@ const EditProfile = () => {
 
       if (error) throw error;
       await refreshProfile();
-      showSuccess('บันทึกสำเร็จ!', 'ข้อมูลโปรไฟล์ถูกอัปเดตแล้ว');
+      showSuccess('บันทึกสำเร็จ!', 'ข้อมูลโปรไฟล์ถูกอัปเดตเรียบร้อยแล้ว');
     } catch (err) {
       console.error('Error updating profile:', err);
       showError('บันทึกไม่สำเร็จ', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่');
@@ -87,191 +87,294 @@ const EditProfile = () => {
 
   return (
     <PageWrapper>
-      {/* Header */}
-      <header className="fixed top-0 w-full z-50 flex justify-between items-center px-4 h-16 bg-white border-b border-zinc-100">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="p-2 transition-all duration-200 active:scale-95 hover:bg-zinc-50 rounded-full"
-          >
-            <span className="material-symbols-outlined text-zinc-600">arrow_back</span>
-          </button>
-          <h1 className="text-2xl font-black text-emerald-600 tracking-tight uppercase">TH-LOTTO</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={() => navigate('/notifications')} className="p-2 transition-all duration-200 active:scale-95 hover:bg-zinc-50 rounded-full">
-            <span className="material-symbols-outlined text-emerald-600">notifications</span>
-          </button>
-          <div className="w-8 h-8 rounded-full bg-zinc-200 overflow-hidden border border-zinc-100">
-            <img
-              alt="Profile"
-              className="w-full h-full object-cover"
-              src={profile?.avatar_url || defaultAvatar}
-            />
-          </div>
-        </div>
-      </header>
-
-      <main className="pt-24 px-4 max-w-[480px] mx-auto">
-        {/* Profile Picture Section */}
-        <section className="flex flex-col items-center mb-8">
-          <div className="relative">
-            <input
-              ref={avatarInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarChange}
-            />
-            <div className="w-32 h-32 rounded-full border-4 border-white ring-1 ring-zinc-200 overflow-hidden bg-zinc-100">
-              <img
-                alt="Avatar"
-                className="w-full h-full object-cover"
-                src={profile?.avatar_url || defaultAvatar}
-              />
-            </div>
+      {/* Page Header / Breadcrumb */}
+      <div className="bg-white/80 border-b border-slate-100 px-4 sm:px-6 lg:px-8 py-3.5 sticky top-[72px] lg:top-[34px] z-40 backdrop-blur-md">
+        <div className="max-w-[1720px] 2xl:max-w-[1850px] mx-auto w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <button
-              onClick={() => avatarInputRef.current?.click()}
-              disabled={avatarUploading}
-              className="absolute bottom-0 right-0 bg-emerald-600 text-white p-3 rounded-full border-4 border-white transition-all duration-200 active:scale-90 flex items-center justify-center disabled:opacity-60"
+              onClick={() => navigate(-1)}
+              className="size-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-all active:scale-95 cursor-pointer"
             >
-              {avatarUploading
-                ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                : <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>photo_camera</span>
-              }
+              <span className="material-symbols-outlined text-xl">chevron_left</span>
             </button>
-          </div>
-          <p className="mt-4 text-sm font-semibold text-zinc-500">แก้ไขรูปโปรไฟล์</p>
-        </section>
-
-        {/* Edit Form */}
-        <section className="space-y-6">
-          {/* Personal Info */}
-          <div className="bg-white p-6 rounded-2xl border border-zinc-100">
-            <h3 className="text-emerald-700 font-extrabold mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
-              <span className="material-symbols-outlined text-[20px]">person</span>
-              ข้อมูลส่วนตัว
-            </h3>
-            <div className="space-y-5">
-              {/* Read-only Phone */}
-              <div className="space-y-2">
-                <label className="block text-sm font-bold text-zinc-400 px-1 uppercase tracking-wide">หมายเลขโทรศัพท์ (ไม่สามารถแก้ไขได้)</label>
-                <div className="flex items-center gap-3 p-4 bg-zinc-50 border border-zinc-100 rounded-xl text-zinc-400">
-                  <span className="material-symbols-outlined text-zinc-400">call</span>
-                  <span className="font-medium">{profile?.phone || '—'}</span>
-                  <span className="ml-auto material-symbols-outlined text-zinc-300">lock</span>
-                </div>
-              </div>
-              {/* Full Name */}
-              <div className="space-y-2">
-                <label className="block text-sm font-bold text-zinc-700 px-1 uppercase tracking-wide" htmlFor="full_name">ชื่อ-นามสกุล</label>
-                <div className="relative group">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-emerald-600">person</span>
-                  <input
-                    id="full_name"
-                    type="text"
-                    value={formData.full_name}
-                    onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                    className="w-full pl-12 pr-4 py-4 bg-white border border-zinc-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all outline-none font-medium"
-                  />
-                </div>
-              </div>
-              {/* Email (read-only, shown from auth) */}
-              <div className="space-y-2">
-                <label className="block text-sm font-bold text-zinc-400 px-1 uppercase tracking-wide">อีเมล (ไม่สามารถแก้ไขได้)</label>
-                <div className="flex items-center gap-3 p-4 bg-zinc-50 border border-zinc-100 rounded-xl text-zinc-400">
-                  <span className="material-symbols-outlined text-zinc-400">mail</span>
-                  <span className="font-medium">{user?.email || '—'}</span>
-                  <span className="ml-auto material-symbols-outlined text-zinc-300">lock</span>
-                </div>
-              </div>
+            <div>
+              <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 flex items-center gap-2">
+                <span>แก้ไขข้อมูลโปรไฟล์</span>
+                <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/70">
+                  Settings
+                </span>
+              </h1>
+              <p className="text-[11px] text-slate-400 font-medium">อัปเดตข้อมูลส่วนตัว ชื่อ-นามสกุล และบัญชีธนาคารสำหรับถอนเงิน</p>
             </div>
           </div>
 
-          {/* Bank Account Section */}
-          <div className="bg-white p-6 rounded-2xl border border-zinc-100">
-            <h3 className="text-emerald-700 font-extrabold mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
-              <span className="material-symbols-outlined text-[20px]">account_balance</span>
-              บัญชีธนาคาร (สำหรับถอนเงิน)
-            </h3>
-            <div className="space-y-5">
-              <div className="space-y-2">
-                <label className="block text-sm font-bold text-zinc-700 px-1 uppercase tracking-wide">ธนาคาร</label>
-                <BankSelector
-                  value={formData.bank_name}
-                  onChange={(code) => setFormData({ ...formData, bank_name: code })}
-                  placeholder="เลือกธนาคารของคุณ"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-bold text-zinc-700 px-1 uppercase tracking-wide" htmlFor="bank_account_number">เลขที่บัญชี</label>
-                <input
-                  id="bank_account_number"
-                  type="text"
-                  value={formData.bank_account_number}
-                  onChange={(e) => setFormData({ ...formData, bank_account_number: e.target.value.replace(/[^0-9-]/g, '') })}
-                  placeholder="xxx-x-xxxxx-x"
-                  className="w-full px-4 py-4 bg-white border border-zinc-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all outline-none font-mono tracking-wider"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm font-bold text-zinc-700 px-1 uppercase tracking-wide" htmlFor="bank_account_name">ชื่อบัญชี</label>
-                <input
-                  id="bank_account_name"
-                  type="text"
-                  value={formData.bank_account_name}
-                  onChange={(e) => setFormData({ ...formData, bank_account_name: e.target.value })}
-                  placeholder="ชื่อ-นามสกุลผู้ถือบัญชี"
-                  className="w-full px-4 py-4 bg-white border border-zinc-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all outline-none font-medium"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Security Section */}
-          <div className="bg-white p-6 rounded-2xl border border-zinc-100">
-            <h3 className="text-emerald-700 font-extrabold mb-4 flex items-center gap-2 text-sm uppercase tracking-wider">
-              <span className="material-symbols-outlined text-[20px]">verified_user</span>
-              ข้อมูลความปลอดภัย
-            </h3>
-            <div className="divide-y divide-zinc-50">
-              <div onClick={() => navigate('/change-password')} className="py-4 flex justify-between items-center group cursor-pointer">
-                <div>
-                  <p className="font-bold text-zinc-800">เปลี่ยน PIN (รหัสผ่าน)</p>
-                  <p className="text-xs text-zinc-500 font-medium">ใช้สำหรับเข้าสู่ระบบและยืนยันการถอนเงิน</p>
-                </div>
-                <span className="material-symbols-outlined text-zinc-300 group-hover:text-emerald-600 transition-colors">chevron_right</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="pt-4 flex flex-col gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={handleUpdate}
               disabled={loading}
-              className="w-full py-4 bg-emerald-600 text-white font-extrabold rounded-full active:scale-[0.98] transition-all duration-200 uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold transition-all shadow-xs disabled:opacity-50 cursor-pointer active:scale-95"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               ) : (
-                'บันทึกการเปลี่ยนแปลง'
+                <>
+                  <span className="material-symbols-outlined text-sm">save</span>
+                  <span>บันทึกข้อมูล</span>
+                </>
               )}
             </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main 3-Section Settings Cockpit */}
+      <div className="max-w-[1720px] 2xl:max-w-[1850px] mx-auto w-full px-4 sm:px-6 lg:px-8 mt-6 pb-28 lg:pb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+          {/* ════ SECTION 1 (Left 4 Cols on PC): Avatar & User Overview ════ */}
+          <aside className="lg:col-span-4 xl:col-span-4 space-y-4">
+            {/* Avatar & Photo Upload Box */}
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs text-center space-y-4">
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
+
+              <div className="relative inline-block mx-auto">
+                <div className="size-32 rounded-full p-1 border-2 border-emerald-600/30 shadow-xs">
+                  <div className="size-full rounded-full bg-slate-50 overflow-hidden">
+                    <img
+                      alt="Avatar"
+                      className="size-full object-cover"
+                      src={profile?.avatar_url || defaultAvatar}
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={avatarUploading}
+                  className="absolute bottom-1 right-1 size-10 bg-emerald-700 hover:bg-emerald-800 text-white rounded-full border-2 border-white shadow-md flex items-center justify-center transition-all active:scale-90 cursor-pointer disabled:opacity-50"
+                  title="เปลี่ยนรูปโปรไฟล์"
+                >
+                  {avatarUploading ? (
+                    <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <span className="material-symbols-outlined text-base">photo_camera</span>
+                  )}
+                </button>
+              </div>
+
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900">รูปภาพโปรไฟล์</h3>
+                <p className="text-xs text-slate-400 mt-0.5">รองรับไฟล์ JPG, PNG ขนาดไม่เกิน 2MB</p>
+              </div>
+
+              <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-left space-y-2.5 text-xs">
+                <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
+                  <span className="text-slate-400">รหัสสมาชิก:</span>
+                  <span className="font-mono font-bold text-slate-800">{profile?.member_id || '------'}</span>
+                </div>
+                <div className="flex justify-between items-center py-1 border-b border-slate-200/60">
+                  <span className="text-slate-400">ระดับสมาชิก:</span>
+                  <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">{profile?.vip_level || 'MEMBER'}</span>
+                </div>
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-slate-400">เบอร์มือถือ:</span>
+                  <span className="font-mono font-bold text-slate-800">{profile?.phone || '—'}</span>
+                </div>
+              </div>
+
+              {/* Quick Navigation to Change PIN */}
+              <button
+                type="button"
+                onClick={() => navigate('/change-password')}
+                className="w-full h-11 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-base">lock_reset</span>
+                <span>เปลี่ยนรหัสผ่าน / PIN 4 หลัก</span>
+              </button>
+            </div>
+          </aside>
+
+          {/* ════ SECTION 2 (Center 5 Cols on PC): Form Details ════ */}
+          <main className="lg:col-span-5 space-y-4">
+            {/* Personal Details Card */}
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs space-y-4">
+              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                <div className="size-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-lg">person</span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">ข้อมูลส่วนตัว</h3>
+                  <p className="text-[11px] text-slate-400 font-medium">ชื่อ-นามสกุลสำหรับแสดงผลในระบบ</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* Full Name */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700" htmlFor="full_name">
+                    ชื่อ-นามสกุล <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
+                      badge
+                    </span>
+                    <input
+                      id="full_name"
+                      type="text"
+                      value={formData.full_name}
+                      onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                      placeholder="ระบุชื่อและนามสกุลจริง"
+                      className="w-full h-12 pl-10 pr-4 rounded-xl bg-slate-50 border border-slate-200/80 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-emerald-600 focus:bg-white transition-all"
+                    />
+                  </div>
+                </div>
+
+                {/* Locked Phone */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-400">
+                    เบอร์โทรศัพท์ (ใช้เป็น ID เข้าสู่ระบบ - แก้ไขไม่ได้)
+                  </label>
+                  <div className="flex items-center gap-3 px-4 h-12 bg-slate-100 border border-slate-200/60 rounded-xl text-slate-500 text-xs font-mono">
+                    <span className="material-symbols-outlined text-slate-400 text-base">call</span>
+                    <span>{profile?.phone || '—'}</span>
+                    <span className="ml-auto material-symbols-outlined text-slate-400 text-sm">lock</span>
+                  </div>
+                </div>
+
+                {/* Locked Email */}
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-400">
+                    อีเมลที่เชื่อมต่อ
+                  </label>
+                  <div className="flex items-center gap-3 px-4 h-12 bg-slate-100 border border-slate-200/60 rounded-xl text-slate-500 text-xs">
+                    <span className="material-symbols-outlined text-slate-400 text-base">mail</span>
+                    <span className="truncate">{user?.email || '—'}</span>
+                    <span className="ml-auto material-symbols-outlined text-slate-400 text-sm">lock</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bank Account Details Card */}
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs space-y-4">
+              <div className="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                <div className="size-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-lg">account_balance</span>
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-slate-900">บัญชีธนาคารสำหรับถอนเงิน</h3>
+                  <p className="text-[11px] text-slate-400 font-medium">ชื่อบัญชีต้องตรงกับชื่อสมาชิกเพื่อความรวดเร็วในการถอน</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700">ธนาคาร</label>
+                  <BankSelector
+                    value={formData.bank_name}
+                    onChange={(code) => setFormData({ ...formData, bank_name: code })}
+                    placeholder="เลือกธนาคารของคุณ"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700" htmlFor="bank_account_number">
+                    เลขที่บัญชี
+                  </label>
+                  <input
+                    id="bank_account_number"
+                    type="text"
+                    value={formData.bank_account_number}
+                    onChange={(e) => setFormData({ ...formData, bank_account_number: e.target.value.replace(/[^0-9-]/g, '') })}
+                    placeholder="เช่น 123-4-56789-0"
+                    className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200/80 text-xs font-mono font-bold text-slate-900 focus:outline-hidden focus:border-emerald-600 focus:bg-white transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700" htmlFor="bank_account_name">
+                    ชื่อบัญชีธนาคาร
+                  </label>
+                  <input
+                    id="bank_account_name"
+                    type="text"
+                    value={formData.bank_account_name}
+                    onChange={(e) => setFormData({ ...formData, bank_account_name: e.target.value })}
+                    placeholder="ชื่อ-นามสกุลตรงตามสมุดบัญชี"
+                    className="w-full h-12 px-4 rounded-xl bg-slate-50 border border-slate-200/80 text-xs font-medium text-slate-900 focus:outline-hidden focus:border-emerald-600 focus:bg-white transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={handleUpdate}
+                  disabled={loading}
+                  className="w-full h-13 rounded-2xl bg-gradient-to-r from-emerald-800 to-emerald-700 hover:from-emerald-700 hover:to-emerald-600 text-white font-extrabold text-sm flex items-center justify-center gap-2 shadow-md active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {loading ? (
+                    <div className="size-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-lg">save</span>
+                      <span>บันทึกการเปลี่ยนแปลงทั้งหมด</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </main>
+
+          {/* ════ SECTION 3 (Right 3 Cols on PC): Compliance & Security ════ */}
+          <aside className="hidden xl:block xl:col-span-3 space-y-4">
+            {/* Bank Compliance Guidelines */}
+            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs space-y-3">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                กฎระเบียบบัญชีธนาคาร
+              </h3>
+              <div className="space-y-2.5 text-xs text-slate-600 leading-relaxed">
+                <div className="flex items-start gap-2">
+                  <span className="material-symbols-outlined text-amber-500 text-sm shrink-0 mt-0.5">info</span>
+                  <p>ชื่อบัญชีธนาคารต้องตรงกับชื่อผู้ลงทะเบียน เพื่อป้องกันการฟอกเงินและความปลอดภัยสูงสุด</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="material-symbols-outlined text-emerald-700 text-sm shrink-0 mt-0.5">verified</span>
+                  <p>ระบบถอนเงินออโต้จะโอนเข้าบัญชีที่ระบุนี้โดยตรงภายใน 5-15 นาที</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Security Audit Badge */}
+            <div className="bg-emerald-50/60 rounded-3xl p-4.5 border border-emerald-200/80 text-emerald-950 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-emerald-700 text-lg">shield</span>
+                <h4 className="text-xs font-extrabold">ความปลอดภัยระดับสูง</h4>
+              </div>
+              <p className="text-[11px] text-emerald-800 leading-relaxed">
+                ข้อมูลส่วนบุคคลทั้งหมดถูกเข้ารหัสด้วยเทคโนโลยี AES-256 ปลอดภัย 100%
+              </p>
+            </div>
+
+            {/* Logout Action */}
             <button
+              type="button"
               onClick={() => { signOut(); navigate('/login'); }}
-              className="w-full py-4 bg-white text-red-500 border border-red-100 font-extrabold rounded-full active:scale-[0.98] transition-all duration-200 uppercase tracking-wider"
+              className="w-full h-11 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
-              ออกจากระบบ
+              <span className="material-symbols-outlined text-base">logout</span>
+              <span>ออกจากระบบ</span>
             </button>
-          </div>
+          </aside>
 
-          <div className="text-center pb-8">
-            <p className="text-zinc-400 text-xs font-bold tracking-widest uppercase">TH-LOTTO Premium</p>
-          </div>
-        </section>
-      </main>
-
+        </div>
+      </div>
     </PageWrapper>
   );
 };

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import PageWrapper from '../components/PageWrapper';
 import AppHeader from '../components/AppHeader';
 import { supabase } from '../supabaseClient';
@@ -9,7 +10,6 @@ const fmtDate = (dateStr) => {
   if (!dateStr) return '';
   try {
     const dt = new Date(dateStr + 'T00:00:00');
-    // Buddhist calendar (พ.ศ.)
     return dt.toLocaleDateString('th-TH-u-ca-buddhist', { year: 'numeric', month: 'long', day: 'numeric' });
   } catch { return dateStr; }
 };
@@ -36,11 +36,16 @@ const getCountdown = (drawTime) => {
 };
 
 const Results = () => {
+  const navigate = useNavigate();
   const [rows, setRows] = useState([]);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('today');
   const [tick, setTick] = useState(0);
+
+  // Fast Digit Checker state
+  const [checkDigits, setCheckDigits] = useState('');
+  const [checkResult, setCheckResult] = useState(null);
 
   const fetchResults = useCallback(async () => {
     try {
@@ -89,15 +94,15 @@ const Results = () => {
   const historyDates = [...new Set(history.map(r => r.draw_date))];
 
   const Badge = ({ row }) => {
-    if (!row.has_draw_today) return <span className="text-[8px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-500">งวดล่าสุด</span>;
-    if (isPending(row.result_status)) return <span className="text-[8px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">รอผล</span>;
-    return <span className="text-[8px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">ประกาศแล้ว</span>;
+    if (!row.has_draw_today) return <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200/60">งวดล่าสุด</span>;
+    if (isPending(row.result_status)) return <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">รอผล</span>;
+    return <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60">ประกาศแล้ว</span>;
   };
 
   const SubDate = ({ row }) => {
     if (row.has_draw_today && isPending(row.result_status)) {
       const cd = getCountdown(row.draw_time);
-      if (cd) return <p className="text-xs text-amber-500 font-bold">อีก {cd}</p>;
+      if (cd) return <p className="text-xs text-amber-600 font-bold">อีก {cd}</p>;
       return <p className="text-xs text-slate-400 font-medium">ออกผล {fmtTime(row.draw_time)}</p>;
     }
     if (row.has_draw_today) return <p className="text-xs text-slate-400 font-medium">ออกผล {fmtTime(row.draw_time)}</p>;
@@ -106,332 +111,513 @@ const Results = () => {
 
   const pending = (row) => isPending(row.result_status);
 
+  // Fast check algorithm against today's results
+  const handleCheckPrize = (e) => {
+    e.preventDefault();
+    const query = checkDigits.trim();
+    if (!query) {
+      setCheckResult(null);
+      return;
+    }
+
+    const matches = [];
+    rows.forEach(r => {
+      if (pending(r)) return;
+      if (r.result_main && r.result_main === query) {
+        matches.push({ market: r.name, prize: 'รางวัลที่ 1 / รางวัลหลัก', number: r.result_main });
+      }
+      if (r.result_3top && r.result_3top === query) {
+        matches.push({ market: r.name, prize: '3 ตัวบน', number: r.result_3top });
+      }
+      if (r.result_3front && r.result_3front === query) {
+        matches.push({ market: r.name, prize: '3 ตัวหน้า', number: r.result_3front });
+      }
+      if (r.result_3bottom && r.result_3bottom === query) {
+        matches.push({ market: r.name, prize: '3 ตัวล่าง', number: r.result_3bottom });
+      }
+      if (r.result_2top && r.result_2top === query) {
+        matches.push({ market: r.name, prize: '2 ตัวบน', number: r.result_2top });
+      }
+      if (r.result_2bottom && r.result_2bottom === query) {
+        matches.push({ market: r.name, prize: '2 ตัวล่าง', number: r.result_2bottom });
+      }
+    });
+
+    setCheckResult({ query, matches });
+  };
+
   return (
     <PageWrapper>
       <AppHeader />
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-8 py-4">
-        {/* หัวข้อ + Tabs */}
-        <div className="text-center mb-4 mt-2">
-          <h1 className="text-lg font-bold text-slate-900">ผลรางวัลประจำวัน</h1>
-          <p className="text-xs text-slate-400 mt-1">{todayStr}</p>
-        </div>
-        <div className="flex gap-2 mb-5 justify-center">
-          <button onClick={() => setTab('today')}
-            className={`px-5 py-1.5 rounded-full text-xs font-bold transition ${tab === 'today' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-500'}`}>
-            วันนี้
-          </button>
-          <button onClick={() => setTab('history')}
-            className={`px-5 py-1.5 rounded-full text-xs font-bold transition ${tab === 'history' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-500'}`}>
-            ย้อนหลัง 7 วัน
-          </button>
-        </div>
-
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+      {/* Page Breadcrumb / Controls Header */}
+      <div className="bg-white/80 border-b border-slate-100 px-4 sm:px-6 lg:px-8 py-3.5 sticky top-[72px] lg:top-[34px] z-40 backdrop-blur-md">
+        <div className="max-w-[1720px] 2xl:max-w-[1850px] mx-auto w-full flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="size-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-all active:scale-95 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-xl">chevron_left</span>
+            </button>
+            <div>
+              <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 flex items-center gap-2">
+                <span>ผลรางวัลสลากและหวย</span>
+                <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/70">
+                  {todayStr}
+                </span>
+              </h1>
+              <p className="text-[11px] text-slate-400 font-medium">อัปเดตผลรางวัล Real-time ทันทีที่ออกรางวัลเสร็จสิ้น</p>
+            </div>
           </div>
-        ) : tab === 'today' ? (
-          <>
-            {/* ── GOV CARD ── */}
-            {govRow && (
-              <section className="mb-8">
-                <div className="rounded-[2.5rem] p-5 sm:p-6 text-white" style={{ background: 'linear-gradient(135deg, rgb(22, 68, 30) 0%, rgb(13, 121, 4) 100%)' }}>
-                  <div className="flex justify-between items-start gap-2 mb-4">
-                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 flex items-center justify-center overflow-hidden shrink-0">
-                        <img alt="Government" className="w-full h-full object-cover" src={govRow.logo_url || 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Seal_of_the_Government_Lottery_Office.png/240px-Seal_of_the_Government_Lottery_Office.png'} />
+
+          {/* Tab Switcher */}
+          <div className="flex items-center gap-2 bg-slate-100/80 p-1 rounded-2xl border border-slate-200/60">
+            <button
+              onClick={() => setTab('today')}
+              className={`px-5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                tab === 'today'
+                  ? 'bg-white text-emerald-800 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              ผลวันนี้
+            </button>
+            <button
+              onClick={() => setTab('history')}
+              className={`px-5 py-1.5 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                tab === 'history'
+                  ? 'bg-white text-emerald-800 shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              ย้อนหลัง 7 วัน
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main 3-Layout Container */}
+      <div className="max-w-[1720px] 2xl:max-w-[1850px] mx-auto w-full px-4 sm:px-6 lg:px-8 mt-5 pb-36 lg:pb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+          {/* ════════════════════════════════════════════════════════════
+              LAYOUT 1: LEFT COLUMN (Government Lottery Hero & Live Studio)
+              ════════════════════════════════════════════════════════════ */}
+          <aside className="lg:col-span-4 xl:col-span-4 space-y-4">
+            {/* Government Lottery Hero Ticket Card */}
+            {govRow ? (
+              <div className="rounded-[2.5rem] p-6 text-white shadow-xl relative overflow-hidden"
+                   style={{ background: 'linear-gradient(135deg, rgb(22, 68, 30) 0%, rgb(13, 121, 4) 100%)' }}>
+                {/* Background GLO Seal */}
+                <div className="absolute -right-8 -bottom-8 w-44 h-44 opacity-15 pointer-events-none select-none">
+                  <img
+                    alt="GLO Seal"
+                    className="w-full h-full object-contain"
+                    src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Seal_of_the_Government_Lottery_Office.png/240px-Seal_of_the_Government_Lottery_Office.png"
+                  />
+                </div>
+
+                <div className="relative z-10">
+                  <div className="flex justify-between items-start gap-2 mb-5">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="size-12 rounded-2xl bg-white/20 flex items-center justify-center overflow-hidden shrink-0 border border-white/30 backdrop-blur-xs">
+                        <img
+                          alt="Government"
+                          className="w-full h-full object-cover"
+                          src={govRow.logo_url || 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Seal_of_the_Government_Lottery_Office.png/240px-Seal_of_the_Government_Lottery_Office.png'}
+                        />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h2 className="text-sm sm:text-lg font-bold leading-tight truncate">สลากกินแบ่งรัฐบาล</h2>
-                        <p className="text-white/70 text-xs font-medium truncate mt-0.5">
+                        <h2 className="text-base sm:text-lg font-black leading-tight truncate">สลากกินแบ่งรัฐบาล</h2>
+                        <p className="text-white/80 text-xs font-medium truncate mt-0.5">
                           {govRow.has_draw_today ? `วันนี้ ออกผล ${fmtTime(govRow.draw_time)}` : fmtDate(govRow.draw_date)}
                         </p>
                       </div>
                     </div>
-                    <div className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-xs font-bold whitespace-nowrap shrink-0 ${
+                    <div className={`px-3 py-1 rounded-full text-xs font-bold shrink-0 ${
                       !govRow.has_draw_today ? 'bg-blue-400/30 text-white' :
-                      pending(govRow) ? 'bg-red-500 text-white' : 'bg-green-400 text-white'
+                      pending(govRow) ? 'bg-amber-400/30 text-amber-200 border border-amber-300/40' : 'bg-white/25 text-white'
                     }`}>
-                      {!govRow.has_draw_today ? 'งวดล่าสุด' : pending(govRow) ? 'รอผล' : 'ออกแล้ว'}
+                      {!govRow.has_draw_today ? 'งวดล่าสุด' : pending(govRow) ? 'รอผลออก' : 'ออกแล้ว'}
                     </div>
                   </div>
+
+                  {/* 6-Digit Prize 1 Balls */}
                   <div className="mb-6 text-center">
-                    <p className="text-white/80 text-xs font-medium mb-3">รางวัลที่ 1</p>
-                    <div className="flex justify-center gap-1.5">
+                    <p className="text-white/80 text-xs font-extrabold uppercase tracking-widest mb-3">รางวัลที่ 1 (บาทละ 2,000,000)</p>
+                    <div className="flex justify-center gap-1.5 sm:gap-2">
                       {pending(govRow)
                         ? Array.from({ length: 6 }).map((_, i) => (
-                            <span key={i} className="w-11 h-11 bg-white/15 border border-white/20 rounded-full flex items-center justify-center text-white/30 font-bold text-xl">x</span>
+                            <span key={i} className="size-10 sm:size-11 bg-white/15 border border-white/25 rounded-2xl flex items-center justify-center text-white/40 font-bold text-lg">?</span>
                           ))
-                        : (govRow.result_main || '').split('').map((digit, i) => (
-                            <span key={i} className="w-11 h-11 bg-white rounded-full flex items-center justify-center text-[#064e3b] font-bold text-xl">{digit}</span>
-                          ))
-                      }
+                        : (govRow.result_main || '------').split('').map((d, i) => (
+                            <span key={i} className="size-10 sm:size-11 bg-white rounded-2xl flex items-center justify-center text-emerald-950 font-black text-xl shadow-md transform hover:scale-105 transition-transform">
+                              {d}
+                            </span>
+                          ))}
                     </div>
                   </div>
-                  <div className="h-px bg-white/10 mb-5"></div>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div>
-                      <p className="text-white/60 text-xs font-medium mb-1">3 ตัวหน้า</p>
-                      <div className="text-base font-bold">{pending(govRow) ? 'xxx' : (govRow.result_3front || 'xxx')}</div>
-                    </div>
-                    <div>
-                      <p className="text-white/60 text-xs font-medium mb-1">3 ตัวท้าย</p>
-                      <div className="text-base font-bold">{pending(govRow) ? 'xxx' : (govRow.result_3top || 'xxx')}</div>
-                    </div>
-                    <div>
-                      <p className="text-white/60 text-xs font-medium mb-1">2 ตัวล่าง</p>
-                      <div className="text-xl font-bold">{pending(govRow) ? 'xx' : (govRow.result_2bottom || govRow.result_2top || 'xx')}</div>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            )}
 
-            {/* ── FOREIGN ── */}
-            {foreignRows.length > 0 && (
-              <section className="mb-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="w-1.5 h-4 bg-brand-600 rounded-full"></span>
-                  <h3 className="text-base font-extrabold text-slate-900">หวยต่างประเทศ</h3>
+                  {/* 3 Front / 3 Back / 2 Bottom Grid */}
+                  <div className="grid grid-cols-3 gap-2.5 text-center pt-4 border-t border-white/20">
+                    <div className="bg-white/10 rounded-2xl p-2.5 backdrop-blur-xs border border-white/10">
+                      <p className="text-white/70 text-[10px] font-bold mb-1">3 ตัวหน้า</p>
+                      <p className="text-base sm:text-lg font-black font-mono tracking-wider">{pending(govRow) ? 'xxx' : (govRow.result_3front || '—')}</p>
+                    </div>
+                    <div className="bg-white/10 rounded-2xl p-2.5 backdrop-blur-xs border border-white/10">
+                      <p className="text-white/70 text-[10px] font-bold mb-1">3 ตัวท้าย</p>
+                      <p className="text-base sm:text-lg font-black font-mono tracking-wider">{pending(govRow) ? 'xxx' : (govRow.result_3top || '—')}</p>
+                    </div>
+                    <div className="bg-amber-400/20 rounded-2xl p-2.5 backdrop-blur-xs border border-amber-300/30">
+                      <p className="text-amber-200 text-[10px] font-bold mb-1">2 ตัวล่าง</p>
+                      <p className="text-base sm:text-lg font-black font-mono tracking-wider text-amber-200">{pending(govRow) ? 'xx' : (govRow.result_2bottom || '—')}</p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="mt-5 flex gap-2">
+                    <button
+                      onClick={() => navigate('/lottery-list')}
+                      className="flex-1 py-2.5 rounded-xl bg-white text-emerald-900 font-extrabold text-xs shadow-md hover:bg-emerald-50 active:scale-95 transition-all text-center cursor-pointer"
+                    >
+                      แทงสลากงวดถัดไป
+                    </button>
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {foreignRows.map((r) => (
-                    <div key={r.code} className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-brand-200 transition-all flex flex-col justify-between">
-                      <div className="flex items-start justify-between gap-2 mb-3.5">
-                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                          <div className="w-10 h-10 rounded-2xl overflow-hidden flex items-center justify-center bg-slate-50 border border-slate-100 shrink-0">
-                            {r.logo_url ? <img alt={r.name} className="w-full h-full object-cover" src={r.logo_url} /> : <span className="material-symbols-outlined text-slate-400 text-lg">flag</span>}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <h4 className="font-extrabold text-slate-900 text-sm truncate">{r.name}</h4>
-                            <SubDate row={r} />
+              </div>
+            ) : null}
+
+            {/* Quick Live Game Results (Instant Lotto Tape) */}
+            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-red-500 text-sm animate-pulse">videocam</span>
+                  ผลสตรีมมิ่งสด & หวยเร็ว
+                </h3>
+                <span className="text-[10px] font-bold bg-red-50 text-red-600 px-2 py-0.5 rounded-full">REALTIME</span>
+              </div>
+              <div className="space-y-2">
+                <div
+                  onClick={() => navigate('/instant-lottery')}
+                  className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-emerald-50/50 border border-slate-100 transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="size-9 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-xs font-black">
+                      1M
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">หวยไทย 1 นาที</h4>
+                      <p className="text-[10px] text-slate-400">ออกผลทุก 60 วินาที</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-extrabold text-emerald-700 flex items-center gap-1">
+                    เข้าชม <span className="material-symbols-outlined text-xs">chevron_right</span>
+                  </span>
+                </div>
+
+                <div
+                  onClick={() => navigate('/lotto-15m')}
+                  className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-emerald-50/50 border border-slate-100 transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="size-9 rounded-xl bg-slate-800 text-white flex items-center justify-center text-xs font-black">
+                      15M
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">ล็อตโต้ 15 นาที LIVE</h4>
+                      <p className="text-[10px] text-slate-400">ถ่ายทอดสดสตูดิโอ HD</p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-extrabold text-emerald-700 flex items-center gap-1">
+                    เข้าชม <span className="material-symbols-outlined text-xs">chevron_right</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* ════════════════════════════════════════════════════════════
+              LAYOUT 2: CENTER WORKSPACE (International & Daily Stock Results)
+              ════════════════════════════════════════════════════════════ */}
+          <main className="lg:col-span-8 xl:col-span-5 space-y-5">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-24 gap-4 bg-white rounded-3xl border border-slate-200/80 shadow-2xs">
+                <div className="w-10 h-10 border-3 border-emerald-700/20 border-t-emerald-700 rounded-full animate-spin"></div>
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-400 animate-pulse">กำลังโหลดผลรางวัล...</p>
+              </div>
+            ) : tab === 'today' ? (
+              <>
+                {/* ── Foreign Lotteries Section ── */}
+                {foreignRows.length > 0 && (
+                  <section className="space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                      <h3 className="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+                        <span className="w-1.5 h-4 bg-emerald-700 rounded-full"></span>
+                        หวยต่างประเทศ (ลาว • ฮานอย • มาเลย์)
+                      </h3>
+                      <span className="text-xs text-slate-400 font-bold">{foreignRows.length} รายการ</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      {foreignRows.map((r) => (
+                        <div key={r.code} className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-emerald-200 transition-all flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-start justify-between gap-2 mb-3">
+                              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                                <div className="size-10 rounded-2xl overflow-hidden flex items-center justify-center bg-slate-50 border border-slate-100 shrink-0">
+                                  {r.logo_url ? (
+                                    <img alt={r.name} className="w-full h-full object-cover" src={r.logo_url} />
+                                  ) : (
+                                    <span className="material-symbols-outlined text-slate-400 text-lg">flag</span>
+                                  )}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <h4 className="font-extrabold text-slate-900 text-xs sm:text-sm truncate">{r.name}</h4>
+                                  <SubDate row={r} />
+                                </div>
+                              </div>
+                              <Badge row={r} />
+                            </div>
+
+                            <div className="grid grid-cols-4 gap-1.5">
+                              {[
+                                ['รางวัล', pending(r) ? 'xxxx' : (r.result_main || r.result_3top || 'xxxx'), false],
+                                ['3 บน', pending(r) ? 'xxx' : (r.result_3top || 'xxx'), false],
+                                ['2 บน', pending(r) ? 'xx' : (r.result_2top || 'xx'), false],
+                                ['2 ล่าง', pending(r) ? 'xx' : (r.result_2bottom || 'xx'), true],
+                              ].map(([label, val, accent]) => (
+                                <div key={label} className={`text-center p-2 rounded-xl border ${accent ? 'bg-emerald-50/70 border-emerald-200/80' : 'bg-slate-50 border-slate-100'}`}>
+                                  <p className={`text-[8px] font-extrabold uppercase ${accent ? 'text-emerald-800' : 'text-slate-400'}`}>{label}</p>
+                                  <p className={`text-xs font-black font-mono mt-0.5 ${accent ? 'text-emerald-800' : 'text-slate-800'}`}>{val}</p>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
-                        <Badge row={r} />
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* ── Daily Stock Results Section ── */}
+                {stockRows.length > 0 && (
+                  <section className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between px-1">
+                      <h3 className="text-sm font-extrabold text-slate-800 flex items-center gap-2">
+                        <span className="w-1.5 h-4 bg-amber-500 rounded-full"></span>
+                        ผลหุ้นรายวัน (Nikkei, Hang Seng, Dow Jones)
+                      </h3>
+                      <span className="text-xs text-slate-400 font-bold">{stockRows.length} รายการ</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {stockRows.map((r) => (
+                        <div key={r.code} className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            {r.logo_url ? (
+                              <img alt={r.name} className="w-8 h-8 rounded-full object-cover shrink-0" src={r.logo_url} />
+                            ) : (
+                              <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                                <span className="material-symbols-outlined text-slate-400 text-sm">show_chart</span>
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-bold text-slate-900 text-xs truncate">{r.name}</h4>
+                              <SubDate row={r} />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
+                            <div className="text-right">
+                              <p className="text-[7px] text-slate-400 font-bold uppercase">3 บน</p>
+                              <p className="text-xs font-bold text-slate-800 font-mono">{pending(r) ? 'xxx' : (r.result_3top || 'xxx')}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[7px] text-emerald-700 font-bold uppercase">2 ล่าง</p>
+                              <p className="text-xs font-bold text-emerald-700 font-mono">{pending(r) ? 'xx' : (r.result_2bottom || r.result_2top || 'xx')}</p>
+                            </div>
+                            <Badge row={r} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+              </>
+            ) : (
+              /* ── TAB: ย้อนหลัง 7 วัน ── */
+              <div className="space-y-6">
+                {historyDates.length === 0 ? (
+                  <div className="py-20 text-center text-slate-400 bg-white rounded-3xl border border-slate-200/80">
+                    <p className="text-sm font-bold">ยังไม่มีผลรางวัลย้อนหลัง</p>
+                  </div>
+                ) : (
+                  historyDates.map(date => {
+                    const dayResults = history.filter(r => r.draw_date === date);
+                    return (
+                      <div key={date} className="space-y-3">
+                        <h4 className="text-xs font-extrabold text-slate-700 flex items-center gap-2">
+                          <span className="w-1.5 h-3.5 bg-emerald-700 rounded-full"></span>
+                          ผลประจำวันที่ {fmtDate(date)}
+                        </h4>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {dayResults.map((r, idx) => (
+                            <div key={idx} className="bg-white p-3.5 rounded-2xl border border-slate-100 shadow-2xs">
+                              <div className="flex items-center gap-2.5 mb-2.5">
+                                {r.lottery_markets?.logo_url ? (
+                                  <img alt="" className="size-7 rounded-full object-cover shrink-0" src={r.lottery_markets.logo_url} />
+                                ) : (
+                                  <div className="size-7 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                                    <span className="material-symbols-outlined text-slate-400 text-xs">flag</span>
+                                  </div>
+                                )}
+                                <div className="min-w-0 flex-1">
+                                  <h5 className="font-extrabold text-slate-900 text-xs truncate">{r.lottery_markets?.name}</h5>
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-3 gap-1.5 text-center">
+                                <div className="bg-slate-50 p-1.5 rounded-lg">
+                                  <p className="text-[8px] text-slate-400 font-bold uppercase">3 ตัวบน</p>
+                                  <p className="text-xs font-black font-mono text-slate-800">{r.result_3top || '—'}</p>
+                                </div>
+                                <div className="bg-slate-50 p-1.5 rounded-lg">
+                                  <p className="text-[8px] text-slate-400 font-bold uppercase">3 หน้า/ล่าง</p>
+                                  <p className="text-xs font-black font-mono text-slate-800">{r.result_3front || r.result_3bottom || '—'}</p>
+                                </div>
+                                <div className="bg-emerald-50 p-1.5 rounded-lg">
+                                  <p className="text-[8px] text-emerald-800 font-bold uppercase">2 ตัวล่าง</p>
+                                  <p className="text-xs font-black font-mono text-emerald-800">{r.result_2bottom || r.result_2top || '—'}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        {[
-                          ['รางวัล', pending(r) ? 'xxxx' : (r.result_main || r.result_3top || 'xxxx'), false],
-                          ['3 บน', pending(r) ? 'xxx' : (r.result_3top || 'xxx'), false],
-                          ['2 บน', pending(r) ? 'xx' : (r.result_2top || 'xx'), false],
-                          ['2 ล่าง', pending(r) ? 'xx' : (r.result_2bottom || 'xx'), true],
-                        ].map(([label, val, accent]) => (
-                          <div key={label} className={`text-center p-2 rounded-xl border ${accent ? 'bg-brand-50/60 border-brand-200/80' : 'bg-slate-50 border-slate-100'}`}>
-                            <p className={`text-[8px] font-extrabold uppercase ${accent ? 'text-brand-700' : 'text-slate-400'}`}>{label}</p>
-                            <p className={`text-xs font-black font-mono mt-0.5 ${accent ? 'text-brand-700' : 'text-slate-800'}`}>{val}</p>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </main>
+
+          {/* ════════════════════════════════════════════════════════════
+              LAYOUT 3: RIGHT COLUMN (Fast Digit Checker & Draw Calendar)
+              ════════════════════════════════════════════════════════════ */}
+          <aside className="hidden xl:block xl:col-span-3 space-y-4">
+            {/* Interactive Fast Digit Checker */}
+            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="material-symbols-outlined text-emerald-700 text-lg">search_check</span>
+                <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-800">
+                  ตรวจรางวัลทันใจ
+                </h3>
+              </div>
+              <p className="text-[11px] text-slate-400 mb-3.5">
+                กรอกเลข 2 ตัว, 3 ตัว หรือ 6 ตัว เพื่อตรวจเช็กกับผลรางวัลที่ประกาศแล้ววันนี้
+              </p>
+
+              <form onSubmit={handleCheckPrize} className="space-y-2.5">
+                <div className="relative">
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={checkDigits}
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/[^0-9]/g, '');
+                      setCheckDigits(val);
+                      if (!val) setCheckResult(null);
+                    }}
+                    placeholder="ใส่ตัวเลขที่ต้องการตรวจ..."
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black font-mono tracking-widest text-slate-900 placeholder:text-slate-400 placeholder:tracking-normal focus:outline-none focus:border-emerald-600 focus:bg-white transition-all text-center"
+                  />
+                  {checkDigits && (
+                    <button
+                      type="button"
+                      onClick={() => { setCheckDigits(''); setCheckResult(null); }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      <span className="material-symbols-outlined text-sm">cancel</span>
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={!checkDigits.trim()}
+                  className={`w-full py-2.5 rounded-xl font-extrabold text-xs transition-all shadow-xs cursor-pointer ${
+                    checkDigits.trim()
+                      ? 'bg-gradient-to-r from-emerald-800 to-emerald-700 text-white hover:from-emerald-700 hover:to-emerald-600 active:scale-95'
+                      : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                  }`}
+                >
+                  ตรวจเช็กผลรางวัล
+                </button>
+              </form>
+
+              {/* Fast Checker Results Display */}
+              {checkResult && (
+                <div className="mt-4 pt-3.5 border-t border-slate-100">
+                  {checkResult.matches.length > 0 ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1.5 text-emerald-700 font-extrabold text-xs">
+                        <span className="material-symbols-outlined text-base">celebration</span>
+                        <span>ยินดีด้วย! ถูกรางวัล ({checkResult.matches.length} รายการ)</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {checkResult.matches.map((m, idx) => (
+                          <div key={idx} className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 text-xs">
+                            <p className="font-extrabold text-emerald-900">{m.market}</p>
+                            <p className="text-emerald-700 text-[11px] font-semibold">{m.prize}: <span className="font-mono font-bold text-emerald-950">{m.number}</span></p>
                           </div>
                         ))}
                       </div>
                     </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* ── STOCK ── */}
-            {stockRows.length > 0 && (
-              <section className="mb-6">
-                <div className="pt-2 pb-3">
-                  <h3 className="text-sm font-extrabold text-slate-700 flex items-center gap-2">
-                    <span className="w-1.5 h-4 bg-amber-500 rounded-full"></span>
-                    ผลหุ้นรายวัน
-                  </h3>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-                  {stockRows.map((r) => (
-                    <div key={r.code} className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                        {r.logo_url ? <img alt={r.name} className="w-8 h-8 rounded-full object-cover shrink-0" src={r.logo_url} />
-                          : <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0"><span className="material-symbols-outlined text-slate-400 text-sm">show_chart</span></div>}
-                        <div className="min-w-0 flex-1">
-                          <h4 className="font-bold text-slate-900 text-xs truncate">{r.name}</h4>
-                          <SubDate row={r} />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
-                        <div className="text-right">
-                          <p className="text-[7px] text-slate-400 font-bold uppercase">3 ตัว</p>
-                          <p className="text-xs font-bold text-slate-800">{pending(r) ? 'xxx' : (r.result_3top || 'xxx')}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[7px] text-primary font-bold uppercase">2 ตัว</p>
-                          <p className="text-xs font-bold text-primary">{pending(r) ? 'xx' : (r.result_2top || 'xx')}</p>
-                        </div>
-                        <Badge row={r} />
-                      </div>
+                  ) : (
+                    <div className="p-3 bg-slate-50 rounded-xl text-center space-y-1">
+                      <span className="material-symbols-outlined text-slate-400 text-xl">sentiment_dissatisfied</span>
+                      <p className="text-xs font-bold text-slate-700">ไม่พบข้อมูลถูกรางวัล</p>
+                      <p className="text-[10px] text-slate-400">เลข {checkResult.query} ไม่ตรงกับผลรางวัลวันนี้</p>
                     </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {rows.length === 0 && (
-              <div className="py-20 text-center text-slate-400">
-                <span className="material-symbols-outlined text-5xl text-slate-200">emoji_events</span>
-                <p className="mt-4 text-sm font-medium">ยังไม่มีผลรางวัล</p>
-              </div>
-            )}
-          </>
-        ) : (
-          /* ── TAB: ย้อนหลัง ── */
-          <div className="space-y-6">
-            {historyDates.length === 0 ? (
-              <div className="py-20 text-center text-slate-400">
-                <p className="text-sm">ยังไม่มีผลรางวัลย้อนหลัง</p>
-              </div>
-            ) : (() => {
-              // จัดลำดับในแต่ละวัน: ลาว(1) → ฮานอย(2) → มาเลย์(3) → หุ้น(4)
-              const sortOrder = (r) => {
-                const c = r.lottery_markets?.code;
-                if (c === 'LAO') return 1;
-                if (c?.startsWith('HANOI')) return 2;
-                if (c === 'MALAY') return 3;
-                return 4;
-              };
-
-              // แยกรัฐบาลออก → แสดงบนสุดเสมอ
-              const govResults = history.filter(r => r.lottery_markets?.code === 'TH_GOV');
-              const govDates = [...new Set(govResults.map(r => r.draw_date))];
-              const otherResults = history.filter(r => r.lottery_markets?.code !== 'TH_GOV');
-              const otherDates = [...new Set(otherResults.map(r => r.draw_date))];
-
-              // ฟังก์ชัน render การ์ดรัฐบาล (เขียว)
-              const renderGovCard = (r, date) => (
-                <div className="relative rounded-[2rem] p-5 text-white overflow-hidden" style={{ background: 'linear-gradient(135deg, rgb(22, 68, 30) 0%, rgb(13, 121, 4) 100%)' }}>
-                  {r.lottery_markets?.logo_url && (
-                    <img src={r.lottery_markets.logo_url} alt=""
-                      className="absolute -right-8 -bottom-8 w-48 h-48 object-contain pointer-events-none opacity-10 select-none"/>
                   )}
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-2.5 mb-4">
-                      <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center overflow-hidden shrink-0">
-                        {r.lottery_markets?.logo_url
-                          ? <img alt="" className="w-full h-full object-cover" src={r.lottery_markets.logo_url} />
-                          : <div className="w-full h-full bg-white/10"></div>}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-bold leading-tight truncate">{r.lottery_markets?.name}</h4>
-                        <p className="text-white/70 text-xs font-medium truncate mt-0.5">{fmtDate(date)}</p>
-                      </div>
+                </div>
+              )}
+            </div>
+
+            {/* Official Draw Schedule Timetable */}
+            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs">
+              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-sm text-emerald-700">calendar_month</span>
+                ตารางเวลาออกผลรางวัล
+              </h3>
+
+              <div className="space-y-2 text-xs">
+                {[
+                  { name: 'สลากกินแบ่งรัฐบาล', days: 'ทุกวันที่ 1 และ 16', time: '14:30 น.' },
+                  { name: 'หวยลาวพัฒนา', days: 'จันทร์ / พุธ / ศุกร์', time: '20:30 น.' },
+                  { name: 'หวยฮานอยพิเศษ', days: 'ออกทุกวัน', time: '17:30 น.' },
+                  { name: 'หวยฮานอยปกติ', days: 'ออกทุกวัน', time: '18:30 น.' },
+                  { name: 'หวยฮานอย VIP', days: 'ออกทุกวัน', time: '19:30 น.' },
+                  { name: 'หวยมาเลย์ 4D', days: 'พุธ / เสาร์ / อาทิตย์', time: '18:30 น.' },
+                ].map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0">
+                    <div>
+                      <p className="font-bold text-slate-800">{item.name}</p>
+                      <p className="text-[10px] text-slate-400">{item.days}</p>
                     </div>
-                    {r.result_main && (
-                      <div className="mb-4 text-center">
-                        <p className="text-white/80 text-xs font-medium mb-2">รางวัลที่ 1</p>
-                        <div className="flex justify-center gap-1">
-                          {r.result_main.split('').map((d, idx) => (
-                            <span key={idx} className="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-full flex items-center justify-center text-[#064e3b] font-bold text-base sm:text-xl">{d}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <div className="h-px bg-white/10 mb-3"></div>
-                    <div className="grid grid-cols-3 gap-2 text-center">
-                      <div><p className="text-white/60 text-xs font-medium mb-1">3 ตัวหน้า</p><div className="text-sm sm:text-base font-bold">{r.result_3front || '—'}</div></div>
-                      <div><p className="text-white/60 text-xs font-medium mb-1">3 ตัวท้าย</p><div className="text-sm sm:text-base font-bold">{r.result_3top || '—'}</div></div>
-                      <div><p className="text-white/60 text-xs font-medium mb-1">2 ตัวล่าง</p><div className="text-base sm:text-xl font-bold">{r.result_2bottom || r.result_2top || '—'}</div></div>
-                    </div>
+                    <span className="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-200/60">
+                      {item.time}
+                    </span>
                   </div>
-                </div>
-              );
-
-              return <>
-                {/* ── หวยรัฐบาล — บนสุดเสมอ ── */}
-                {govDates.map(date => {
-                  const gov = govResults.find(r => r.draw_date === date);
-                  if (!gov) return null;
-                  return (
-                    <div key={`gov-${date}`}>
-                      <h3 className="text-sm font-bold text-slate-600 mb-3 flex items-center gap-2">
-                        <span className="w-1 h-4 bg-emerald-700 rounded-full"></span>
-                        หวยรัฐบาล — {fmtDate(date)}
-                      </h3>
-                      {renderGovCard(gov, date)}
-                    </div>
-                  );
-                })}
-
-                {/* ── ตลาดอื่นๆ เรียงตามวัน: ลาว → ฮานอย → มาเลย์ → หุ้น ── */}
-                {otherDates.map(date => (
-              <div key={date}>
-                <h3 className="text-sm font-bold text-slate-600 mb-3 flex items-center gap-2">
-                  <span className="w-1 h-4 bg-primary rounded-full"></span>
-                  {fmtDate(date)}
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {otherResults.filter(r => r.draw_date === date)
-                    .sort((a, b) => sortOrder(a) - sortOrder(b))
-                    .map((r, i) => {
-
-                    // ── ตลาดอื่นๆ: การ์ดขาว + watermark โลโก้ ──
-                    return (
-                      <div key={i} className="relative bg-white p-4 rounded-2xl border border-slate-100 overflow-hidden">
-                        {/* Watermark logo */}
-                        {r.lottery_markets?.logo_url && (
-                          <img src={r.lottery_markets.logo_url} alt=""
-                            className="absolute -right-6 -bottom-6 w-40 h-40 object-contain pointer-events-none opacity-[0.07] select-none"/>
-                        )}
-                        <div className="relative z-10">
-                        <div className="flex items-center gap-3 mb-3">
-                          {r.lottery_markets?.logo_url
-                            ? <img alt="" className="w-10 h-10 rounded-full object-cover shrink-0" src={r.lottery_markets.logo_url} />
-                            : <div className="w-10 h-10 rounded-full bg-slate-100 shrink-0"></div>}
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-bold text-slate-900 text-sm truncate">{r.lottery_markets?.name}</h4>
-                            <p className="text-xs text-slate-400 font-mono">{r.lottery_markets?.code}</p>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                          {r.result_main && r.result_main !== r.result_3top && (
-                            <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                              <p className="text-[8px] text-slate-400 font-bold uppercase">รางวัล</p>
-                              <p className="text-sm font-bold text-slate-800">{r.result_main}</p>
-                            </div>
-                          )}
-                          {r.result_3top && (
-                            <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                              <p className="text-[8px] text-slate-400 font-bold uppercase">3 ตัวบน</p>
-                              <p className="text-sm font-bold text-slate-800">{r.result_3top}</p>
-                            </div>
-                          )}
-                          {r.result_3front && (
-                            <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                              <p className="text-[8px] text-slate-400 font-bold uppercase">3 ตัวหน้า</p>
-                              <p className="text-sm font-bold text-slate-800">{r.result_3front}</p>
-                            </div>
-                          )}
-                          {r.result_3bottom && (
-                            <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                              <p className="text-[8px] text-slate-400 font-bold uppercase">3 ตัวล่าง</p>
-                              <p className="text-sm font-bold text-slate-800">{r.result_3bottom}</p>
-                            </div>
-                          )}
-                          {r.result_2top && (
-                            <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                              <p className="text-[8px] text-slate-400 font-bold uppercase">2 ตัวบน</p>
-                              <p className="text-sm font-bold text-slate-800">{r.result_2top}</p>
-                            </div>
-                          )}
-                          {r.result_2bottom && (
-                            <div className="text-center bg-primary/5 p-2 rounded-xl border border-primary/10">
-                              <p className="text-[8px] text-primary font-bold uppercase">2 ตัวล่าง</p>
-                              <p className="text-sm font-bold text-primary">{r.result_2bottom}</p>
-                            </div>
-                          )}
-                        </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
                 ))}
-              </>;
-            })()}
-          </div>
-        )}
-      </main>
+              </div>
+            </div>
+          </aside>
 
+        </div>
+      </div>
     </PageWrapper>
   );
 };
