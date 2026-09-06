@@ -46,7 +46,6 @@ const Betting = () => {
   const [loading, setLoading] = useState(false);
   const [isSuccessAnimating, setIsSuccessAnimating] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ h: '00', m: '00', s: '00', isExpired: false });
-  const [showCartModal, setShowCartModal] = useState(false);
   const [editingIdx, setEditingIdx] = useState(null);
   const [editAmount, setEditAmount] = useState('');
   const audioRef = useRef(null);
@@ -283,8 +282,6 @@ const Betting = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentDigits, digitLimit, cart, timeLeft.isExpired, loading]);
 
-  const lastCartItem = cart[cart.length - 1];
-
   // Helper to render Category buttons
   const renderCategoryRow = (codes, opts = {}) => {
     const available = codes.map(c => categories.find(cat => cat.code === c)).filter(Boolean);
@@ -406,11 +403,11 @@ const Betting = () => {
           </div>
         </div>
 
-        {/* ── 3-PANE COCKPIT GRID FOR PC WIDESCREEN / DUAL ON LG / SINGLE ON MOBILE ── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pb-36 lg:pb-12">
+        {/* ── 3-PANE COCKPIT GRID FOR PC WIDESCREEN / LAPTOP / TABLET / MOBILE ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pb-12">
           
           {/* ════ LEFT COLUMN (Pane 1): Live Stream, Countdown, Market Info & Rates ════ */}
-          <div className="lg:col-span-5 xl:col-span-3 space-y-4">
+          <div className="lg:col-span-3 xl:col-span-3 space-y-4">
 
             {/* Live Stream / Broadcast Video */}
             <div className="relative overflow-hidden rounded-2xl bg-slate-900 aspect-video shadow-md border border-slate-800">
@@ -501,7 +498,7 @@ const Betting = () => {
           </div>
 
           {/* ════ CENTER COLUMN (Pane 2): Category Selection, Number Display & Numpad ════ */}
-          <div className="lg:col-span-7 xl:col-span-5 space-y-4">
+          <div className="lg:col-span-5 xl:col-span-5 space-y-4">
 
             {/* Category Selection */}
             <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-4">
@@ -600,11 +597,11 @@ const Betting = () => {
 
           </div>
 
-          {/* ════ RIGHT COLUMN (Pane 3): Desktop Live Slip Console ════ */}
-          <div className="lg:col-span-12 xl:col-span-4 space-y-4 lg:sticky lg:top-5 lg:self-start">
+          {/* ════ RIGHT COLUMN (Pane 3): Live Slip Console ════ */}
+          <div className="lg:col-span-4 xl:col-span-4 space-y-4 lg:sticky lg:top-5 lg:self-start">
 
-            {/* Desktop Live Slip Card */}
-            <div className="hidden lg:flex flex-col bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
+            {/* Live Slip Card */}
+            <div className="flex flex-col bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
               <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <div className="flex items-center gap-2">
                   <span className="material-symbols-outlined text-emerald-600 text-lg">receipt_long</span>
@@ -707,139 +704,6 @@ const Betting = () => {
 
         </div>
 
-      </div>
-
-      {/* ── MOBILE CART FOOTER (Only shown on screens < lg) ── */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30">
-        {/* Cart Modal (slide up) */}
-        {showCartModal && (
-          <div className="bg-white rounded-t-[2.5rem] border-t border-slate-200 px-6 pt-5 pb-4 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-slate-400 text-base">receipt_long</span>
-                <h3 className="text-xs font-black text-slate-800">รายการทั้งหมด ({cart.length})</h3>
-              </div>
-              <div className="flex items-center gap-3">
-                <button onClick={() => setCart([])} className="text-xs font-black text-red-500">ล้างทั้งหมด</button>
-                <button onClick={() => setShowCartModal(false)} className="text-slate-400">
-                  <span className="material-symbols-outlined text-xl">expand_more</span>
-                </button>
-              </div>
-            </div>
-            <div className="max-h-52 overflow-y-auto space-y-2 no-scrollbar">
-              {cart.map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl">
-                  <div className="flex items-center gap-3">
-                    <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-black text-primary">{item.numbers}</span>
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-slate-400">{categories.find(c => c.code === item.type)?.name}</p>
-                      {editingIdx === idx ? (
-                        <div className="flex items-center gap-1">
-                          <input
-                            autoFocus
-                            className="w-20 text-xs font-black border border-primary rounded-lg px-2 py-0.5 text-center"
-                            value={editAmount}
-                            onChange={e => setEditAmount(e.target.value)}
-                            onBlur={() => handleSaveAmount(idx)}
-                            onKeyDown={e => e.key === 'Enter' && handleSaveAmount(idx)}
-                          />
-                        </div>
-                      ) : (
-                        <span className="text-xs font-black text-slate-700">฿ {item.amount}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleEditAmount(idx)}
-                      className="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-100"
-                    >
-                      <span className="text-xs font-bold text-slate-400">แก้ไข</span>
-                      <span className="material-symbols-outlined text-primary text-sm">edit</span>
-                    </button>
-                    <button onClick={() => handleRemoveFromCart(idx)} className="text-slate-300 hover:text-red-400 transition-colors">
-                      <span className="material-symbols-outlined text-lg">delete</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Main Footer Bar (Mobile) */}
-        <div className="bg-white/95 backdrop-blur-xl rounded-t-[2.5rem] border-t border-slate-200 px-6 pt-4 pb-7 shadow-lg">
-          {/* Last item preview */}
-          {lastCartItem && !showCartModal && (
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-slate-400 text-sm">receipt_long</span>
-                <h3 className="text-xs font-black text-slate-800">
-                  รายการที่เลือก ({cart.length})
-                </h3>
-              </div>
-              <button
-                onClick={() => setShowCartModal(true)}
-                className="text-xs font-black text-primary"
-              >
-                ดูรายการทั้งหมด
-              </button>
-            </div>
-          )}
-          {!showCartModal && lastCartItem && (
-            <div className="flex items-center justify-between bg-slate-50 p-3 rounded-2xl mb-4 ring-1 ring-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="size-9 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-sm font-black text-primary">{lastCartItem.numbers}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-slate-400">{categories.find(c => c.code === lastCartItem.type)?.name}</span>
-                  <span className="text-xs font-black text-slate-700">฿ {lastCartItem.amount}</span>
-                </div>
-              </div>
-              <button
-                onClick={() => handleEditAmount(cart.length - 1)}
-                className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-xl border border-slate-200"
-              >
-                <span className="text-xs font-bold text-slate-500 uppercase">เปลี่ยนราคา</span>
-                <span className="material-symbols-outlined text-primary text-sm">edit</span>
-              </button>
-            </div>
-          )}
-          {!lastCartItem && !showCartModal && (
-            <div className="flex items-center justify-center gap-2 mb-3 py-1">
-              <span className="material-symbols-outlined text-slate-300 text-base">touch_app</span>
-              <p className="text-xs font-bold text-slate-400">กดตัวเลขเพื่อเพิ่มรายการในโพย</p>
-            </div>
-          )}
-
-          {/* Total + Submit */}
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black text-slate-400 tracking-wider uppercase">ยอดรวมทั้งหมด</span>
-              <span className="text-xl font-black text-amber-600">
-                ฿ {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-              </span>
-            </div>
-            <button
-              onClick={handleSubmit}
-              disabled={loading || cart.length === 0 || timeLeft.isExpired}
-              className="flex-1 py-3.5 text-white font-black rounded-xl active:scale-[0.98] transition-all flex items-center justify-center gap-2 tracking-wider disabled:opacity-50 shadow-md shadow-emerald-900/20"
-              style={{ background: 'linear-gradient(to right, rgb(22,68,30), rgb(13,121,4))' }}
-            >
-              {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-              ) : (
-                <>
-                  <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>send</span>
-                  ส่งโพย ({cart.length})
-                </>
-              )}
-            </button>
-          </div>
-        </div>
       </div>
 
     </div>
