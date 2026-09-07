@@ -110,7 +110,7 @@ const Results = () => {
     <PageWrapper>
       <AppHeader />
 
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 lg:px-8 py-4">
+      <main className="flex-1 max-w-[2200px] mx-auto w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-5">
         {/* หัวข้อ + Tabs */}
         <div className="text-center mb-4 mt-2">
           <h1 className="text-lg font-bold text-slate-900">ผลรางวัลประจำวัน</h1>
@@ -195,7 +195,7 @@ const Results = () => {
                   <span className="w-1.5 h-4 bg-brand-600 rounded-full"></span>
                   <h3 className="text-base font-extrabold text-slate-900">หวยต่างประเทศ</h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                   {foreignRows.map((r) => (
                     <div key={r.code} className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-brand-200 transition-all flex flex-col justify-between">
                       <div className="flex items-start justify-between gap-2 mb-3.5">
@@ -238,7 +238,7 @@ const Results = () => {
                     ผลหุ้นรายวัน
                   </h3>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
                   {stockRows.map((r) => (
                     <div key={r.code} className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -358,7 +358,7 @@ const Results = () => {
                   <span className="w-1 h-4 bg-primary rounded-full"></span>
                   {fmtDate(date)}
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
                   {otherResults.filter(r => r.draw_date === date)
                     .sort((a, b) => sortOrder(a) - sortOrder(b))
                     .map((r, i) => {
