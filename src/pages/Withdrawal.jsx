@@ -4,7 +4,6 @@ import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import { useModal } from '../contexts/ModalContext';
 import BankBadge from '../components/BankBadge';
-import PageWrapper from '../components/PageWrapper';
 
 const Withdrawal = () => {
   const { profile, refreshProfile } = useAuth();
@@ -146,184 +145,157 @@ const Withdrawal = () => {
   };
 
   return (
-    <PageWrapper>
-      {/* Page Header / Breadcrumb */}
-      <div className="bg-white/80 border-b border-slate-100 px-4 sm:px-6 lg:px-8 py-3.5 sticky top-[72px] lg:top-[34px] z-40 backdrop-blur-md">
-        <div className="max-w-[1720px] 2xl:max-w-[1850px] mx-auto w-full flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate(-1)}
-              className="size-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-all active:scale-95 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-xl">chevron_left</span>
-            </button>
-            <div>
-              <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 flex items-center gap-2">
-                <span>ถอนเงินเข้าบัญชี</span>
-                <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/70">
-                  ระบบออโต้
-                </span>
-              </h1>
-              <p className="text-[11px] text-slate-400 font-medium">โอนเงินเข้าบัญชีธนาคารของคุณโดยตรง ปลอดภัย รวดเร็ว</p>
+    <div className="bg-white min-h-screen text-slate-900 flex flex-col">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md px-6 py-4 border-b border-slate-100">
+        <div className="max-w-2xl mx-auto w-full flex items-center justify-between">
+          <button
+            onClick={() => navigate(-1)}
+            className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-50 text-[#1a7e2a] hover:bg-slate-100 transition-colors cursor-pointer"
+          >
+            <span className="material-symbols-outlined">arrow_back_ios_new</span>
+          </button>
+          <h1 className="text-xl font-extrabold text-slate-900 tracking-tight">ถอนเงิน</h1>
+          <div className="w-11"></div>
+        </div>
+      </header>
+
+      <main className="flex-1 px-6 pt-6 pb-36 max-w-2xl mx-auto w-full">
+        {/* Promo Turnover Warning */}
+        {promoStatus && (
+          <div className={`mb-4 rounded-2xl p-4 border ${promoStatus.turnover_completed >= promoStatus.turnover_required ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="material-symbols-outlined text-lg" style={{ color: promoStatus.turnover_completed >= promoStatus.turnover_required ? '#16a34a' : '#d97706' }}>
+                {promoStatus.turnover_completed >= promoStatus.turnover_required ? 'check_circle' : 'warning'}
+              </span>
+              <span className={`font-bold text-sm ${promoStatus.turnover_completed >= promoStatus.turnover_required ? 'text-green-800' : 'text-amber-800'}`}>
+                {promoStatus.turnover_completed >= promoStatus.turnover_required ? 'ทำเทิร์นครบแล้ว ถอนได้' : 'ติดเงื่อนไขโปรโมชั่น'}
+              </span>
             </div>
+            <p className="text-xs font-semibold text-slate-600 mb-2">โปร: {promoStatus.promo_title}</p>
+            <div className="flex justify-between text-xs text-slate-500 mb-1">
+              <span>เทิร์นโอเวอร์</span>
+              <span className="font-bold">{Number(promoStatus.turnover_completed).toLocaleString()} / {Number(promoStatus.turnover_required).toLocaleString()}</span>
+            </div>
+            <div className="w-full bg-slate-200 rounded-full h-2 mb-2">
+              <div className="h-2 rounded-full transition-all" style={{
+                width: `${Math.min(100, promoStatus.turnover_required > 0 ? (promoStatus.turnover_completed / promoStatus.turnover_required) * 100 : 0)}%`,
+                background: promoStatus.turnover_completed >= promoStatus.turnover_required ? '#16a34a' : '#f59e0b'
+              }} />
+            </div>
+            {promoStatus.turnover_completed < promoStatus.turnover_required && (
+              <p className="text-xs text-amber-700">แทงอีก ฿{(promoStatus.turnover_required - promoStatus.turnover_completed).toLocaleString()} ถึงจะถอนได้</p>
+            )}
+            {promoStatus.promo_max_withdrawal > 0 && (
+              <p className="text-xs text-slate-500 mt-1">ถอนสูงสุด ฿{Number(promoStatus.promo_max_withdrawal).toLocaleString()}</p>
+            )}
+          </div>
+        )}
+
+        {/* Premium Badge */}
+        <div className="flex justify-center mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5">
+            <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
+            <span className="text-primary text-xs font-extrabold uppercase tracking-widest">TH-LOTTO Premium</span>
           </div>
         </div>
-      </div>
 
-      {/* Main 3-Section Container */}
-      <div className="max-w-[1720px] 2xl:max-w-[1850px] mx-auto w-full px-4 sm:px-6 lg:px-8 mt-6 pb-36 lg:pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-          {/* ════ SECTION 1 (Left 4 Cols on PC): Balance & Bank Account ════ */}
-          <aside className="lg:col-span-4 xl:col-span-4 space-y-4">
-            {/* Balance Card */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">ยอดเงินที่สามารถถอนได้</p>
-              <div className="flex items-baseline gap-1.5 mb-2">
-                <span className="text-2xl font-bold text-emerald-700">฿</span>
-                <span className="text-3xl sm:text-4xl font-black font-mono text-slate-900">
-                  {(userProfile?.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-400">ถอนขั้นต่ำ {minWithdraw.toLocaleString()} บาท</p>
+        {/* Balance Card */}
+        <section className="mb-6">
+          <div className="relative overflow-hidden bg-white rounded-[1.75rem] p-7 text-center border border-slate-100" style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+            <div className="absolute top-0 right-0 p-4 opacity-[0.03]">
+              <span className="material-symbols-outlined text-9xl">account_balance_wallet</span>
             </div>
-
-            {/* Bank Details */}
-            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-extrabold text-slate-400 uppercase tracking-wider">บัญชีรับเงินของคุณ</p>
-                <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">ยืนยันแล้ว</span>
-              </div>
-              <BankBadge
-                code={userProfile?.bank_name}
-                accountNumber={userProfile?.bank_account_number}
-                size="lg"
-                className="w-full"
-              />
+            <p className="text-slate-400 text-sm font-medium mb-2">ยอดเงินที่ถอนได้</p>
+            <div className="flex items-baseline justify-center gap-2">
+              <span className="text-2xl font-extrabold text-primary">฿</span>
+              <p className="text-5xl font-extrabold text-primary tracking-tight">
+                {(userProfile?.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </p>
             </div>
+          </div>
+        </section>
 
-            {/* Promo Turnover Warning */}
-            {promoStatus && (
-              <div className={`rounded-3xl p-5 border ${promoStatus.turnover_completed >= promoStatus.turnover_required ? 'bg-emerald-50/70 border-emerald-200 text-emerald-950' : 'bg-amber-50/70 border-amber-200 text-amber-950'}`}>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="material-symbols-outlined text-lg" style={{ color: promoStatus.turnover_completed >= promoStatus.turnover_required ? '#16a34a' : '#d97706' }}>
-                    {promoStatus.turnover_completed >= promoStatus.turnover_required ? 'check_circle' : 'warning'}
-                  </span>
-                  <span className={`font-extrabold text-xs ${promoStatus.turnover_completed >= promoStatus.turnover_required ? 'text-emerald-900' : 'text-amber-900'}`}>
-                    {promoStatus.turnover_completed >= promoStatus.turnover_required ? 'ทำเทิร์นครบแล้ว ถอนได้ทันที' : 'ติดเงื่อนไขโปรโมชั่น'}
-                  </span>
-                </div>
-                <div className="w-full bg-black/10 rounded-full h-2 mb-2">
-                  <div className="h-2 rounded-full transition-all" style={{
-                    width: `${Math.min(100, promoStatus.turnover_required > 0 ? (promoStatus.turnover_completed / promoStatus.turnover_required) * 100 : 0)}%`,
-                    background: promoStatus.turnover_completed >= promoStatus.turnover_required ? '#16a34a' : '#f59e0b'
-                  }} />
-                </div>
-                {promoStatus.turnover_completed < promoStatus.turnover_required && (
-                  <p className="text-[11px] text-amber-800 font-medium">แทงอีก ฿{(promoStatus.turnover_required - promoStatus.turnover_completed).toLocaleString()} ถึงจะถอนได้</p>
-                )}
-              </div>
-            )}
-          </aside>
-
-          {/* ════ SECTION 2 (Center 5 Cols on PC): Withdrawal Amount & Action ════ */}
-          <main className="lg:col-span-8 xl:col-span-5 space-y-5">
-            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs text-center space-y-4">
-              <p className="text-slate-800 font-extrabold text-base">ระบุจำนวนเงินที่ต้องการถอน</p>
-
-              <div className="relative bg-slate-50/80 rounded-2xl p-6 border border-slate-200/80 focus-within:border-emerald-600 focus-within:bg-white transition-all">
-                <div className="flex items-center justify-center gap-2">
-                  <span className="text-3xl font-black text-emerald-700">฿</span>
-                  <input
-                    className="w-full bg-transparent text-center text-4xl sm:text-5xl font-black font-mono text-slate-900 border-none focus:ring-0 outline-none placeholder:text-slate-300"
-                    placeholder="0.00"
-                    type="text"
-                    inputMode="decimal"
-                    autoComplete="new-password"
-                    name="withdrawal-amount"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
-                  />
-                </div>
-              </div>
-
-              {/* Quick Select Buttons */}
-              <div className="grid grid-cols-4 gap-2.5 pt-2">
-                {['1000', '5000', '10000'].map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => setAmount(v)}
-                    className="h-11 rounded-xl bg-white border border-slate-200 text-slate-700 font-black text-xs hover:border-emerald-600 hover:text-emerald-700 hover:bg-emerald-50/50 active:scale-95 transition-all cursor-pointer shadow-2xs"
-                  >
-                    ฿{Number(v).toLocaleString()}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setAmount(String(Math.floor(userProfile?.balance || 0)))}
-                  className="h-11 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 font-black text-xs hover:bg-emerald-100 active:scale-95 transition-all cursor-pointer shadow-2xs"
-                >
-                  ถอนทั้งหมด
-                </button>
-              </div>
-
-              {/* Submit Button */}
-              <div className="pt-4 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={handleWithdrawal}
-                  disabled={loading || !amount || parseFloat(amount) < minWithdraw}
-                  className="w-full h-14 rounded-2xl flex items-center justify-center gap-2 text-white text-base font-extrabold active:scale-[0.98] transition-all disabled:opacity-50 shadow-md cursor-pointer bg-gradient-to-r from-emerald-800 to-emerald-700 hover:from-emerald-700 hover:to-emerald-600"
-                >
-                  <span>ยืนยันการถอนเงิน</span>
-                  <span className="material-symbols-outlined text-lg">arrow_forward</span>
-                </button>
-              </div>
+        {/* Bank Details */}
+        <section className="mb-6">
+          <p className="text-xs font-extrabold text-slate-400 uppercase tracking-widest px-1 mb-3">บัญชีรับเงินของคุณ</p>
+          <div className="flex items-center gap-3 bg-white p-4 rounded-2xl border border-slate-100">
+            <BankBadge
+              code={userProfile?.bank_name}
+              accountNumber={userProfile?.bank_account_number}
+              size="lg"
+              className="flex-1"
+            />
+            <div className="text-primary">
+              <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
             </div>
-          </main>
+          </div>
+        </section>
 
-          {/* ════ SECTION 3 (Right 3 Cols on PC): Rules & Safety Policy ════ */}
-          <aside className="hidden xl:block xl:col-span-3 space-y-4">
-            {/* Daily Limits */}
-            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs space-y-3">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-                เงื่อนไขการถอนเงิน
-              </h3>
-              <div className="space-y-2 text-xs text-slate-600">
-                <div className="flex justify-between py-1 border-b border-slate-50">
-                  <span>ถอนขั้นต่ำต่อครั้ง</span>
-                  <span className="font-mono font-bold text-slate-800">฿{minWithdraw.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-50">
-                  <span>ถอนได้สูงสุดต่อวัน</span>
-                  <span className="font-mono font-bold text-emerald-700">฿2,000,000</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-50">
-                  <span>ค่าธรรมเนียมการถอน</span>
-                  <span className="font-bold text-emerald-700">ฟรี 0%</span>
-                </div>
-                <div className="flex justify-between py-1">
-                  <span>ระยะเวลาโอนเงิน</span>
-                  <span className="font-bold text-slate-800">5 - 15 นาที</span>
-                </div>
-              </div>
-            </div>
+        {/* Amount Entry */}
+        <section className="mb-5">
+          <p className="text-center text-slate-900 font-extrabold text-base mb-4">ระบุจำนวนเงินที่ต้องการถอน</p>
+          <div className="relative bg-slate-50 rounded-2xl border border-slate-100 focus-within:border-primary/30 transition-all overflow-hidden">
+            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-2xl font-extrabold text-slate-300">฿</div>
+            <input
+              className="w-full bg-transparent pl-14 pr-6 py-5 text-4xl font-extrabold text-slate-900 border-none focus:ring-0 outline-none text-center"
+              placeholder="0.00"
+              type="text"
+              inputMode="decimal"
+              autoComplete="new-password"
+              name="withdrawal-amount"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value.replace(/[^0-9.]/g, ''))}
+            />
+          </div>
+          <p className="text-center mt-2 text-slate-400 text-xs font-medium">ถอนขั้นต่ำ {minWithdraw.toLocaleString()} บาท</p>
+        </section>
 
-            {/* Security Guarantee */}
-            <div className="bg-emerald-50/60 rounded-3xl p-4.5 border border-emerald-200/80 text-emerald-950 flex items-center gap-3">
-              <div className="size-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                <span className="material-symbols-outlined text-xl">shield</span>
-              </div>
-              <div>
-                <h4 className="text-xs font-extrabold text-emerald-950">ปลอดภัยด้วยระบบ PIN 4 หลัก</h4>
-                <p className="text-[11px] text-emerald-700 font-medium">ยืนยันรหัสความปลอดภัยทุกครั้งก่อนถอน</p>
-              </div>
-            </div>
-          </aside>
-
+        {/* Quick Select */}
+        <div className="flex flex-wrap justify-center gap-2 mb-6">
+          {['1000', '5000', '10000'].map((v) => (
+            <button
+              key={v}
+              onClick={() => setAmount(v)}
+              className="px-5 py-2.5 rounded-full border border-slate-200 text-sm font-bold text-slate-600 bg-white hover:border-primary hover:text-primary active:scale-95 transition-all"
+            >
+              {Number(v).toLocaleString()}
+            </button>
+          ))}
+          <button
+            onClick={() => setAmount((userProfile?.balance || 0).toString())}
+            className="px-5 py-2.5 rounded-full border border-primary/20 text-sm font-bold text-primary bg-primary/5 active:scale-95 transition-all"
+          >
+            ทั้งหมด
+          </button>
         </div>
-      </div>
+
+      </main>
+
+      {/* Footer */}
+      <footer className="fixed bottom-0 left-0 right-0 lg:left-64 xl:left-72 p-6 bg-white/95 backdrop-blur-lg border-t border-slate-100 z-30">
+        <div className="max-w-2xl mx-auto w-full">
+          <button
+            onClick={handleWithdrawal}
+            disabled={loading || !amount || parseFloat(amount) < minWithdraw}
+            className="w-full h-16 rounded-full flex items-center justify-center gap-3 text-white text-lg font-extrabold active:scale-[0.98] transition-all disabled:opacity-50 cursor-pointer"
+            style={{ background: 'linear-gradient(135deg, #1a7e2a 0%, #156321 100%)' }}
+          >
+            {loading ? (
+              <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+            ) : (
+              <>
+                <span className="material-symbols-outlined">payments</span>
+                ยืนยันการถอนเงิน
+              </>
+            )}
+          </button>
+          <div className="mt-3 flex items-center justify-center gap-1.5 opacity-40">
+            <span className="material-symbols-outlined text-[12px]">lock</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-900">Secure SSL 256-bit Encryption</span>
+          </div>
+        </div>
+      </footer>
 
       {/* PIN Modal */}
       {showPinModal && (
@@ -439,7 +411,7 @@ const Withdrawal = () => {
           </div>
         </div>
       )}
-    </PageWrapper>
+    </div>
   );
 };
 

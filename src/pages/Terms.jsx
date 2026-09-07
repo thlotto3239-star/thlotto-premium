@@ -1,73 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import PageWrapper from '../components/PageWrapper';
 
 const STATIC_SECTIONS = [
   {
-    id: 'general',
     icon: 'gavel',
-    title: 'เงื่อนไขทั่วไปของสมาชิก',
+    title: 'เงื่อนไขทั่วไป',
     items: [
-      'สมาชิกต้องมีอายุ 18 ปีบริบูรณ์ขึ้นไปตามกฎหมาย',
-      'ข้อมูลบัญชีธนาคารต้องตรงกับชื่อ-นามสกุลของผู้สมัครเท่านั้น',
-      '1 คน สามารถลงทะเบียนได้ 1 บัญชีเท่านั้น หากพบบัญชีซ้ำซ้อนจะถูกระงับสิทธิ์ทันที',
-      'ห้ามใช้โปรแกรมโกง สคริปต์อัตโนมัติ หรือบอทในการเดิมพันทุกกรณี',
-      'บริษัทขอสงวนสิทธิ์ในการแก้ไขเงื่อนไขโดยไม่ต้องแจ้งให้ทราบล่วงหน้า',
+      'สมาชิกต้องมีอายุ 18 ปีบริบูรณ์ขึ้นไป',
+      'ข้อมูลบัญชีธนาคารต้องตรงกับชื่อผู้สมัครเท่านั้น',
+      '1 คน สามารถมีได้ 1 บัญชีเท่านั้น หากพบบัญชีซ้ำซ้อน จะถูกระงับทันที',
+      'ห้ามใช้โปรแกรมเสริม บอท หรือระบบอัตโนมัติในการใช้งาน',
+      'บริษัทขอสงวนสิทธิ์ในการแก้ไขเงื่อนไขโดยไม่ต้องแจ้งล่วงหน้า',
     ],
   },
   {
-    id: 'banking',
     icon: 'savings',
-    title: 'นโยบายการฝากและถอนเงิน',
+    title: 'การฝาก-ถอนเงิน',
     items: [
-      'การฝากเงินต้องโอนจากบัญชีธนาคารที่ลงทะเบียนไว้กับระบบเท่านั้น',
-      'ระบบฝาก-ถอนเงินอัตโนมัติเปิดให้บริการตลอด 24 ชั่วโมง',
-      'ระยะเวลาดำเนินการโอนเงินเฉลี่ย 5 - 15 นาที (อาจมีความล่าช้าตามระบบธนาคารช่วงปรับปรุงประจำวัน)',
-      'การถอนเงินจำกัดยอดสูงสุด 2,000,000 บาทต่อวัน',
-      'หากตรวจพบพฤติกรรมผิดปกติ บริษัทขอสงวนสิทธิ์ในการระงับรายการชั่วคราวเพื่อตรวจสอบความโปร่งใส',
+      'ฝากเงินขั้นต่ำตามที่ระบบกำหนด',
+      'ถอนเงินขั้นต่ำตามที่ระบบกำหนด',
+      'การถอนเงินจะดำเนินการภายใน 1-15 นาที (อาจนานกว่าในกรณีตรวจสอบพิเศษ)',
+      'จำนวนครั้งในการถอนต่อวันมีจำกัดตามที่ระบบกำหนด',
+      'หากตรวจพบพฤติกรรมผิดปกติ บริษัทขอสงวนสิทธิ์ในการระงับการถอนเพื่อตรวจสอบ',
     ],
   },
   {
-    id: 'betting',
     icon: 'confirmation_number',
-    title: 'กติกาการแทงหวยและรับรางวัล',
+    title: 'การแทงหวย',
     items: [
-      'เมื่อส่งโพยหวยและระบบยืนยันแล้ว สมาชิกไม่สามารถแก้ไขหรือยกเลิกโพยได้',
-      'การตัดสินผลรางวัลยึดตามผลการออกรางวัลอย่างเป็นทางการของหน่วยงานที่เกี่ยวข้องในแต่ละประเทศ',
-      'อัตราจ่ายเงินรางวัลเป็นไปตามที่ระบุไว้ในระบบ ณ เวลาที่ส่งโพย',
-      'หากเกิดเหตุการณ์ระบบขัดข้องหรือปิดรับแทงก่อนเวลา บิลที่ไม่สมบูรณ์จะถูกยกเลิกและคืนเครดิตเต็มจำนวน',
+      'แทงขั้นต่ำตามที่ระบบกำหนดในแต่ละประเภท',
+      'เมื่อส่งโพยแล้วไม่สามารถยกเลิกได้',
+      'ผลรางวัลยึดตามการออกรางวัลอย่างเป็นทางการของแต่ละสำนัก',
+      'อัตราจ่ายอาจมีการเปลี่ยนแปลงโดยไม่ต้องแจ้งล่วงหน้า',
+      'หากระบบขัดข้อง การแทงที่ไม่สมบูรณ์จะถูกยกเลิกและคืนเงินอัตโนมัติ',
     ],
   },
   {
-    id: 'promotions',
     icon: 'redeem',
-    title: 'เงื่อนไขโปรโมชั่นและโบนัส',
+    title: 'โปรโมชั่นและโบนัส',
     items: [
-      'โปรโมชั่นแต่ละรายการมีข้อกำหนดและอัตราเทิร์นโอเวอร์เฉพาะ กรุณาศึกษารายละเอียดก่อนกดรับ',
-      'ยอดโบนัสต้องทำเทิร์นโอเวอร์ครบตามเงื่อนไขจึงจะสามารถถอนเงินออกจากระบบได้',
-      'ห้ามมิให้กระทำการฉ้อโกงเพื่อสะสมโบนัสในทางมิชอบ',
-      'บริษัทขอสงวนสิทธิ์ในการยกเลิกโบนัสและกำไรที่เกิดขึ้นหากพบการกระทำทุจริต',
+      'โปรโมชั่นแต่ละรายการมีเงื่อนไขเฉพาะ กรุณาอ่านรายละเอียดก่อนรับ',
+      'โบนัสต้องทำเทิร์นโอเวอร์ตามที่กำหนดก่อนถอน',
+      'ห้ามใช้โปรโมชั่นในทางที่ผิดหรือฉ้อโกง',
+      'บริษัทขอสงวนสิทธิ์ในการยกเลิกโบนัสหากตรวจพบพฤติกรรมไม่สุจริต',
     ],
   },
   {
-    id: 'affiliate',
     icon: 'group',
-    title: 'ระบบแนะนำเพื่อน (Affiliate)',
+    title: 'ระบบแนะนำเพื่อน',
     items: [
-      'ค่าคอมมิชชั่น 8% คำนวณจากยอดเดิมพันจริงของสมาชิกที่คุณแนะนำ',
-      'รายได้สะสมอัปเดตแบบเรียลไทม์ และสามารถกดโอนเข้ากระเป๋าหลักได้ทันที',
-      'ห้ามแนะนำตนเองหรือสร้างบัญชีปลอมเพื่อหวังผลประโยชน์จากระบบคอมมิชชั่น',
+      'ค่าคอมมิชชั่นจะคำนวณจากยอดแทงของผู้ที่ถูกแนะนำ',
+      'ค่าคอมมิชชั่นจะเข้ากระเป๋าอัตโนมัติ',
+      'ห้ามแนะนำตัวเองหรือสร้างบัญชีปลอมเพื่อรับคอมมิชชั่น',
     ],
   },
   {
-    id: 'privacy',
     icon: 'shield',
-    title: 'นโยบายความเป็นส่วนตัวและความปลอดภัย',
+    title: 'ความเป็นส่วนตัวและความปลอดภัย',
     items: [
-      'ข้อมูลส่วนบุคคลของสมาชิกจะถูกจัดเก็บด้วยระบบเข้ารหัสระดับสากล SSL 256-Bit',
-      'ไม่มีการเปิดเผยหรือจำหน่ายข้อมูลสมาชิกให้แก่บุคคลที่สามโดยเด็ดขาด',
-      'สมาชิกมีหน้าที่รักษารหัสผ่านและ PIN 4 หลักของตนเองเป็นความลับสูงสุด',
+      'ข้อมูลส่วนตัวของสมาชิกจะถูกเก็บรักษาเป็นความลับ',
+      'เราใช้ระบบเข้ารหัสข้อมูลระดับสูงในการรักษาความปลอดภัย',
+      'ไม่มีการแบ่งปันข้อมูลกับบุคคลที่สาม ยกเว้นกรณีที่กฎหมายกำหนด',
+      'สมาชิกมีหน้าที่รักษารหัสผ่านและข้อมูลเข้าสู่ระบบของตนเอง',
     ],
   },
 ];
@@ -108,188 +104,113 @@ const Terms = () => {
 
   return (
     <PageWrapper>
-      {/* Page Header / Breadcrumb */}
-      <div className="bg-white/80 border-b border-slate-100 px-4 sm:px-6 lg:px-8 py-3.5 sticky top-[72px] lg:top-[34px] z-40 backdrop-blur-md">
-        <div className="max-w-[1720px] 2xl:max-w-[1850px] mx-auto w-full flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate(-1)}
-              className="size-9 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition-all active:scale-95 cursor-pointer"
-            >
-              <span className="material-symbols-outlined text-xl">chevron_left</span>
-            </button>
-            <div>
-              <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900 flex items-center gap-2">
-                <span>ข้อกำหนดและเงื่อนไขการใช้งาน</span>
-                <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/70">
-                  Compliance Policy
-                </span>
-              </h1>
-              <p className="text-[11px] text-slate-400 font-medium">กติกาการเดิมพัน นโยบายฝาก-ถอน และข้อตกลงการใช้งานแพลตฟอร์มอย่างเป็นทางการ</p>
-            </div>
-          </div>
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-100 flex items-center gap-3 px-4 h-16">
+        <button onClick={() => navigate(-1)} className="p-2 rounded-full hover:bg-slate-100 active:scale-95 transition-all">
+          <span className="material-symbols-outlined">arrow_back</span>
+        </button>
+        <h1 className="font-extrabold text-lg tracking-tight">เงื่อนไขการใช้งาน</h1>
+      </header>
 
-          <div className="flex items-center gap-2">
-            <Link
-              to="/support"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all"
-            >
-              <span className="material-symbols-outlined text-sm">help</span>
-              <span>สอบถามเพิ่มเติม</span>
-            </Link>
+      <div className="flex-1 px-5 py-6 pb-32 max-w-md mx-auto w-full">
+
+        {/* Top banner */}
+        <div className="bg-gradient-to-br from-emerald-800 to-emerald-900 rounded-2xl p-6 mb-6 text-white relative overflow-hidden">
+          <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/5" />
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="material-symbols-outlined text-emerald-300">description</span>
+              <span className="text-xs font-extrabold uppercase tracking-widest text-emerald-300">Terms & Conditions</span>
+            </div>
+            <h2 className="text-lg font-extrabold mb-1">เงื่อนไขและข้อตกลงการใช้งาน</h2>
+            <p className="text-xs text-emerald-200/80 leading-relaxed">
+              {siteName} — โปรดอ่านเงื่อนไขอย่างละเอียดก่อนใช้บริการ
+              {serviceHours && <><br />เวลาให้บริการ: {serviceHours}</>}
+            </p>
           </div>
         </div>
-      </div>
 
-      {/* Main 3-Column Layout */}
-      <div className="max-w-[1720px] 2xl:max-w-[1850px] mx-auto w-full px-4 sm:px-6 lg:px-8 mt-6 pb-28 lg:pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Quick Info Bar */}
+        {(minDeposit || minWithdraw || minBet) && (
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            {minDeposit && (
+              <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-3 text-center flex flex-col items-center gap-1">
+                <span className="material-symbols-outlined text-emerald-600 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>savings</span>
+                <p className="text-xs font-extrabold text-emerald-700 uppercase tracking-wide">ฝากขั้นต่ำ</p>
+                <p className="text-base font-black text-emerald-900">฿{Number(minDeposit).toLocaleString()}</p>
+              </div>
+            )}
+            {minWithdraw && (
+              <div className="bg-blue-50 border border-blue-100 rounded-2xl p-3 text-center flex flex-col items-center gap-1">
+                <span className="material-symbols-outlined text-blue-600 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
+                <p className="text-xs font-extrabold text-blue-700 uppercase tracking-wide">ถอนขั้นต่ำ</p>
+                <p className="text-base font-black text-blue-900">฿{Number(minWithdraw).toLocaleString()}</p>
+              </div>
+            )}
+            {minBet && (
+              <div className="bg-amber-50 border border-amber-100 rounded-2xl p-3 text-center flex flex-col items-center gap-1">
+                <span className="material-symbols-outlined text-amber-600 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>confirmation_number</span>
+                <p className="text-xs font-extrabold text-amber-700 uppercase tracking-wide">แทงขั้นต่ำ</p>
+                <p className="text-base font-black text-amber-900">฿{Number(minBet).toLocaleString()}</p>
+              </div>
+            )}
+          </div>
+        )}
 
-          {/* ════ COLUMN 1 (Left 3 Cols on PC): Navigation & System Limits ════ */}
-          <aside className="lg:col-span-3 space-y-4">
-            {/* Table of Contents / Anchors */}
-            <div className="bg-white rounded-3xl p-4 border border-slate-200/80 shadow-2xs space-y-1">
-              <h3 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider px-3 mb-2">
-                หัวข้อกติกาสำคัญ
-              </h3>
-              {STATIC_SECTIONS.map((sec) => (
-                <a
-                  key={sec.id}
-                  href={`#${sec.id}`}
-                  className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-emerald-700 transition-all"
-                >
-                  <span className="material-symbols-outlined text-base text-slate-400">{sec.icon}</span>
-                  <span className="truncate">{sec.title}</span>
-                </a>
+        {/* Extra terms from DB (if any) */}
+        {extraTerms.length > 0 && (
+          <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4 mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="material-symbols-outlined text-amber-500 text-[18px]">priority_high</span>
+              <p className="text-xs font-extrabold text-amber-700 uppercase tracking-widest">ข้อกำหนดเฉพาะ</p>
+            </div>
+            <ul className="space-y-2">
+              {extraTerms.map((item, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="text-amber-400 text-xs mt-0.5">●</span>
+                  <span className="text-xs text-amber-800 leading-relaxed">{item}</span>
+                </li>
               ))}
-            </div>
+            </ul>
+          </div>
+        )}
 
-            {/* System Limits Box */}
-            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs space-y-3">
-              <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
-                เกณฑ์วงเงินระบบ
-              </h3>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between py-1.5 border-b border-slate-50">
-                  <span className="text-slate-500">ฝากเงินขั้นต่ำ:</span>
-                  <span className="font-mono font-bold text-slate-900">฿{minDeposit ? Number(minDeposit).toLocaleString() : '100'}</span>
+        {/* Main Sections */}
+        <div className="space-y-4">
+          {STATIC_SECTIONS.map((section, idx) => (
+            <details key={idx} className="group bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
+              <summary className="flex items-center gap-3 p-4 cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden">
+                <div className="size-9 rounded-full bg-white flex items-center justify-center shrink-0 border border-slate-100">
+                  <span className="material-symbols-outlined text-primary text-[18px]">{section.icon}</span>
                 </div>
-                <div className="flex justify-between py-1.5 border-b border-slate-50">
-                  <span className="text-slate-500">ถอนเงินขั้นต่ำ:</span>
-                  <span className="font-mono font-bold text-emerald-700">฿{minWithdraw ? Number(minWithdraw).toLocaleString() : '300'}</span>
-                </div>
-                <div className="flex justify-between py-1.5">
-                  <span className="text-slate-500">เดิมพันขั้นต่ำ:</span>
-                  <span className="font-mono font-bold text-slate-900">฿{minBet ? Number(minBet).toLocaleString() : '1'}</span>
-                </div>
-              </div>
-            </div>
-          </aside>
-
-          {/* ════ COLUMN 2 (Center 6 Cols on PC): Policy Articles Feed ════ */}
-          <main className="lg:col-span-6 space-y-4">
-            {/* Hero Header Card */}
-            <div className="bg-gradient-to-br from-emerald-800 to-emerald-950 rounded-3xl p-6 text-white shadow-md space-y-2 relative overflow-hidden">
-              <div className="absolute top-[-20px] right-[-20px] size-40 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-              <div className="relative z-10">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="material-symbols-outlined text-emerald-300 text-lg">verified</span>
-                  <span className="text-xs font-bold uppercase tracking-widest text-emerald-200">ข้อตกลงและนโยบายการให้บริการ</span>
-                </div>
-                <h2 className="text-xl font-extrabold tracking-tight">ข้อกำหนดการใช้งาน {siteName}</h2>
-                <p className="text-xs text-emerald-200/90 leading-relaxed mt-1">
-                  โปรดศึกษาและทำความเข้าใจข้อกำหนดการใช้งานอย่างละเอียด เพื่อรักษาสิทธิประโยชน์และความปลอดภัยของบัญชีของท่าน
-                  {serviceHours && <span className="block mt-1">เวลาให้บริการ: {serviceHours}</span>}
-                </p>
-              </div>
-            </div>
-
-            {/* Extra DB-Configured Terms */}
-            {extraTerms.length > 0 && (
-              <div className="bg-amber-50 border border-amber-200/80 rounded-3xl p-5 space-y-2.5">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-amber-600 text-base">warning</span>
-                  <h3 className="text-xs font-extrabold text-amber-900 uppercase tracking-wider">ข้อกำหนดเฉพาะกิจ</h3>
-                </div>
-                <ul className="space-y-1.5 text-xs text-amber-800">
-                  {extraTerms.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-2">
-                      <span className="text-amber-500 font-bold">•</span>
-                      <span>{item}</span>
+                <span className="font-bold text-sm text-slate-800 flex-1">{section.title}</span>
+                <span className="material-symbols-outlined text-slate-400 text-[20px] group-open:rotate-180 transition-transform">expand_more</span>
+              </summary>
+              <div className="px-4 pb-4">
+                <ul className="space-y-2.5 ml-12">
+                  {section.items.map((item, i) => (
+                    <li key={i} className="flex items-start gap-2">
+                      <span className="text-primary text-[8px] mt-1.5 shrink-0">●</span>
+                      <span className="text-xs text-slate-600 leading-relaxed">{item}</span>
                     </li>
                   ))}
                 </ul>
               </div>
-            )}
+            </details>
+          ))}
+        </div>
 
-            {/* Static Policy Sections in Rich Cards */}
-            <div className="space-y-4">
-              {STATIC_SECTIONS.map((section) => (
-                <div
-                  key={section.id}
-                  id={section.id}
-                  className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-2xs space-y-3 scroll-mt-28"
-                >
-                  <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
-                    <div className="size-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
-                      <span className="material-symbols-outlined text-xl">{section.icon}</span>
-                    </div>
-                    <h3 className="text-sm font-extrabold text-slate-900">{section.title}</h3>
-                  </div>
-
-                  <ul className="space-y-2 text-xs text-slate-600 leading-relaxed">
-                    {section.items.map((item, i) => (
-                      <li key={i} className="flex items-start gap-2.5">
-                        <span className="material-symbols-outlined text-emerald-600 text-sm shrink-0 mt-0.5">check_circle</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </main>
-
-          {/* ════ COLUMN 3 (Right 3 Cols on PC): Legal & Compliance Certifications ════ */}
-          <aside className="hidden xl:block xl:col-span-3 space-y-4">
-            {/* Fair Play & Transparency */}
-            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-2xs space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-emerald-700 text-lg">policy</span>
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
-                  มาตรฐานความโปร่งใส
-                </h3>
-              </div>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                การออกผลรางวัลทุกมาร์เก็ตอ้างอิงจากผลอย่างเป็นทางการ ไม่มีการดัดแปลงผลลัพธ์ใดๆ ทั้งสิ้น
-              </p>
-            </div>
-
-            {/* Security Guarantee */}
-            <div className="bg-emerald-50/60 rounded-3xl p-4.5 border border-emerald-200/80 text-emerald-950 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-emerald-700 text-lg">lock</span>
-                <h4 className="text-xs font-extrabold">ความปลอดภัย 256-Bit</h4>
-              </div>
-              <p className="text-[11px] text-emerald-800 leading-relaxed">
-                ข้อมูลส่วนบุคคล การทำธุรกรรม และการเดิมพันทั้งหมดได้รับการคุ้มครองภายใต้มาตรฐานสากล
-              </p>
-            </div>
-
-            {/* Contact Support Link */}
-            <div className="p-4 text-center text-xs text-slate-400 space-y-1">
-              <p>มีข้อสงสัยเกี่ยวกับกติกา?</p>
-              <Link
-                to="/support"
-                className="font-bold text-emerald-700 hover:underline inline-block"
-              >
-                ติดต่อฝ่ายบริการลูกค้า 24 ชม.
-              </Link>
-            </div>
-          </aside>
-
+        {/* Footer note */}
+        <div className="mt-8 text-center space-y-2">
+          <p className="text-xs text-slate-400 leading-relaxed">
+            การใช้บริการ {siteName} ถือว่าท่านยอมรับเงื่อนไขทั้งหมดข้างต้น
+          </p>
+          <p className="text-xs text-slate-300 font-bold uppercase tracking-widest">
+            {siteName} Premium © {new Date().getFullYear()}
+          </p>
         </div>
       </div>
+
     </PageWrapper>
   );
 };

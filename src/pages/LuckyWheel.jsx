@@ -143,80 +143,27 @@ const LuckyWheel = () => {
       </div>
 
       {/* Page header */}
-      <header className="relative z-10 w-full max-w-[1720px] 2xl:max-w-[1850px] px-5 sm:px-8 h-16 flex items-center justify-between border-b border-white/5">
+      <header className="relative z-10 w-full max-w-[480px] px-5 h-16 flex items-center justify-between">
         <button onClick={() => navigate(-1)}
-          className="size-11 flex items-center justify-center rounded-2xl text-white cursor-pointer hover:bg-white/10 transition-colors"
+          className="w-11 h-11 flex items-center justify-center rounded-2xl text-white"
           style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <span className="material-symbols-outlined text-xl">arrow_back_ios_new</span>
         </button>
         <div className="text-center">
           <p className="text-xs font-black text-emerald-400 uppercase tracking-[0.35em]">TH LOTTO VIP</p>
-          <p className="text-sm sm:text-base font-black text-white" style={{ whiteSpace: 'normal' }}>Premium Lucky Wheel</p>
+          <p className="text-sm font-black text-white" style={{ whiteSpace: 'normal' }}>Premium Lucky Wheel</p>
         </div>
         <button onClick={() => setShowInfoModal(true)}
-          className="size-11 flex items-center justify-center rounded-2xl text-white cursor-pointer hover:bg-white/10 transition-colors"
+          className="w-11 h-11 flex items-center justify-center rounded-2xl text-white"
           style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }}>
           <span className="material-symbols-outlined text-xl">info</span>
         </button>
       </header>
 
-      {/* Main 3-Pane Arena Container */}
-      <main className="relative z-10 w-full max-w-[1720px] 2xl:max-w-[1850px] px-4 sm:px-6 lg:px-8 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <main className="relative z-10 w-full max-w-[480px] px-5 flex flex-col items-center">
 
-          {/* ════ LEFT PANE: User Balance & Quest ════ */}
-          <aside className="lg:col-span-3 space-y-4">
-            {/* Wallet & Spins Stat Card */}
-            <div className="rounded-3xl p-5 border border-white/10"
-                 style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(16px)' }}>
-              <h3 className="text-xs font-black text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                <span className="material-symbols-outlined text-base">account_balance_wallet</span>
-                กระเป๋าเงิน & สิทธิ์ของคุณ
-              </h3>
-              <div className="space-y-3">
-                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-                  <span className="text-xs text-white/60 font-semibold">ยอดเงินคงเหลือ</span>
-                  <span className="text-base font-black text-white tabular-nums">
-                    ฿{(profile?.balance || 0).toLocaleString()}
-                  </span>
-                </div>
-                <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-between">
-                  <span className="text-xs text-white/60 font-semibold">สิทธิ์หมุนวันนี้</span>
-                  <span className="text-base font-black text-amber-400 tabular-nums">
-                    {statusLoading ? '...' : `${spinStatus.spins_left} / ${spinStatus.daily_limit} ครั้ง`}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Daily Quests to Earn Free Spins */}
-            <div className="rounded-3xl p-5 border border-white/10 text-xs"
-                 style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(16px)' }}>
-              <h4 className="font-extrabold text-white text-xs uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-amber-400 text-sm">military_tech</span>
-                ภารกิจรับสิทธิ์หมุนฟรี
-              </h4>
-              <div className="space-y-2.5 text-white/70">
-                <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
-                  <span>เข้าสู่ระบบประจำวัน</span>
-                  <span className="text-emerald-400 font-bold">+1 สิทธิ์ฟรี</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
-                  <span>ฝากเงินครบ ฿300</span>
-                  <span className="text-emerald-400 font-bold">+2 สิทธิ์ฟรี</span>
-                </div>
-                <div className="p-2.5 rounded-xl bg-white/5 border border-white/5 flex items-center justify-between">
-                  <span>แทงหวยครบ ฿500</span>
-                  <span className="text-emerald-400 font-bold">+2 สิทธิ์ฟรี</span>
-                </div>
-              </div>
-            </div>
-          </aside>
-
-          {/* ════ CENTER PANE: Grand Interactive Wheel ════ */}
-          <div className="lg:col-span-6 flex flex-col items-center">
-            {/* ── WHEEL AREA ── */}
-            <div className="relative w-full max-w-[340px] sm:max-w-[380px] my-2 mb-8">
+        {/* ── WHEEL AREA ── */}
+        <div className="relative w-full max-w-[320px] mt-4 mb-8">
 
           {/* Outer decorative rings (don't rotate) */}
           <div className="absolute inset-[-18px] rounded-full"
@@ -388,73 +335,52 @@ const LuckyWheel = () => {
             </span>
           </button>
         </div>
-          </div>
+        <p className="text-center text-white/25 text-xs font-black uppercase tracking-widest mb-8">
+          ค่าหมุน ฿{spinStatus.spin_cost} / ครั้ง · คงเหลือ {spinStatus.spins_left} สิทธิ์วันนี้
+        </p>
 
-          {/* ════ RIGHT PANE: History & Realtime Winners Leaderboard ════ */}
-          <aside className="lg:col-span-3 space-y-4">
-            {/* History Card */}
-            <div className="rounded-3xl p-5 border border-white/10"
-              style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(16px)' }}>
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-emerald-400">history</span>
-                  <h3 className="text-white font-black text-xs uppercase tracking-wider" style={{ whiteSpace: 'normal' }}>ประวัติการหมุนของคุณ</h3>
-                </div>
-                <span className="text-[10px] font-black text-white/40 uppercase">{history.length} LATEST</span>
-              </div>
-              <div className="space-y-2.5">
-                {history.length > 0 ? history.map(item => (
-                  <div key={item.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
-                    <div className="flex items-center gap-2.5">
-                      <div className="size-8 rounded-xl flex items-center justify-center shrink-0"
-                        style={{ background: Number(item.prize_amount) > 0 ? 'rgba(52,211,153,0.15)' : 'rgba(255,255,255,0.05)' }}>
-                        <span className="material-symbols-outlined text-sm"
-                          style={{ fontVariationSettings: "'FILL' 1", color: Number(item.prize_amount) > 0 ? '#34d399' : '#64748b' }}>
-                          {Number(item.prize_amount) > 0 ? 'emoji_events' : 'refresh'}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-white text-xs font-bold">{item.prize_name}</p>
-                        <p className="text-[10px] text-white/30 font-semibold">
-                          {new Date(item.spun_at).toLocaleString('th-TH', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-xs font-black shrink-0"
-                      style={{ color: Number(item.prize_amount) > 0 ? '#34d399' : 'rgba(255,255,255,0.3)' }}>
-                      {Number(item.prize_amount) > 0 ? `+฿${Number(item.prize_amount).toLocaleString()}` : '—'}
+        {/* ── HISTORY ── */}
+        <div className="w-full mb-8 rounded-3xl p-6"
+          style={{ background: 'rgba(0,0,0,0.28)', backdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex justify-between items-center mb-5">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-emerald-400">history</span>
+              <h3 className="text-white font-black text-sm" style={{ whiteSpace: 'normal' }}>ประวัติการหมุน</h3>
+            </div>
+            <span className="text-xs font-black text-white/25 uppercase shrink-0">{history.length} LATEST</span>
+          </div>
+          <div className="space-y-3">
+            {history.length > 0 ? history.map(item => (
+              <div key={item.id} className="flex items-center justify-between py-2 border-b border-white/5 last:border-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: Number(item.prize_amount) > 0 ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.05)' }}>
+                    <span className="material-symbols-outlined text-base"
+                      style={{ fontVariationSettings: "'FILL' 1", color: Number(item.prize_amount) > 0 ? '#34d399' : '#475569' }}>
+                      {Number(item.prize_amount) > 0 ? 'emoji_events' : 'refresh'}
                     </span>
                   </div>
-                )) : (
-                  <div className="py-6 text-center">
-                    <span className="material-symbols-outlined text-3xl block mb-1 text-white/20">sports_esports</span>
-                    <p className="text-xs text-white/30">ยังไม่มีประวัติการหมุน</p>
+                  <div>
+                    <p className="text-white text-sm font-bold">{item.prize_name}</p>
+                    <p className="text-xs text-white/25 font-bold uppercase">
+                      {new Date(item.spun_at).toLocaleString('th-TH', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}
+                    </p>
                   </div>
-                )}
+                </div>
+                <span className="text-sm font-black shrink-0"
+                  style={{ color: Number(item.prize_amount) > 0 ? '#34d399' : 'rgba(255,255,255,0.2)' }}>
+                  {Number(item.prize_amount) > 0 ? `+฿${Number(item.prize_amount).toLocaleString()}` : '—'}
+                </span>
               </div>
-            </div>
-
-            {/* Quick Navigation to Betting / Home */}
-            <div className="rounded-3xl p-5 border border-white/10 text-xs space-y-2.5"
-                 style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(16px)' }}>
-              <p className="text-white/60 font-semibold mb-2">ลุ้นโชคต่อกับหวยยอดนิยม</p>
-              <button
-                onClick={() => navigate('/lottery-list')}
-                className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-extrabold flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-white/10"
-              >
-                <span>ไปที่ตลาดหวยทั้งหมด</span>
-                <span className="material-symbols-outlined text-sm">arrow_forward</span>
-              </button>
-              <button
-                onClick={() => navigate('/home')}
-                className="w-full py-2.5 rounded-xl bg-transparent hover:bg-white/5 text-white/60 hover:text-white font-bold transition-colors cursor-pointer"
-              >
-                กลับสู่หน้าหลัก
-              </button>
-            </div>
-          </aside>
-
+            )) : (
+              <div className="py-8 text-center">
+                <span className="material-symbols-outlined text-4xl block mb-2" style={{ color: 'rgba(255,255,255,0.1)' }}>sports_esports</span>
+                <p className="text-xs font-black uppercase" style={{ color: 'rgba(255,255,255,0.18)' }}>ยังไม่มีประวัติ</p>
+              </div>
+            )}
+          </div>
         </div>
+
       </main>
 
       {/* ── PRIZE MODAL ── */}
