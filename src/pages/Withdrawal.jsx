@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useModal } from '../contexts/ModalContext';
 import BankBadge from '../components/BankBadge';
 
@@ -60,6 +60,15 @@ const Withdrawal = () => {
   }, [profile]);
 
   const handleWithdrawal = () => {
+    if (!userProfile?.phone || !userProfile?.bank_account_number) {
+      showError(
+        'ข้อมูลบัญชีไม่สมบูรณ์',
+        'กรุณากรอกหมายเลขโทรศัพท์ บัญชีธนาคาร และรหัส PIN ให้ครบถ้วนก่อนทำรายการถอนเงิน',
+        () => navigate('/edit-profile')
+      );
+      return;
+    }
+
     const withdrawAmount = parseFloat(amount);
     if (!amount || withdrawAmount < minWithdraw) {
       showError(
@@ -161,6 +170,25 @@ const Withdrawal = () => {
       </header>
 
       <main className="flex-1 px-6 pt-6 pb-36 max-w-2xl mx-auto w-full">
+        {/* Onboarding Notice if Profile Incomplete */}
+        {userProfile && (!userProfile.phone || !userProfile.bank_account_number) && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-amber-600 text-2xl">warning</span>
+              <div>
+                <p className="text-xs font-bold text-amber-900">กรุณาตั้งค่าเบอร์โทร บัญชีธนาคาร และรหัส PIN</p>
+                <p className="text-[11px] text-amber-700">เพื่อความปลอดภัยและเพื่อเปิดใช้งานระบบถอนเงิน</p>
+              </div>
+            </div>
+            <Link
+              to="/edit-profile"
+              className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition-colors whitespace-nowrap"
+            >
+              ตั้งค่าตอนนี้
+            </Link>
+          </div>
+        )}
+
         {/* Promo Turnover Warning */}
         {promoStatus && (
           <div className={`mb-4 rounded-2xl p-4 border ${promoStatus.turnover_completed >= promoStatus.turnover_required ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>

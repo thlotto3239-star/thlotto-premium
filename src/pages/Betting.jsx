@@ -27,7 +27,7 @@ const BASE_CATEGORIES = [
 ];
 
 const Betting = () => {
-  const { refreshProfile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const { showSuccess, showError, showConfirm } = useModal();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -214,6 +214,10 @@ const Betting = () => {
     if (cart.length === 0) return;
     if (timeLeft.isExpired) {
       showError('งวดปิดแล้ว', 'งวดนี้ปิดรับแทงแล้ว ไม่สามารถส่งโพยได้');
+      return;
+    }
+    if (profile && !profile.phone) {
+      showError('กรุณากรอกข้อมูลส่วนตัว', 'กรุณาระบุหมายเลขโทรศัพท์และตั้งค่าบัญชีก่อนเริ่มแทงหวย', () => navigate('/edit-profile'));
       return;
     }
 

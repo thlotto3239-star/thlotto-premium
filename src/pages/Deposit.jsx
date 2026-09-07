@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { useAuth } from '../AuthContext';
+import { useModal } from '../contexts/ModalContext';
 import BankBadge from '../components/BankBadge';
 
 const Deposit = () => {
   const navigate = useNavigate();
+  const { profile } = useAuth();
+  const { showError } = useModal();
   const [searchParams] = useSearchParams();
   const [amount, setAmount] = useState(() => searchParams.get('amount') || '');
   const promoCode = searchParams.get('promo') || null;
@@ -67,6 +71,25 @@ const Deposit = () => {
       </header>
 
       <main className="flex-1 max-w-2xl mx-auto w-full px-6 pt-6 pb-36">
+        {/* Onboarding Notice if Profile Incomplete */}
+        {profile && (!profile.phone || !profile.bank_account_number) && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-amber-600 text-2xl">warning</span>
+              <div>
+                <p className="text-xs font-bold text-amber-900">กรุณาตั้งค่าเบอร์โทรและบัญชีธนาคาร</p>
+                <p className="text-[11px] text-amber-700">เพื่อความปลอดภัยและเพื่อเปิดใช้งานระบบฝากเงิน</p>
+              </div>
+            </div>
+            <Link
+              to="/edit-profile"
+              className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl transition-colors whitespace-nowrap"
+            >
+              ตั้งค่าตอนนี้
+            </Link>
+          </div>
+        )}
+
         {/* Promo Banner */}
         {isPromoDeposit && (
           <div className="mb-6 flex items-center gap-3 bg-primary/5 border border-primary/20 rounded-2xl px-5 py-4">
@@ -149,6 +172,14 @@ const Deposit = () => {
         <div className="max-w-2xl mx-auto w-full">
           <button
             onClick={() => {
+              if (profile && (!profile.phone || !profile.bank_account_number)) {
+                showError(
+                  'ข้อมูลบัญชีไม่สมบูรณ์',
+                  'กรุณาระบุหมายเลขโทรศัพท์และบัญชีธนาคารให้ครบถ้วนก่อนทำรายการฝากเงิน',
+                  () => navigate('/edit-profile')
+                );
+                return;
+              }
               if (isPromoDeposit) {
                 navigate('/upload-slip', { state: { amount, promoCode, promoName } });
               } else {

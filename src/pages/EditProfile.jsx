@@ -13,13 +13,17 @@ const EditProfile = () => {
   const [loading, setLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarInputRef = useRef(null);
+  const isNewPhone = !profile?.phone;
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || '',
+    phone: profile?.phone || '',
+    pin: '',
+    confirm_pin: '',
     bank_name: profile?.bank_name || '',
     bank_account_number: profile?.bank_account_number || '',
-    bank_account_name: profile?.bank_account_name || '',
+    bank_account_name: profile?.bank_account_name || profile?.full_name || '',
   });
-  const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.phone}`;
+  const defaultAvatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.phone || profile?.id}`;
 
   const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
@@ -62,24 +66,51 @@ const EditProfile = () => {
       showError('กรุณากรอกชื่อ', 'ชื่อ-นามสกุลไม่สามารถเว้นว่างได้');
       return;
     }
+
+    if (isNewPhone) {
+      if (!formData.phone || !/^[0-9]{10}$/.test(formData.phone)) {
+        showError('เบอร์โทรศัพท์ไม่ถูกต้อง', 'กรุณากรอกหมายเลขโทรศัพท์ 10 หลัก');
+        return;
+      }
+      if (!formData.pin || !/^[0-9]{4}$/.test(formData.pin)) {
+        showError('รหัส PIN ไม่ถูกต้อง', 'กรุณากำหนดรหัส PIN ตัวเลข 4 หลักเพื่อความปลอดภัย');
+        return;
+      }
+      if (formData.pin !== formData.confirm_pin) {
+        showError('รหัส PIN ไม่ตรงกัน', 'กรุณากรอกรหัส PIN และยืนยันรหัส PIN ให้ตรงกัน');
+        return;
+      }
+    }
+
     setLoading(true);
     try {
+      const updatePayload = {
+        full_name: formData.full_name,
+        bank_name: formData.bank_name || null,
+        bank_account_number: formData.bank_account_number || null,
+        bank_account_name: formData.bank_account_name || formData.full_name || null,
+      };
+
+      if (isNewPhone) {
+        const raw = new TextEncoder().encode(formData.pin + formData.phone);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', raw);
+        const pinHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+        updatePayload.phone = formData.phone;
+        updatePayload.pin_hash = pinHash;
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          full_name: formData.full_name,
-          bank_name: formData.bank_name || null,
-          bank_account_number: formData.bank_account_number || null,
-          bank_account_name: formData.bank_account_name || null,
-        })
+        .update(updatePayload)
         .eq('id', profile.id);
 
       if (error) throw error;
       await refreshProfile();
-      showSuccess('บันทึกสำเร็จ!', 'ข้อมูลโปรไฟล์ถูกอัปเดตแล้ว');
+      showSuccess('บันทึกสำเร็จ!', 'ข้อมูลโปรไฟล์และบัญชีธนาคารถูกอัปเดตเรียบร้อยแล้ว');
+      navigate('/profile');
     } catch (err) {
       console.error('Error updating profile:', err);
-      showError('บันทึกไม่สำเร็จ', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่');
+      showError('บันทึกไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาลองใหม่');
     } finally {
       setLoading(false);
     }
@@ -153,15 +184,65 @@ const EditProfile = () => {
               ข้อมูลส่วนตัว
             </h3>
             <div className="space-y-5">
-              {/* Read-only Phone */}
+              {/* Phone Field */}
               <div className="space-y-2">
-                <label className="block text-sm font-bold text-zinc-400 px-1 uppercase tracking-wide">หมายเลขโทรศัพท์ (ไม่สามารถแก้ไขได้)</label>
-                <div className="flex items-center gap-3 p-4 bg-zinc-50 border border-zinc-100 rounded-xl text-zinc-400">
-                  <span className="material-symbols-outlined text-zinc-400">call</span>
-                  <span className="font-medium">{profile?.phone || '—'}</span>
-                  <span className="ml-auto material-symbols-outlined text-zinc-300">lock</span>
-                </div>
+                <label className="block text-sm font-bold text-zinc-700 px-1 uppercase tracking-wide">
+                  หมายเลขโทรศัพท์ {isNewPhone ? <span className="text-red-500">* (กรอก 10 หลัก)</span> : <span className="text-zinc-400 font-normal">(ไม่สามารถแก้ไขได้)</span>}
+                </label>
+                {isNewPhone ? (
+                  <div className="relative group">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-emerald-600">call</span>
+                    <input
+                      type="tel"
+                      maxLength={10}
+                      placeholder="0xxxxxxxxx"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value.replace(/[^0-9]/g, '') })}
+                      className="w-full pl-12 pr-4 py-4 bg-white border border-emerald-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all outline-none font-medium font-mono"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 p-4 bg-zinc-50 border border-zinc-100 rounded-xl text-zinc-400">
+                    <span className="material-symbols-outlined text-zinc-400">call</span>
+                    <span className="font-medium font-mono">{profile?.phone || '—'}</span>
+                    <span className="ml-auto material-symbols-outlined text-zinc-300">lock</span>
+                  </div>
+                )}
               </div>
+
+              {/* PIN Setup (Only for new Google users without phone) */}
+              {isNewPhone && (
+                <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl space-y-3">
+                  <div className="flex items-center gap-2 text-emerald-800">
+                    <span className="material-symbols-outlined text-sm font-bold">pin</span>
+                    <p className="text-xs font-bold">กำหนดรหัส PIN 4 หลัก สำหรับยืนยันการถอนเงิน</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-zinc-600 px-1">รหัส PIN 4 หลัก</label>
+                      <input
+                        type="password"
+                        maxLength={4}
+                        placeholder="••••"
+                        value={formData.pin}
+                        onChange={(e) => setFormData({ ...formData, pin: e.target.value.replace(/[^0-9]/g, '') })}
+                        className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-xl focus:ring-2 focus:ring-emerald-500 text-center font-mono text-xl font-bold tracking-widest"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[11px] font-bold text-zinc-600 px-1">ยืนยัน PIN อีกครั้ง</label>
+                      <input
+                        type="password"
+                        maxLength={4}
+                        placeholder="••••"
+                        value={formData.confirm_pin}
+                        onChange={(e) => setFormData({ ...formData, confirm_pin: e.target.value.replace(/[^0-9]/g, '') })}
+                        className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-xl focus:ring-2 focus:ring-emerald-500 text-center font-mono text-xl font-bold tracking-widest"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
               {/* Full Name */}
               <div className="space-y-2">
                 <label className="block text-sm font-bold text-zinc-700 px-1 uppercase tracking-wide" htmlFor="full_name">ชื่อ-นามสกุล</label>

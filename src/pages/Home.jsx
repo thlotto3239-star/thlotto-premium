@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../supabaseClient';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
 import BottomNav from '../components/BottomNav';
 import AppHeader from '../components/AppHeader';
 import logger from '../services/logger';
@@ -20,6 +21,7 @@ const formatThaiDate = (dateStr) => {
 
 const Home = () => {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const [govResult, setGovResult] = useState(null);
   const [_draws, setDraws] = useState([]);
   const [popularLotteries, setPopularLotteries] = useState([]);
@@ -289,6 +291,27 @@ const Home = () => {
       <AppHeader announcements={announcements} />
 
       <main className="max-w-6xl mx-auto px-4 py-4 space-y-8">
+
+        {/* Onboarding Notice for Incomplete Profiles / Google Sign-in */}
+        {profile && (!profile.phone || !profile.bank_account_number) && (
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 flex-shrink-0">
+                <span className="material-symbols-outlined">warning</span>
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-amber-900">กรุณากรอกข้อมูลบัญชีให้ครบถ้วน</h4>
+                <p className="text-xs text-amber-700 font-medium">เพิ่มเบอร์โทรศัพท์ บัญชีธนาคาร และรหัส PIN เพื่อเริ่มใช้งานฝาก-ถอน และแทงหวย</p>
+              </div>
+            </div>
+            <Link
+              to="/edit-profile"
+              className="w-full sm:w-auto px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-xl text-center transition-colors flex-shrink-0 shadow-xs"
+            >
+              ตั้งค่าบัญชีตอนนี้
+            </Link>
+          </div>
+        )}
 
         {/* Hero Slider */}
         <section className="relative group">
