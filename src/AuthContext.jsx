@@ -58,6 +58,17 @@ export const AuthProvider = ({ children }) => {
     return unsub;
   }, [user?.id]);
 
+  // Periodic heartbeat เพื่อระบุสถานะ ออนไลน์ จริงในระบบแอดมิน
+  useEffect(() => {
+    if (!user?.id) return;
+    const sendPulse = () => {
+      authService.heartbeat(user.id).catch(() => {});
+    };
+    sendPulse();
+    const interval = setInterval(sendPulse, 60000); // ทุก 1 นาที
+    return () => clearInterval(interval);
+  }, [user?.id]);
+
   const loadProfile = async (userId) => {
     try {
       const data = await authService.fetchProfile(userId);

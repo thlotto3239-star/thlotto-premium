@@ -59,6 +59,9 @@ export async function signIn(phone, pin, rememberMe = false) {
 
   if (!error && data?.session) {
     setSessionExpiry(rememberMe);
+    recordLoginSession(phone, data.user?.id, true).catch(() => {});
+  } else {
+    recordLoginSession(phone, null, false).catch(() => {});
   }
 
   return { data, error };
@@ -232,3 +235,146 @@ export function onAuthStateChange(callback) {
   const { data: { subscription } } = supabase.auth.onAuthStateChange(callback);
   return subscription;
 }
+
+/**
+ * ตรวจจับ Device Forensics และรุ่นอุปกรณ์จริงจากเบราว์เซอร์
+ */
+export function detectClientForensics() {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return { deviceType: 'desktop', deviceModel: 'PC', os: 'Unknown', browser: 'Browser', ua: '' };
+  }
+  const ua = navigator.userAgent || '';
+  let deviceType = 'desktop';
+  let deviceModel = 'Windows PC';
+  let os = 'Windows';
+  let browser = 'Web Browser';
+
+  if (/iPhone/i.test(ua)) {
+    deviceType = 'mobile';
+    deviceModel = 'Apple iPhone';
+    os = 'iOS';
+    const m = ua.match(/OS (\d+[_\.]\d+)/);
+    if (m) os = `iOS ${m[1].replace(/_/g, '.')}`;
+  } else if (/iPad/i.test(ua)) {
+    deviceType = 'tablet';
+    deviceModel = 'Apple iPad';
+    os = 'iPadOS';
+    const m = ua.match(/OS (\d+[_\.]\d+)/);
+    if (m) os = `iPadOS ${m[1].replace(/_/g, '.')}`;
+  } else if (/Android/i.test(ua)) {
+    deviceType = /Tablet|iPad/i.test(ua) ? 'tablet' : 'mobile';
+    os = 'Android';
+    const m = ua.match(/Android (\d+(\.\d+)?)/);
+    if (m) os = `Android ${m[1]}`;
+    const modelM = ua.match(/;\s*([^;]+?)\s*Build\//i);
+    deviceModel = modelM && modelM[1] ? modelM[1].trim() : 'Android Smartphone';
+  } else if (/Macintosh|Mac OS/i.test(ua)) {
+    deviceType = 'desktop';
+    deviceModel = 'Apple Mac / MacBook';
+    os = 'macOS';
+    const m = ua.match(/Mac OS X (\d+[_\.]\d+)/);
+    if (m) os = `macOS ${m[1].replace(/_/g, '.')}`;
+  } else if (/Windows/i.test(ua)) {
+    deviceType = 'desktop';
+    deviceModel = 'Windows PC';
+    if (/Windows NT 10.0/i.test(ua)) os = 'Windows 10/11';
+    else if (/Windows NT 6.3/i.test(ua)) os = 'Windows 8.1';
+    else if (/Windows NT 6.1/i.test(ua)) os = 'Windows 7';
+  } else if (/Linux/i.test(ua)) {
+    deviceType = 'desktop';
+    deviceModel = 'Linux Workstation';
+    os = 'Linux';
+  }
+
+  if (/Edg\//i.test(ua)) {
+    const m = ua.match(/Edg\/(\d+[\.\d]*)/);
+    browser = `Microsoft Edge ${m ? m[1].split('.')[0] : ''}`.trim();
+  } else if (/Chrome\//i.test(ua) && !/Chromium|Edg/i.test(ua)) {
+    const m = ua.match(/Chrome\/(\d+[\.\d]*)/);
+    browser = `Google Chrome ${m ? m[1].split('.')[0] : ''}`.trim();
+  } else if (/Safari\//i.test(ua) && !/Chrome/i.test(ua)) {
+    const m = ua.match(/Version\/(\d+[\.\d]*)/);
+    browser = `Apple Safari ${m ? m[1].split('.')[0] : ''}`.trim();
+  } else if (/Firefox\//i.test(ua)) {
+    const m = ua.match(/Firefox\/(\d+[\.\d]*)/);
+    browser = `Mozilla Firefox ${m ? m[1].split('.')[0] : ''}`.trim();
+  }
+
+  return { deviceType, deviceModel, os, browser, ua };
+}
+
+/**
+ * ดึงพิกัดและ IP จริงของผู้ใช้งาน
+ */
+export async function getClientGeo() {
+  try {
+    const res = await fetch('https://ipwho.is/', { signal: AbortSignal.timeout(3000) });
+    const data = await res.json();
+    if (data && data.success !== false) {
+      return {
+        ip: data.ip || null,
+        city: data.city || 'Bangkok',
+        region: data.region || 'Bangkok',
+        country: data.country_code || 'TH',
+        lat: data.latitude || 13.7563,
+        lon: data.longitude || 100.5018,
+        isp: (data.connection && data.connection.isp) || null,
+      };
+    }
+  } catch (_) {
+    // fallback
+  }
+  return {
+    ip: '127.0.0.1',
+    city: 'เครือข่ายภายใน (Local / Dev)',
+    region: 'Local Network',
+    country: 'TH',
+    lat: 13.7563,
+    lon: 100.5018,
+    isp: 'Localhost / Internal Dev',
+  };
+}
+
+/**
+ * บันทึกประวัติการเข้าสู่ระบบลง Supabase (RPC record_login_session)
+ */
+export async function recordLoginSession(phone, userId, success) {
+  try {
+    const dev = detectClientForensics();
+    const geo = await getClientGeo();
+
+    await supabase.rpc('record_login_session', {
+      p_phone: phone || null,
+      p_user_id: userId || null,
+      p_success: Boolean(success),
+      p_ip: geo.ip,
+      p_user_agent: dev.ua,
+      p_city: geo.city,
+      p_region: geo.region,
+      p_country: geo.country,
+      p_lat: geo.lat,
+      p_lon: geo.lon,
+      p_isp: geo.isp,
+      p_device_type: dev.deviceType,
+      p_device_model: dev.deviceModel,
+      p_os: dev.os,
+      p_browser: dev.browser,
+    });
+  } catch (err) {
+    logger.warn('recordLoginSession error:', err?.message);
+  }
+}
+
+/**
+ * ส่ง Heartbeat อัปเดตสถานะออนไลน์ลง profiles.last_seen_at
+ */
+export async function heartbeat(userId) {
+  try {
+    if (userId) {
+      await supabase.from('profiles').update({ last_seen_at: new Date().toISOString() }).eq('id', userId);
+    } else {
+      await supabase.rpc('update_user_heartbeat');
+    }
+  } catch (_) {}
+}
+

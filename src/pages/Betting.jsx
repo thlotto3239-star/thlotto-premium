@@ -43,6 +43,7 @@ const Betting = () => {
   const [currentCategory, setCurrentCategory] = useState('3TOP');
   const [betAmount, setBetAmount] = useState(100);
   const [cart, setCart] = useState([]);
+  const [restrictedNumbers, setRestrictedNumbers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isSuccessAnimating, setIsSuccessAnimating] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ h: '00', m: '00', s: '00', isExpired: false });
@@ -92,6 +93,8 @@ const Betting = () => {
       if (!data.is_open) {
         setTimeLeft({ d: '00', h: '00', m: '00', s: '00', isExpired: true });
       }
+
+      // Fetch Payout Rates
       const { data: rates } = await supabase
         .from('payout_rates')
         .select('bet_type, rate')
@@ -105,6 +108,19 @@ const Betting = () => {
           const first = filtered.find(c => c.code === '3TOP') || filtered[0];
           if (first) { setCurrentCategory(first.code); setDigitLimit(first.limit); }
         }
+      }
+
+      // Fetch active restricted numbers for this market
+      try {
+        const { data: restrList } = await supabase
+          .from('restricted_numbers')
+          .select('*')
+          .or(`market_id.is.null,market_id.eq.${drawId}`);
+        if (restrList) {
+          setRestrictedNumbers(restrList);
+        }
+      } catch (err) {
+        console.warn('Could not load restricted numbers:', err);
       }
     };
     fetchDraw();
@@ -174,13 +190,46 @@ const Betting = () => {
     }
   };
 
+  const getRestrictedRule = (numStr, categoryCode) => {
+    return restrictedNumbers.find(r => 
+      r.bet_type === categoryCode && 
+      r.number === numStr && 
+      (!r.draw_date || !draw?.next_draw_date || r.draw_date === draw.next_draw_date)
+    );
+  };
+
   const addToCart = (numbers) => {
+    const minBet = Number(draw?.min_bet || 1);
+    if (betAmount < minBet) {
+      showError('ยอดแทงต่ำกว่ากำหนด', `ตลาด ${draw?.name || ''} กำหนดยอดแทงขั้นต่ำ ${minBet} บาทต่อรายการ`);
+      return;
+    }
+
+    const restr = getRestrictedRule(numbers, currentCategory);
+    if (restr) {
+      const isBlocked = (Number(restr.payout_rate) === 0 && Number(restr.max_amount) === 0) || (Number(restr.payout_rate) === 0 && !restr.max_amount);
+      if (isBlocked) {
+        showError('เลขอั้น ปิดรับแทง', `เลข ${numbers} (${categories.find(c => c.code === currentCategory)?.name || currentCategory}) เป็นเลขอั้น ปิดรับแทงในงวดนี้`);
+        setCurrentDigits([]);
+        return;
+      }
+    }
+
+    let finalRate = currentCat?.rate ?? DEFAULT_RATES[currentCategory];
+    let restrictedTag = null;
+    if (restr && Number(restr.payout_rate) > 0) {
+      finalRate = Math.min(finalRate, Number(restr.payout_rate));
+      restrictedTag = `เลขอั้น (จ่าย ฿${finalRate})`;
+    }
+
     setCart(prev => [...prev, {
       numbers,
       type: currentCategory,
       amount: betAmount,
-      rate: currentCat?.rate ?? DEFAULT_RATES[currentCategory]
+      rate: finalRate,
+      restrictedTag
     }]);
+
     if (audioRef.current) {
       audioRef.current.currentTime = 0;
       audioRef.current.play().catch(() => {});
@@ -202,8 +251,11 @@ const Betting = () => {
   };
   const handleSaveAmount = (idx) => {
     const val = parseInt(editAmount);
-    if (!isNaN(val) && val > 0) {
+    const minBet = Number(draw?.min_bet || 1);
+    if (!isNaN(val) && val >= minBet) {
       setCart(prev => prev.map((item, i) => i === idx ? { ...item, amount: val } : item));
+    } else if (!isNaN(val) && val < minBet) {
+      showError('ยอดแทงต่ำกว่าขั้นต่ำ', `แทงขั้นต่ำ ${minBet} บาท`);
     }
     setEditingIdx(null);
   };
@@ -221,8 +273,21 @@ const Betting = () => {
       return;
     }
 
-    // คำนวณยอดรวม
+    // คำนวณยอดรวม และตรวจสอบเงื่อนไข
+    const minBet = Number(draw?.min_bet || 1);
+    const maxBet = Number(draw?.max_bet || 20000);
     const totalAmount = cart.reduce((sum, item) => sum + item.amount, 0);
+
+    const subMinItem = cart.find(i => i.amount < minBet);
+    if (subMinItem) {
+      showError('ยอดแทงต่ำกว่ากำหนด', `รายการเลข ${subMinItem.numbers} แทง ฿${subMinItem.amount} (ขั้นต่ำ ฿${minBet} บาทต่อรายการ)`);
+      return;
+    }
+
+    if (maxBet > 0 && totalAmount > maxBet) {
+      showError('ยอดแทงเกินกำหนดสูงสุด', `ยอดรวมต่อบิล ฿${totalAmount.toLocaleString()} เกินขีดจำกัดสูงสุด ฿${maxBet.toLocaleString()} บาท`);
+      return;
+    }
 
     // แสดง Confirm Modal ก่อนส่ง
     showConfirm(
@@ -499,6 +564,54 @@ const Betting = () => {
               </div>
             </div>
 
+            {/* Market Limits Card */}
+            <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-2 text-xs">
+              <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-blue-600 text-sm">tune</span>
+                เงื่อนไขและขีดจำกัด
+              </h3>
+              <div className="space-y-1.5 pt-1">
+                <div className="flex items-center justify-between text-slate-600 bg-slate-50 p-2 rounded-xl">
+                  <span>ขั้นต่ำต่อรายการ</span>
+                  <span className="font-bold text-slate-900 font-mono">฿{draw?.min_bet || 1}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-600 bg-slate-50 p-2 rounded-xl">
+                  <span>สูงสุดต่อบิล</span>
+                  <span className="font-bold text-slate-900 font-mono">฿{Number(draw?.max_bet || 20000).toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-600 bg-slate-50 p-2 rounded-xl">
+                  <span>เพดานรับต่อเลข</span>
+                  <span className="font-bold text-slate-900 font-mono">฿{Number(draw?.max_per_number || 50000).toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Restricted Numbers Card */}
+            {restrictedNumbers.length > 0 && (
+              <div className="bg-white rounded-2xl p-4 border border-rose-200/80 shadow-xs space-y-2.5">
+                <h3 className="text-xs font-black uppercase tracking-wider text-rose-700 flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-rose-600 text-sm">shield_with_heart</span>
+                  เลขอั้นประจำงวด ({restrictedNumbers.length})
+                </h3>
+                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                  {restrictedNumbers.map((rn, idx) => {
+                    const isBlocked = (Number(rn.payout_rate) === 0 && Number(rn.max_amount) === 0) || (Number(rn.payout_rate) === 0 && !rn.max_amount);
+                    return (
+                      <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-rose-50/50 border border-rose-100 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black font-mono text-sm text-slate-900">{rn.number}</span>
+                          <span className="text-[10px] text-slate-500">{categories.find(c => c.code === rn.bet_type)?.name || rn.bet_type}</span>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isBlocked ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800'}`}>
+                          {isBlocked ? 'ปิดรับแทง' : `จ่าย ฿${rn.payout_rate}`}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
           </div>
 
           {/* ════ CENTER COLUMN (Pane 2): Category Selection, Number Display & Numpad ════ */}
@@ -557,6 +670,29 @@ const Betting = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Live Restricted Number Warning Indicator */}
+              {(() => {
+                const numStr = currentDigits.join('');
+                if (currentDigits.length === digitLimit) {
+                  const restr = getRestrictedRule(numStr, currentCategory);
+                  if (restr) {
+                    const isBlocked = (Number(restr.payout_rate) === 0 && Number(restr.max_amount) === 0) || (Number(restr.payout_rate) === 0 && !restr.max_amount);
+                    return (
+                      <div className={`my-2 p-2 rounded-xl text-center text-xs font-bold animate-in fade-in flex items-center justify-center gap-1.5 ${
+                        isBlocked ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-800 border border-amber-200'
+                      }`}>
+                        <span className="material-symbols-outlined text-sm">{isBlocked ? 'block' : 'info'}</span>
+                        {isBlocked 
+                          ? `เลข ${numStr} เป็นเลขอั้น ปิดรับแทงในงวดนี้`
+                          : `เลข ${numStr} ปรับลดอัตราจ่าย เหลือบาทละ ฿${restr.payout_rate}`
+                        }
+                      </div>
+                    );
+                  }
+                }
+                return null;
+              })()}
 
               {/* Quick Amount Selector */}
               <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2">
@@ -638,7 +774,14 @@ const Betting = () => {
                           {item.numbers}
                         </div>
                         <div>
-                          <p className="text-xs font-bold text-slate-500">{categories.find(c => c.code === item.type)?.name}</p>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="text-xs font-bold text-slate-500">{categories.find(c => c.code === item.type)?.name}</p>
+                            {item.restrictedTag && (
+                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                                {item.restrictedTag}
+                              </span>
+                            )}
+                          </div>
                           {editingIdx === idx ? (
                             <div className="flex items-center gap-1 mt-0.5">
                               <input
