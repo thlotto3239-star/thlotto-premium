@@ -57,41 +57,62 @@ const Notifications = () => {
   };
 
   const getIconName = (type) => {
-    switch (type) {
+    const t = String(type || '').toUpperCase();
+    switch (t) {
       case 'WIN': return 'military_tech';
       case 'DEPOSIT': return 'account_balance_wallet';
       case 'WITHDRAW': return 'payments';
-      case 'SYSTEM': return 'info';
-      case 'broadcast': return 'campaign';
+      case 'WARNING': return 'warning';
+      case 'PROMOTION': return 'campaign';
+      case 'SYSTEM':
+      case 'INFO': return 'info';
+      case 'BROADCAST': return 'campaign';
       default: return 'notifications';
     }
   };
 
   const getIconColor = (type) => {
-    switch (type) {
+    const t = String(type || '').toUpperCase();
+    switch (t) {
       case 'WIN': return 'text-emerald-500';
       case 'DEPOSIT': return 'text-[#1a7e2a]';
       case 'WITHDRAW': return 'text-[#b08d57]';
-      case 'SYSTEM': return 'text-blue-500';
-      case 'broadcast': return 'text-orange-500';
+      case 'WARNING': return 'text-amber-500';
+      case 'PROMOTION': return 'text-emerald-600';
+      case 'SYSTEM':
+      case 'INFO': return 'text-blue-500';
+      case 'BROADCAST': return 'text-orange-500';
       default: return 'text-slate-400';
     }
   };
 
   const getIconBg = (type) => {
-    switch (type) {
+    const t = String(type || '').toUpperCase();
+    switch (t) {
       case 'WIN': return 'bg-emerald-50';
       case 'DEPOSIT': return 'bg-[#1a7e2a]/10';
       case 'WITHDRAW': return 'bg-[#b08d57]/10';
-      case 'SYSTEM': return 'bg-blue-50';
-      case 'broadcast': return 'bg-orange-50';
+      case 'WARNING': return 'bg-amber-50';
+      case 'PROMOTION': return 'bg-emerald-50';
+      case 'SYSTEM':
+      case 'INFO': return 'bg-blue-50';
+      case 'BROADCAST': return 'bg-orange-50';
       default: return 'bg-slate-50';
     }
   };
 
   const filteredNotifications = activeFilter === 'ALL' 
     ? notifications 
-    : notifications.filter(n => n.type === activeFilter);
+    : notifications.filter(n => {
+        const t = String(n.type || '').toUpperCase();
+        if (activeFilter === 'SYSTEM') {
+          return t === 'SYSTEM' || t === 'INFO' || t === 'WARNING';
+        }
+        if (activeFilter === 'broadcast') {
+          return t === 'BROADCAST' || t === 'PROMOTION' || t === 'ANNOUNCEMENT';
+        }
+        return t === activeFilter.toUpperCase();
+      });
 
   const todayStr = new Date().toDateString();
   const yesterdayStr = new Date(Date.now() - 86400000).toDateString();

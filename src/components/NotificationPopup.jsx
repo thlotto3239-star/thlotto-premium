@@ -42,16 +42,52 @@ const TYPE_CONFIG = {
     shadow: 'shadow-blue-400/40',
   },
   SYSTEM: {
-    bg: 'from-slate-600 via-slate-500 to-slate-600',
-    border: 'border-slate-400',
-    iconBg: 'bg-slate-700',
+    bg: 'from-slate-700 via-slate-600 to-slate-700',
+    border: 'border-slate-500',
+    iconBg: 'bg-slate-800',
     icon: 'info',
-    textColor: 'text-slate-900',
+    textColor: 'text-slate-950',
     subColor: 'text-slate-700',
-    badge: 'bg-slate-700 text-white',
-    badgeLabel: '📢 แจ้งเตือนระบบ',
-    progressColor: 'bg-slate-700',
-    shadow: 'shadow-slate-400/30',
+    badge: 'bg-slate-800 text-white',
+    badgeLabel: '📢 ข้อความระบบ',
+    progressColor: 'bg-slate-800',
+    shadow: 'shadow-slate-500/30',
+  },
+  WARNING: {
+    bg: 'from-amber-500 via-orange-400 to-amber-500',
+    border: 'border-amber-300',
+    iconBg: 'bg-amber-600',
+    icon: 'warning',
+    textColor: 'text-amber-950',
+    subColor: 'text-amber-900',
+    badge: 'bg-amber-700 text-white',
+    badgeLabel: '⚠️ แจ้งเตือนระบบ',
+    progressColor: 'bg-amber-700',
+    shadow: 'shadow-amber-400/30',
+  },
+  PROMOTION: {
+    bg: 'from-emerald-600 via-teal-500 to-emerald-600',
+    border: 'border-emerald-300',
+    iconBg: 'bg-emerald-700',
+    icon: 'campaign',
+    textColor: 'text-emerald-950',
+    subColor: 'text-emerald-900',
+    badge: 'bg-emerald-800 text-white',
+    badgeLabel: '🎁 กิจกรรม / โปรโมชั่น',
+    progressColor: 'bg-emerald-800',
+    shadow: 'shadow-emerald-400/30',
+  },
+  INFO: {
+    bg: 'from-sky-600 via-blue-500 to-sky-600',
+    border: 'border-sky-300',
+    iconBg: 'bg-sky-700',
+    icon: 'info',
+    textColor: 'text-sky-950',
+    subColor: 'text-sky-900',
+    badge: 'bg-sky-800 text-white',
+    badgeLabel: 'ℹ️ ข่าวสารทั่วไป',
+    progressColor: 'bg-sky-800',
+    shadow: 'shadow-sky-400/30',
   },
   DEFAULT: {
     bg: 'from-primary via-primary/80 to-primary',
@@ -158,6 +194,17 @@ function SinglePopup({ notif, onDismiss }) {
           </p>
 
           <div className="flex items-center justify-between mt-4 gap-3">
+            {notif.data?.action_url && (
+              <a
+                href={notif.data.action_url}
+                target={notif.data.action_url.startsWith('http') ? '_blank' : '_self'}
+                rel="noreferrer"
+                onClick={handleDismiss}
+                className="flex-1 py-3 text-center rounded-2xl font-bold text-sm bg-slate-900 text-white shadow-md transition active:scale-95"
+              >
+                ดูรายละเอียด
+              </a>
+            )}
             <button
               onClick={handleDismiss}
               className={`flex-1 py-3 rounded-2xl font-bold text-sm bg-gradient-to-r ${cfg.bg} text-white shadow-lg transition active:scale-95`}
@@ -188,7 +235,17 @@ export default function NotificationPopup() {
     if (!user?.id) return;
 
     const unsub = subscribeNotifications(user.id, (notification) => {
-      setQueue(prev => [...prev, { ...notification, _popupId: Date.now() + Math.random() }]);
+      // Logic: Only show popup modal if explicitly requested (is_popup = true)
+      // or if it's a critical transaction event (WIN, DEPOSIT, WITHDRAW) without explicit is_popup: false
+      const isExplicitPopup = notification.data?.is_popup === true;
+      const isAutoPopupType = ['WIN', 'DEPOSIT', 'WITHDRAW'].includes(notification.type);
+      const isExplicitInAppOnly = notification.data?.is_popup === false;
+
+      const shouldPopup = isExplicitPopup || (isAutoPopupType && !isExplicitInAppOnly);
+
+      if (shouldPopup) {
+        setQueue(prev => [...prev, { ...notification, _popupId: Date.now() + Math.random() }]);
+      }
     });
 
     return unsub;
