@@ -66,6 +66,7 @@ const BetHistory = () => {
       case 'WON': return 'ถูกรางวัล';
       case 'LOST': return 'ไม่ถูกรางวัล';
       case 'PENDING': return 'รอผลรางวัล';
+      case 'CANCELLED': return 'ยกเลิก (คืนเงิน)';
       default: return status;
     }
   };
@@ -75,6 +76,7 @@ const BetHistory = () => {
       case 'WON': return 'border-l-primary';
       case 'LOST': return 'border-l-red-200';
       case 'PENDING': return 'border-l-slate-300';
+      case 'CANCELLED': return 'border-l-amber-400';
       default: return 'border-l-slate-200';
     }
   };
@@ -84,6 +86,7 @@ const BetHistory = () => {
       case 'WON': return 'bg-primary/10';
       case 'LOST': return 'bg-red-50';
       case 'PENDING': return 'bg-slate-100';
+      case 'CANCELLED': return 'bg-amber-50';
       default: return 'bg-slate-50';
     }
   };
@@ -93,6 +96,7 @@ const BetHistory = () => {
       case 'WON': return 'text-primary';
       case 'LOST': return 'text-red-400';
       case 'PENDING': return 'text-slate-500';
+      case 'CANCELLED': return 'text-amber-600';
       default: return 'text-slate-400';
     }
   };

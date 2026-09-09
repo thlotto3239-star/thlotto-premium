@@ -2,13 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LottoRulesModal from './LottoRulesModal';
 
-// Mock/fallback rounds data based on 58 rounds (every 15 mins)
+// Standard 96 rounds per day (every 15 mins: 00:00 to 23:45)
 const GENERATE_ROUNDS = () => {
   const list = [];
   let roundNum = 1;
   for (let h = 0; h < 24; h++) {
     for (let m = 0; m < 60; m += 15) {
-      if (roundNum > 58) break;
       const hh = String(h).padStart(2, '0');
       const mm = String(m).padStart(2, '0');
       const timeStr = `${hh}:${mm}`;
@@ -81,29 +80,32 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
   const [isMuted, setIsMuted] = useState(true);
   const [showRules, setShowRules] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(480);
+  const [videoMode, setVideoMode] = useState('live'); // 'live' | 'replay'
   const videoRef = useRef(null);
   const roundsScrollRef = useRef(null);
 
-  // Fetch real-time results from API
+  // Fetch real-time results from LIW Lottery API (96 rounds)
   useEffect(() => {
     const fetchLiveResults = async () => {
       try {
         setLoading(true);
-        const res = await fetch('https://thailottoapi.com/api/results');
+        const res = await fetch('https://liwlottery.com/api/results/history?limit=96&offset=0');
         const json = await res.json();
-        const liwItems = json.categories?.liw?.items || [];
+        const liwItems = json.results || [];
 
-        // Merge with our 58 standard rounds
+        // Merge with our 96 standard rounds
         const merged = ALL_ROUNDS.map((r) => {
-          const found = liwItems.find((item) => item.key === r.key);
+          const found = liwItems.find((item) => item.clock === r.time);
           return {
             ...r,
-            top3: found?.top3 || found?.result || null,
-            top2: found?.top2 || (found?.top3 ? found.top3.slice(-2) : null),
-            bottom2: found?.bottom2 || null,
-            videoUrl: found?.dataresult?.result_video || null,
-            imageUrl: found?.dataresult?.result_image || null,
-            isSettled: Boolean(found?.top3),
+            no: found?.no || null,
+            top3: found?.three || null,
+            top2: found?.two_top || (found?.three ? found.three.slice(-2) : null),
+            bottom2: found?.two_bottom || null,
+            keno: found?.keno || [],
+            videoUrl: found?.video || null,
+            imageUrl: found?.image || null,
+            isSettled: Boolean(found?.three),
           };
         });
 
@@ -145,6 +147,9 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
   const handleSelectRound = (round) => {
     setSelectedRound(round.key);
     setIsRolling(true);
+    if (round.videoUrl) {
+      setVideoMode('replay');
+    }
     setTimeout(() => {
       setCurrentRoundData(round);
       setIsRolling(false);
@@ -200,7 +205,7 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
                 </span>
               </div>
               <p className="text-xs text-slate-500">
-                {currentRoundData ? `${currentRoundData.label} (รอบที่ ${currentRoundData.round}/58) · ระบบออกผลสดอัตโนมัติ` : 'กำลังโหลด...'}
+                {currentRoundData ? `${currentRoundData.label} (รอบที่ ${currentRoundData.round}/96) · ระบบออกผลสดอัตโนมัติ` : 'กำลังโหลด...'}
               </p>
             </div>
           </div>
@@ -220,8 +225,56 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
         <div className="lg:grid lg:grid-cols-12 lg:gap-0">
           {/* Left Column: HD Live Stream Player */}
           <div className="lg:col-span-7 p-4 sm:p-5 bg-slate-950 flex flex-col justify-center">
+            {/* Stream Mode Switcher (Live Stream vs Replay Video) */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1.5 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setVideoMode('live')}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    videoMode === 'live'
+                      ? 'bg-red-600 text-white shadow-xs'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                  <span>ถ่ายทอดสด (LIVE)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVideoMode('replay')}
+                  disabled={!currentRoundData?.videoUrl}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    videoMode === 'replay'
+                      ? 'bg-brand-600 text-white shadow-xs'
+                      : currentRoundData?.videoUrl
+                      ? 'text-slate-400 hover:text-white'
+                      : 'text-slate-600 cursor-not-allowed opacity-50'
+                  }`}
+                >
+                  <span className="material-icons text-xs">play_circle</span>
+                  <span>คลิปย้อนหลังรอบนี้</span>
+                </button>
+              </div>
+
+              <span className="text-[11px] text-slate-400 hidden sm:inline">
+                {videoMode === 'live' ? 'สัญญาณดาวเทียมเรียลไทม์' : `ย้อนหลังรอบ ${currentRoundData?.time || ''}`}
+              </span>
+            </div>
+
             <div className="relative w-full aspect-video rounded-2xl bg-black overflow-hidden shadow-inner group border border-slate-800">
-              {currentRoundData?.videoUrl ? (
+              {videoMode === 'live' ? (
+                <iframe
+                  src="https://liwlottery.com/embed"
+                  title="LIW Lottery live video"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0, borderRadius: '16px', overflow: 'hidden', maxWidth: '100%', aspectRatio: '16/9' }}
+                  allow="autoplay *; fullscreen *; encrypted-media *"
+                  loading="eager"
+                  className="w-full h-full object-cover"
+                />
+              ) : currentRoundData?.videoUrl ? (
                 <video
                   ref={videoRef}
                   src={currentRoundData.videoUrl}
@@ -229,6 +282,7 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
                   loop
                   playsInline
                   muted={isMuted}
+                  controls
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -243,8 +297,8 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
                 </div>
               )}
 
-              {/* Video Floating Controls */}
-              {currentRoundData?.videoUrl && (
+              {/* Video Floating Controls (Replay mode only) */}
+              {videoMode === 'replay' && currentRoundData?.videoUrl && (
                 <div className="absolute top-3 right-3 flex items-center gap-2">
                   <button
                     onClick={() => setIsMuted(!isMuted)}
@@ -257,7 +311,7 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
               )}
 
               {/* Live Official Watermark Badge */}
-              <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full border border-slate-200/60 flex items-center gap-2 shadow-xs">
+              <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full border border-slate-200/60 flex items-center gap-2 shadow-xs pointer-events-none">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span className="text-[10px] font-bold text-slate-800 tracking-wide">
                   TH-LOTTO OFFICIAL STREAM
@@ -342,7 +396,7 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
               <span className="material-icons text-sm text-brand-600">view_timeline</span>
-              <span>เลือกรอบออกรางวัล (ทั้งหมด 58 รอบ/วัน)</span>
+              <span>เลือกรอบออกรางวัล (ทั้งหมด 96 รอบ/วัน)</span>
             </span>
             <span className="text-[11px] text-slate-500">คลิกที่รอบเพื่อดูผลย้อนหลังหรือแทงล่วงหน้า</span>
           </div>

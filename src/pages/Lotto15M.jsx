@@ -64,7 +64,7 @@ export default function Lotto15M() {
 
           <div className="flex items-center gap-3">
             <Link
-              to={`/bet/${marketId}`}
+              to={`/betting?draw=${marketId}`}
               className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-xs active:scale-95 transition-all"
             >
               <Flame className="size-3.5" />
@@ -91,7 +91,7 @@ export default function Lotto15M() {
                   <Zap className="size-5" />
                 </div>
                 <p className="text-xs font-bold text-slate-800">ออกผลทุก 15 นาที</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">วันละ 58 รอบ 24 ชม.</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">วันละ 96 รอบ 24 ชม.</p>
               </div>
               <div className="rounded-2xl p-4 bg-white border border-slate-200/80 shadow-xs text-center flex flex-col items-center hover:border-amber-200 transition-colors">
                 <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 mb-2">
@@ -130,7 +130,7 @@ export default function Lotto15M() {
                   เลือกเลขเด็ด 3 ตัว, 2 ตัว หรือเลขวิ่ง ส่งโพยเร็ว ตัดรอบอัตโนมัติ
                 </p>
                 <Link
-                  to={`/bet/${marketId}`}
+                  to={`/betting?draw=${marketId}`}
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-brand-500 hover:bg-brand-600 active:scale-[0.99] text-white font-bold text-sm tracking-wide shadow-md transition-all cursor-pointer"
                 >
                   <Flame className="size-4" />

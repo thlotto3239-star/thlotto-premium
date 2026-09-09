@@ -12,7 +12,8 @@ const Withdrawal = () => {
   const userProfile = profile;
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
-  const [minWithdraw, setMinWithdraw] = useState(300);
+  const [minWithdraw, setMinWithdraw] = useState(100);
+  const [withdrawEnabled, setWithdrawEnabled] = useState(true);
   const [promoStatus, setPromoStatus] = useState(null);
   const [showPinModal, setShowPinModal] = useState(false);
   const [pendingAmount, setPendingAmount] = useState(null);
@@ -29,15 +30,21 @@ const Withdrawal = () => {
   };
 
   useEffect(() => {
-    const fetchMin = async () => {
+    const fetchSettings = async () => {
       const { data } = await supabase
         .from('settings')
-        .select('value')
-        .eq('key', 'min_withdraw')
-        .single();
-      if (data) setMinWithdraw(Number(data.value));
+        .select('key, value')
+        .in('key', ['min_withdraw', 'withdraw_enabled']);
+      if (data) {
+        data.forEach(row => {
+          if (row.key === 'min_withdraw') setMinWithdraw(Number(row.value));
+          if (row.key === 'withdraw_enabled') {
+            setWithdrawEnabled(String(row.value).toLowerCase() !== 'false');
+          }
+        });
+      }
     };
-    fetchMin();
+    fetchSettings();
 
     if (profile) {
       const fetchPromoStatus = async () => {
@@ -60,11 +67,16 @@ const Withdrawal = () => {
   }, [profile]);
 
   const handleWithdrawal = () => {
-    if (!userProfile?.phone || !userProfile?.bank_account_number) {
+    if (!withdrawEnabled) {
+      showError('ระบบปิดรับถอนเงินชั่วคราว', 'ขณะนี้ระบบปิดรับคำขอถอนเงินชั่วคราวเพื่อปรับปรุงระบบ');
+      return;
+    }
+
+    if (!userProfile?.bank_name || !userProfile?.bank_account_number) {
       showError(
-        'ข้อมูลบัญชีไม่สมบูรณ์',
-        'กรุณากรอกหมายเลขโทรศัพท์ บัญชีธนาคาร และรหัส PIN ให้ครบถ้วนก่อนทำรายการถอนเงิน',
-        () => navigate('/edit-profile')
+        'ยังไม่ได้เพิ่มบัญชีธนาคาร',
+        'กรุณาเพิ่มบัญชีธนาคารก่อนทำรายการถอนเงิน',
+        () => navigate('/bank-account')
       );
       return;
     }
@@ -265,6 +277,13 @@ const Withdrawal = () => {
           {/* ════ RIGHT COLUMN (7 cols on PC): Amount Entry, Quick Select & PC Action Button ════ */}
           <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs space-y-6">
             
+            {!withdrawEnabled && (
+              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-center gap-3 text-amber-800 text-xs font-bold">
+                <span className="material-symbols-outlined text-amber-600 text-lg">error</span>
+                <span>ระบบปิดรับถอนเงินชั่วคราว อยู่ระหว่างการปรับปรุงระบบการเงิน</span>
+              </div>
+            )}
+
             {/* Amount Entry */}
             <div>
               <label className="block text-center text-slate-900 font-black text-base sm:text-lg mb-4">
@@ -318,7 +337,7 @@ const Withdrawal = () => {
             <div className="hidden lg:block pt-4 border-t border-slate-100">
               <button
                 onClick={handleWithdrawal}
-                disabled={loading || !amount || parseFloat(amount) < minWithdraw}
+                disabled={loading || !withdrawEnabled || !amount || parseFloat(amount) < minWithdraw}
                 className="w-full h-14 rounded-2xl flex items-center justify-center gap-2.5 text-white text-base font-black transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-md cursor-pointer bg-brand-600 hover:bg-brand-700 active:scale-[0.99]"
               >
                 {loading ? (
@@ -346,7 +365,7 @@ const Withdrawal = () => {
       <footer className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur-lg border-t border-slate-100 z-30">
         <button
           onClick={handleWithdrawal}
-          disabled={loading || !amount || parseFloat(amount) < minWithdraw}
+          disabled={loading || !withdrawEnabled || !amount || parseFloat(amount) < minWithdraw}
           className="w-full h-14 rounded-2xl flex items-center justify-center gap-2.5 text-white text-base font-black active:scale-[0.98] transition-all disabled:opacity-40 shadow-md cursor-pointer bg-brand-600"
         >
           {loading ? (

@@ -41,6 +41,7 @@ const Support = () => {
   const navigate = useNavigate();
   const [lineUrl, setLineUrl] = useState('https://line.me/ti/p/@thlotto');
   const [openFaq, setOpenFaq] = useState(null);
+  const [faqs, setFaqs] = useState(FAQ_ITEMS);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -52,6 +53,25 @@ const Support = () => {
       if (data?.value) setLineUrl(data.value);
     };
     fetchSettings();
+
+    const fetchFaqs = async () => {
+      const { data, error } = await supabase
+        .from('cms_faq')
+        .select('id, question, answer, category, display_order')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+      if (data && data.length > 0 && !error) {
+        setFaqs(data.map(item => ({
+          q: item.question,
+          a: item.answer,
+          category: item.category,
+          icon: item.category === 'บัญชีและการเงิน' ? 'account_balance_wallet' :
+                item.category === 'ความปลอดภัย' ? 'security' :
+                item.category === 'การแทงหวย' ? 'casino' : 'help_outline'
+        })));
+      }
+    };
+    fetchFaqs();
   }, []);
 
   const handleLine = () => window.open(lineUrl, '_blank');
@@ -136,7 +156,7 @@ const Support = () => {
             คำถามที่พบบ่อย
           </p>
           <div className="space-y-2">
-            {FAQ_ITEMS.map((item, i) => (
+            {faqs.map((item, i) => (
               <div key={i} className="bg-white rounded-2xl border border-slate-100 overflow-hidden">
                 <button
                   onClick={() => toggleFaq(i)}

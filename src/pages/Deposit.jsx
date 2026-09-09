@@ -15,6 +15,7 @@ const Deposit = () => {
   const promoName = searchParams.get('promoName') || null;
   const isPromoDeposit = !!promoCode;
   const [minDeposit, setMinDeposit] = useState(100);
+  const [depositEnabled, setDepositEnabled] = useState(true);
   const [bankSettings, setBankSettings] = useState({
     bank_code: 'KBANK',
     bank_account_name: 'บจก. ทีเอช-ลอตโต พรีเมียม',
@@ -26,7 +27,7 @@ const Deposit = () => {
       const { data, error } = await supabase
         .from('settings')
         .select('key, value')
-        .in('key', ['company_bank_code', 'company_bank_account_name', 'company_bank_account_number', 'min_deposit']);
+        .in('key', ['company_bank_code', 'company_bank_account_name', 'company_bank_account_number', 'min_deposit', 'deposit_enabled']);
       if (data && !error) {
         const map = {};
         data.forEach(row => { map[row.key] = row.value; });
@@ -36,6 +37,9 @@ const Deposit = () => {
           bank_account_number: map['company_bank_account_number'] || prev.bank_account_number,
         }));
         if (map['min_deposit']) setMinDeposit(Number(map['min_deposit']));
+        if (map['deposit_enabled'] !== undefined) {
+          setDepositEnabled(String(map['deposit_enabled']).toLowerCase() !== 'false');
+        }
       }
     };
     fetchBankSettings();
@@ -72,7 +76,7 @@ const Deposit = () => {
     }
   };
 
-  const isProceedDisabled = !amount || parseFloat(amount) < minDeposit;
+  const isProceedDisabled = !depositEnabled || !amount || parseFloat(amount) < minDeposit;
 
   return (
     <div className="bg-slate-50/50 min-h-screen text-slate-900 flex flex-col">
@@ -180,6 +184,13 @@ const Deposit = () => {
           {/* ════ RIGHT COLUMN (7 cols on PC): Amount Entry, Chips & Action Button ════ */}
           <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs space-y-6">
             
+            {!depositEnabled && (
+              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-center gap-3 text-amber-800 text-xs font-bold">
+                <span className="material-symbols-outlined text-amber-600 text-lg">error</span>
+                <span>ระบบปิดรับฝากเงินชั่วคราว อยู่ระหว่างการปรับปรุงระบบการเงิน</span>
+              </div>
+            )}
+
             {/* Amount Input */}
             <div>
               <label className="block text-center text-slate-900 font-black text-base sm:text-lg mb-4">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import PageWrapper from '../components/PageWrapper';
 import AppHeader from '../components/AppHeader';
 import { supabase } from '../supabaseClient';
@@ -81,9 +82,12 @@ const Results = () => {
     if (tab === 'history' && history.length === 0) fetchHistory();
   }, [tab, history.length, fetchHistory]);
 
-  const govRow = rows.find(r => r.category === 'GOV');
+  const govRow = rows.find(r => r.category === 'GOV' && (r.code === 'TH_GOV' || r.code === 'THAI_GOV')) || rows.find(r => r.category === 'GOV');
+  const otherGovRows = rows.filter(r => r.category === 'GOV' && r.id !== govRow?.id);
   const foreignRows = rows.filter(r => r.category === 'FOREIGN');
+  const maekhongRows = rows.filter(r => r.category === 'MAEKHONG');
   const stockRows = rows.filter(r => r.category === 'STOCK');
+  const speedRows = rows.filter(r => r.category === 'SPEED');
   const todayStr = fmtDate(new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' }));
 
   const historyDates = [...new Set(history.map(r => r.draw_date))];
@@ -223,6 +227,90 @@ const Results = () => {
                           </div>
                         ))}
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ── MAEKHONG (11 Markets) ── */}
+            {maekhongRows.length > 0 && (
+              <section className="mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="w-1.5 h-4 bg-teal-600 rounded-full"></span>
+                  <h3 className="text-base font-extrabold text-slate-900">หวยแม่โขง (Mekong Series)</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
+                  {maekhongRows.map((r) => (
+                    <div key={r.code} className="bg-white p-4 rounded-3xl border border-slate-200/80 shadow-2xs hover:shadow-md hover:border-teal-200 transition-all flex flex-col justify-between">
+                      <div className="flex items-start justify-between gap-2 mb-3.5">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="w-10 h-10 rounded-2xl overflow-hidden flex items-center justify-center bg-teal-50 border border-teal-100 shrink-0">
+                            {r.logo_url ? <img alt={r.name} className="w-full h-full object-cover" src={r.logo_url} /> : <span className="material-symbols-outlined text-teal-600 text-lg">water</span>}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-extrabold text-slate-900 text-sm truncate">{r.name}</h4>
+                            <SubDate row={r} />
+                          </div>
+                        </div>
+                        <Badge row={r} />
+                      </div>
+                      <div className="grid grid-cols-4 gap-2">
+                        {[
+                          ['รางวัล', pending(r) ? 'xxxx' : (r.result_main || r.result_3top || 'xxxx'), false],
+                          ['3 บน', pending(r) ? 'xxx' : (r.result_3top || 'xxx'), false],
+                          ['2 บน', pending(r) ? 'xx' : (r.result_2top || 'xx'), false],
+                          ['2 ล่าง', pending(r) ? 'xx' : (r.result_2bottom || 'xx'), true],
+                        ].map(([label, val, accent]) => (
+                          <div key={label} className={`text-center p-2 rounded-xl border ${accent ? 'bg-teal-50/60 border-teal-200/80' : 'bg-slate-50 border-slate-100'}`}>
+                            <p className={`text-[8px] font-extrabold uppercase ${accent ? 'text-teal-700' : 'text-slate-400'}`}>{label}</p>
+                            <p className={`text-xs font-black font-mono mt-0.5 ${accent ? 'text-teal-700' : 'text-slate-800'}`}>{val}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ── SPEED DRAW: LOTTO 15M ── */}
+            {speedRows.length > 0 && (
+              <section className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-4 bg-emerald-600 rounded-full"></span>
+                    <h3 className="text-base font-extrabold text-slate-900">ล็อตโต้ 15 นาที (96 รอบ/วัน)</h3>
+                  </div>
+                  <Link
+                    to="/lotto-15m"
+                    className="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                  >
+                    <span>ชมสด & ตรวจผล 96 รอบ</span>
+                    <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                  </Link>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {speedRows.map((r) => (
+                    <div key={r.code} className="bg-gradient-to-r from-emerald-900 via-slate-900 to-slate-950 p-4 sm:p-5 rounded-3xl border border-emerald-800/60 text-white flex items-center justify-between shadow-md">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
+                          <span className="material-symbols-outlined text-emerald-400 text-2xl">bolt</span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-extrabold text-sm">{r.name}</h4>
+                            <span className="bg-emerald-500/20 text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-bold border border-emerald-500/30">96 รอบ</span>
+                          </div>
+                          <p className="text-slate-300 text-xs mt-1">ออกผลทุก 15 นาที พร้อมไลฟ์สด 24 ชม.</p>
+                        </div>
+                      </div>
+                      <Link
+                        to="/lotto-15m"
+                        className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs shadow-xs active:scale-95 transition-all whitespace-nowrap"
+                      >
+                        ดูผลสด
+                      </Link>
                     </div>
                   ))}
                 </div>
