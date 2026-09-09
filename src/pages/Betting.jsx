@@ -351,35 +351,27 @@ const Betting = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentDigits, digitLimit, cart, timeLeft.isExpired, loading]);
 
-  // Helper to render Category buttons
-  const renderCategoryRow = (codes, opts = {}) => {
-    const available = codes.map(c => categories.find(cat => cat.code === c)).filter(Boolean);
-    if (available.length === 0) return null;
-    const cols = opts.fullWidth ? 1 : Math.min(available.length, 2);
-    const colsClass = cols === 1 ? 'grid-cols-1' : 'grid-cols-2';
+  // Helper to render Category buttons in a compact, balanced grid (matching the size of payout badges)
+  const renderCategoryGrid = () => {
     return (
-      <div className={`grid ${colsClass} gap-2`}>
-        {available.map(cat => {
+      <div className="grid grid-cols-2 gap-2">
+        {categories.map(cat => {
           const isActive = currentCategory === cat.code;
-          const dashed = opts.dashed;
-          const fullW = opts.fullWidth;
           return (
             <button
               key={cat.code}
               type="button"
               onClick={() => handleCategoryChange(cat)}
-              className={`flex flex-col items-center justify-center ${fullW ? 'p-3.5' : 'p-3'} rounded-2xl transition-all active:scale-95 text-center cursor-pointer ${
+              className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer border ${
                 isActive
-                  ? 'text-white ring-2 ring-primary/40 shadow-sm'
-                  : dashed
-                    ? 'bg-white border-2 border-dashed border-slate-200 text-slate-600 hover:border-primary/40'
-                    : 'bg-white border border-slate-200/80 text-slate-700 hover:border-primary/40'
+                  ? 'text-white border-emerald-600 shadow-sm ring-1 ring-emerald-400/40'
+                  : 'bg-white border-slate-200/90 text-slate-700 hover:border-emerald-300 hover:bg-slate-50/80'
               }`}
               style={isActive ? { background: 'linear-gradient(135deg, rgb(22,68,30), rgb(13,121,4))' } : {}}
             >
-              <span className={`${fullW ? 'text-sm' : 'text-xs'} font-black ${dashed ? 'uppercase tracking-wide' : ''}`}>{cat.name}</span>
-              <span className={`${fullW ? 'text-xs' : 'text-[11px]'} font-medium ${isActive ? 'text-white/80' : 'text-slate-400'}`}>
-                บาทละ {cat.rate?.toLocaleString()}
+              <span className="font-extrabold whitespace-nowrap">{cat.name}</span>
+              <span className={`font-mono text-xs font-black whitespace-nowrap ${isActive ? 'text-emerald-200' : 'text-emerald-700'}`}>
+                ฿{cat.rate?.toLocaleString()}
               </span>
             </button>
           );
@@ -472,153 +464,14 @@ const Betting = () => {
           </div>
         </div>
 
-        {/* ── 3-PANE COCKPIT GRID FOR PC WIDESCREEN / LAPTOP / TABLET / MOBILE ── */}
+        {/* ── 2-COLUMN COCKPIT GRID FOR PC WIDESCREEN / RESPONSIVE MOBILE ── */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pb-12">
           
-          {/* ════ LEFT COLUMN (Pane 1): Live Stream, Countdown, Market Info & Rates ════ */}
-          <div className="lg:col-span-3 xl:col-span-3 space-y-4">
-
-            {/* Live Stream / Broadcast Video */}
-            <div className="relative overflow-hidden rounded-2xl bg-slate-900 aspect-video shadow-md border border-slate-800">
-              {embedUrl ? (
-                <>
-                  <iframe
-                    key={streamKey}
-                    src={embedUrl}
-                    className="absolute inset-0 w-full h-full"
-                    allow="autoplay; encrypted-media; picture-in-picture"
-                    allowFullScreen
-                    title="Live Stream"
-                    frameBorder="0"
-                  />
-                  <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-red-600 text-white px-2.5 py-1 rounded-full text-xs font-black animate-pulse pointer-events-none shadow-md">
-                    <div className="size-2 rounded-full bg-white"></div> ถ่ายทอดสด
-                  </div>
-                  <button
-                    onClick={handleToggleMute}
-                    className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 bg-black/70 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold active:scale-95 transition-all hover:bg-black/80 cursor-pointer"
-                  >
-                    <span className="material-symbols-outlined text-[16px]">
-                      {isMuted ? 'volume_off' : 'volume_up'}
-                    </span>
-                    {isMuted ? 'เปิดเสียง' : 'ปิดเสียง'}
-                  </button>
-                </>
-              ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center">
-                  <div className="size-14 rounded-full bg-white/10 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-white text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>live_tv</span>
-                  </div>
-                  <p className="text-white font-bold text-sm">การถ่ายทอดสดผลรางวัล</p>
-                  <p className="text-white/50 text-xs">จะเปิดอัตโนมัติเมื่อถึงเวลาออกรางวัล</p>
-                </div>
-              )}
-            </div>
-
-            {/* Countdown Banner */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="text-center sm:text-left">
-                <p className={`text-xs font-black uppercase tracking-[0.1em] mb-0.5 ${timeLeft.isExpired ? 'text-red-500 animate-pulse' : 'text-amber-600'}`}>
-                  {timeLeft.isExpired ? '● ปิดรับแทงแล้ว' : '● นับถอยหลังปิดรับแทง'}
-                </p>
-                <p className="text-sm font-bold text-slate-800">{draw?.name || 'สลากกินแบ่งรัฐบาล'}</p>
-              </div>
-              {!timeLeft.isExpired ? (
-                <div className="flex items-center gap-1.5">
-                  {[
-                    ...(parseInt(timeLeft.d || '0') > 0 ? [{ val: timeLeft.d, label: 'วัน' }] : []),
-                    { val: timeLeft.h, label: 'ชม.' },
-                    { val: timeLeft.m, label: 'นาที' },
-                    { val: timeLeft.s, label: 'วิ' }
-                  ].map((t, i) => (
-                    <React.Fragment key={i}>
-                      {i > 0 && <span className="text-lg font-black text-slate-300">:</span>}
-                      <div className="flex flex-col items-center justify-center bg-slate-50 size-[50px] sm:size-[54px] rounded-xl border border-slate-200">
-                        <span className="text-lg sm:text-xl font-black text-slate-900 leading-none">{t.val}</span>
-                        <span className="text-[10px] font-bold text-slate-400 mt-1">{t.label}</span>
-                      </div>
-                    </React.Fragment>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-200">
-                  <span className="material-symbols-outlined text-red-500 text-base">lock</span>
-                  <span className="text-xs font-black text-red-600">งวดนี้ปิดรับแทงแล้ว</span>
-                </div>
-              )}
-            </div>
-
-            {/* Payout Rates Quick Card on Left Pane */}
-            <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-2.5">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-emerald-600 text-sm">stars</span>
-                อัตราจ่ายตลาดนี้
-              </h3>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                {categories.slice(0, 6).map((c) => (
-                  <div key={c.code} className="p-2 bg-slate-50 rounded-xl flex items-center justify-between border border-slate-100">
-                    <span className="font-bold text-slate-700 text-[11px]">{c.name}</span>
-                    <span className="font-mono font-black text-emerald-700 text-xs">฿{c.rate}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Market Limits Card */}
-            <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-2 text-xs">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-blue-600 text-sm">tune</span>
-                เงื่อนไขและขีดจำกัด
-              </h3>
-              <div className="space-y-1.5 pt-1">
-                <div className="flex items-center justify-between text-slate-600 bg-slate-50 p-2 rounded-xl">
-                  <span>ขั้นต่ำต่อรายการ</span>
-                  <span className="font-bold text-slate-900 font-mono">฿{draw?.min_bet || 1}</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-600 bg-slate-50 p-2 rounded-xl">
-                  <span>สูงสุดต่อบิล</span>
-                  <span className="font-bold text-slate-900 font-mono">฿{Number(draw?.max_bet || 20000).toLocaleString()}</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-600 bg-slate-50 p-2 rounded-xl">
-                  <span>เพดานรับต่อเลข</span>
-                  <span className="font-bold text-slate-900 font-mono">฿{Number(draw?.max_per_number || 50000).toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Restricted Numbers Card */}
-            {restrictedNumbers.length > 0 && (
-              <div className="bg-white rounded-2xl p-4 border border-rose-200/80 shadow-xs space-y-2.5">
-                <h3 className="text-xs font-black uppercase tracking-wider text-rose-700 flex items-center gap-1.5">
-                  <span className="material-symbols-outlined text-rose-600 text-sm">shield_with_heart</span>
-                  เลขอั้นประจำงวด ({restrictedNumbers.length})
-                </h3>
-                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                  {restrictedNumbers.map((rn, idx) => {
-                    const isBlocked = (Number(rn.payout_rate) === 0 && Number(rn.max_amount) === 0) || (Number(rn.payout_rate) === 0 && !rn.max_amount);
-                    return (
-                      <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-rose-50/50 border border-rose-100 text-xs">
-                        <div className="flex items-center gap-2">
-                          <span className="font-black font-mono text-sm text-slate-900">{rn.number}</span>
-                          <span className="text-[10px] text-slate-500">{categories.find(c => c.code === rn.bet_type)?.name || rn.bet_type}</span>
-                        </div>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isBlocked ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800'}`}>
-                          {isBlocked ? 'ปิดรับแทง' : `จ่าย ฿${rn.payout_rate}`}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-          </div>
-
-          {/* ════ CENTER COLUMN (Pane 2): Category Selection, Number Display & Numpad ════ */}
-          <div className="lg:col-span-5 xl:col-span-5 space-y-4">
+          {/* ════ LEFT COLUMN (lg:col-span-5): Betting Console (Categories, Balls & Numpad) ════ */}
+          <div className="lg:col-span-5 xl:col-span-5 space-y-4 order-2 lg:order-1">
 
             {/* Category Selection */}
-            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-4">
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-black text-slate-800 flex items-center gap-2">
                   <span className="w-1.5 h-4 rounded-full bg-primary inline-block"></span>
@@ -626,14 +479,7 @@ const Betting = () => {
                 </h2>
                 <span className="text-xs font-bold text-slate-400">เลือกประเภทก่อนกดเลข</span>
               </div>
-              <div className="space-y-3">
-                {renderCategoryRow(['6DIGIT'], { fullWidth: true })}
-                {renderCategoryRow(['4TOP'], { fullWidth: true })}
-                {renderCategoryRow(['3TOP', '3TODE'])}
-                {renderCategoryRow(['3FRONT', '3BOTTOM'])}
-                {renderCategoryRow(['2TOP', '2BOTTOM'])}
-                {renderCategoryRow(['RUN_UP', 'RUN_DOWN'], { dashed: true })}
-              </div>
+              {renderCategoryGrid()}
             </div>
 
             {/* Number Display & Bet Amount Quick Select */}
@@ -737,10 +583,80 @@ const Betting = () => {
 
           </div>
 
-          {/* ════ RIGHT COLUMN (Pane 3): Live Slip Console ════ */}
-          <div className="lg:col-span-4 xl:col-span-4 space-y-4 lg:sticky lg:top-5 lg:self-start">
+          {/* ════ CENTER / RIGHT COLUMN (lg:col-span-7): Video, Countdown, Live Slip & Market Limits ════ */}
+          <div className="lg:col-span-7 xl:col-span-7 space-y-4 order-1 lg:order-2">
 
-            {/* Live Slip Card */}
+            {/* Live Stream / Broadcast Video */}
+            <div className="relative overflow-hidden rounded-2xl bg-slate-900 aspect-video shadow-md border border-slate-800">
+              {embedUrl ? (
+                <>
+                  <iframe
+                    key={streamKey}
+                    src={embedUrl}
+                    className="absolute inset-0 w-full h-full"
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                    allowFullScreen
+                    title="Live Stream"
+                    frameBorder="0"
+                  />
+                  <div className="absolute top-3 left-3 z-20 flex items-center gap-1.5 bg-red-600 text-white px-2.5 py-1 rounded-full text-xs font-black animate-pulse pointer-events-none shadow-md">
+                    <div className="size-2 rounded-full bg-white"></div> ถ่ายทอดสด
+                  </div>
+                  <button
+                    onClick={handleToggleMute}
+                    className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 bg-black/70 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold active:scale-95 transition-all hover:bg-black/80 cursor-pointer"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">
+                      {isMuted ? 'volume_off' : 'volume_up'}
+                    </span>
+                    {isMuted ? 'เปิดเสียง' : 'ปิดเสียง'}
+                  </button>
+                </>
+              ) : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-6 text-center">
+                  <div className="size-14 rounded-full bg-white/10 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-white text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>live_tv</span>
+                  </div>
+                  <p className="text-white font-bold text-sm">การถ่ายทอดสดผลรางวัล</p>
+                  <p className="text-white/50 text-xs">จะเปิดอัตโนมัติเมื่อถึงเวลาออกรางวัล</p>
+                </div>
+              )}
+            </div>
+
+            {/* Countdown Banner */}
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="text-center sm:text-left">
+                <p className={`text-xs font-black uppercase tracking-[0.1em] mb-0.5 ${timeLeft.isExpired ? 'text-red-500 animate-pulse' : 'text-amber-600'}`}>
+                  {timeLeft.isExpired ? '● ปิดรับแทงแล้ว' : '● นับถอยหลังปิดรับแทง'}
+                </p>
+                <p className="text-sm font-bold text-slate-800">{draw?.name || 'สลากกินแบ่งรัฐบาล'}</p>
+              </div>
+              {!timeLeft.isExpired ? (
+                <div className="flex items-center gap-1.5">
+                  {[
+                    ...(parseInt(timeLeft.d || '0') > 0 ? [{ val: timeLeft.d, label: 'วัน' }] : []),
+                    { val: timeLeft.h, label: 'ชม.' },
+                    { val: timeLeft.m, label: 'นาที' },
+                    { val: timeLeft.s, label: 'วิ' }
+                  ].map((t, i) => (
+                    <React.Fragment key={i}>
+                      {i > 0 && <span className="text-lg font-black text-slate-300">:</span>}
+                      <div className="flex flex-col items-center justify-center bg-slate-50 size-[50px] sm:size-[54px] rounded-xl border border-slate-200">
+                        <span className="text-lg sm:text-xl font-black text-slate-900 leading-none">{t.val}</span>
+                        <span className="text-xs font-bold text-slate-500 mt-1">{t.label}</span>
+                      </div>
+                    </React.Fragment>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-200">
+                  <span className="material-symbols-outlined text-red-500 text-base">lock</span>
+                  <span className="text-xs font-black text-red-600">งวดนี้ปิดรับแทงแล้ว</span>
+                </div>
+              )}
+            </div>
+
+            {/* โพยหวยของคุณ (Live Slip Card) */}
             <div className="flex flex-col bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden">
               <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <div className="flex items-center gap-2">
@@ -777,7 +693,7 @@ const Betting = () => {
                           <div className="flex items-center gap-1.5 flex-wrap">
                             <p className="text-xs font-bold text-slate-500">{categories.find(c => c.code === item.type)?.name}</p>
                             {item.restrictedTag && (
-                              <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200">
+                              <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200">
                                 {item.restrictedTag}
                               </span>
                             )}
@@ -847,12 +763,77 @@ const Betting = () => {
               </div>
             </div>
 
+            {/* Quick Market Reference Cards Grid (Rates + Limits + Restricted) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Payout Rates Card */}
+              <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-2.5">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-emerald-600 text-sm">stars</span>
+                  อัตราจ่ายตลาดนี้
+                </h3>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  {categories.slice(0, 6).map((c) => (
+                    <div key={c.code} className="p-2 bg-slate-50 rounded-xl flex items-center justify-between border border-slate-100">
+                      <span className="font-bold text-slate-700 text-xs">{c.name}</span>
+                      <span className="font-mono font-black text-emerald-700 text-xs">฿{c.rate}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Market Limits Card */}
+              <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-2 text-xs">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-blue-600 text-sm">tune</span>
+                  เงื่อนไขและขีดจำกัด
+                </h3>
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between text-slate-600 bg-slate-50 p-2 rounded-xl">
+                    <span>ขั้นต่ำต่อรายการ</span>
+                    <span className="font-bold text-slate-900 font-mono">฿{draw?.min_bet || 1}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-600 bg-slate-50 p-2 rounded-xl">
+                    <span>สูงสุดต่อบิล</span>
+                    <span className="font-bold text-slate-900 font-mono">฿{Number(draw?.max_bet || 20000).toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-600 bg-slate-50 p-2 rounded-xl">
+                    <span>เพดานรับต่อเลข</span>
+                    <span className="font-bold text-slate-900 font-mono">฿{Number(draw?.max_per_number || 50000).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Restricted Numbers Card */}
+            {restrictedNumbers.length > 0 && (
+              <div className="bg-white rounded-2xl p-4 border border-rose-200/80 shadow-xs space-y-2.5">
+                <h3 className="text-xs font-black uppercase tracking-wider text-rose-700 flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-rose-600 text-sm">shield_with_heart</span>
+                  เลขอั้นประจำงวด ({restrictedNumbers.length})
+                </h3>
+                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                  {restrictedNumbers.map((rn, idx) => {
+                    const isBlocked = (Number(rn.payout_rate) === 0 && Number(rn.max_amount) === 0) || (Number(rn.payout_rate) === 0 && !rn.max_amount);
+                    return (
+                      <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-rose-50/50 border border-rose-100 text-xs">
+                        <div className="flex items-center gap-2">
+                          <span className="font-black font-mono text-sm text-slate-900">{rn.number}</span>
+                          <span className="text-xs text-slate-500">{categories.find(c => c.code === rn.bet_type)?.name || rn.bet_type}</span>
+                        </div>
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${isBlocked ? 'bg-rose-100 text-rose-700' : 'bg-amber-100 text-amber-800'}`}>
+                          {isBlocked ? 'ปิดรับแทง' : `จ่าย ฿${rn.payout_rate}`}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
           </div>
 
         </div>
-
       </div>
-
     </div>
   );
 };

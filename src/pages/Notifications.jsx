@@ -124,27 +124,29 @@ const Notifications = () => {
     return d !== todayStr && d !== yesterdayStr;
   });
 
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
   const NotifItem = ({ n }) => (
     <div
       onClick={() => !n.is_read && markAsRead(n.id)}
-      className={`relative flex items-start gap-4 p-4 rounded-2xl border transition-all cursor-pointer ${
-        n.is_read ? 'bg-white border-slate-100' : 'bg-primary/[0.03] border-primary/20'
+      className={`relative flex items-start gap-4 p-5 rounded-2xl border transition-all cursor-pointer hover:shadow-md ${
+        n.is_read ? 'bg-white border-slate-100 hover:border-slate-200' : 'bg-primary/[0.03] border-primary/20 hover:border-primary/40'
       }`}
     >
-      {!n.is_read && <span className="absolute top-4 right-4 w-2 h-2 rounded-full bg-primary"></span>}
-      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${getIconBg(n.type)}`}>
-        <span className={`material-symbols-outlined text-xl ${getIconColor(n.type)}`} style={{ fontVariationSettings: "'FILL' 1" }}>
+      {!n.is_read && <span className="absolute top-5 right-5 w-2.5 h-2.5 rounded-full bg-primary ring-4 ring-primary/10"></span>}
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${getIconBg(n.type)} shadow-sm`}>
+        <span className={`material-symbols-outlined text-2xl ${getIconColor(n.type)}`} style={{ fontVariationSettings: "'FILL' 1" }}>
           {getIconName(n.type)}
         </span>
       </div>
       <div className="flex-1 min-w-0 pr-4">
         <div className="flex justify-between items-start">
-          <h3 className={`font-extrabold text-sm truncate ${n.is_read ? 'text-slate-500' : 'text-slate-900'}`}>{n.title}</h3>
-          <span className="text-xs text-slate-400 whitespace-nowrap ml-2 font-medium">
+          <h3 className={`font-black text-sm sm:text-base truncate ${n.is_read ? 'text-slate-600' : 'text-slate-900'}`}>{n.title}</h3>
+          <span className="text-xs text-slate-400 whitespace-nowrap ml-2 font-bold">
             {new Date(n.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
-        <p className={`text-xs mt-0.5 leading-relaxed ${n.is_read ? 'text-slate-400' : 'text-slate-600'}`}>{n.body}</p>
+        <p className={`text-xs sm:text-sm mt-1 leading-relaxed ${n.is_read ? 'text-slate-400' : 'text-slate-600'}`}>{n.body}</p>
       </div>
     </div>
   );
@@ -152,78 +154,113 @@ const Notifications = () => {
   return (
     <PageWrapper>
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-100 px-6 h-16 flex items-center justify-between">
-        <button onClick={() => navigate(-1)} className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-50 text-slate-700">
-          <span className="material-symbols-outlined text-[20px]">arrow_back_ios_new</span>
-        </button>
-        <h1 className="text-lg font-extrabold text-slate-900 tracking-tight">การแจ้งเตือน</h1>
-        <button
-          onClick={markAllAsRead}
-          className="w-11 h-11 flex items-center justify-center rounded-full bg-slate-50 text-slate-700"
-        >
-          <span className="material-symbols-outlined text-[20px]">done_all</span>
-        </button>
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-slate-100">
+        <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-11 h-11 flex items-center justify-center rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors border border-slate-100"
+            >
+              <span className="material-symbols-outlined text-[20px]">arrow_back_ios_new</span>
+            </button>
+            <div>
+              <h1 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                การแจ้งเตือน
+                {unreadCount > 0 && (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-primary text-white">
+                    {unreadCount}
+                  </span>
+                )}
+              </h1>
+              <p className="text-xs text-slate-400 font-bold hidden sm:block">ข่าวสารและการแจ้งเตือนระบบทั้งหมด</p>
+            </div>
+          </div>
+          <button
+            onClick={markAllAsRead}
+            disabled={unreadCount === 0}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all ${
+              unreadCount > 0
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer'
+                : 'bg-slate-50 text-slate-300 cursor-not-allowed'
+            }`}
+          >
+            <span className="material-symbols-outlined text-lg">done_all</span>
+            <span className="hidden sm:inline">อ่านทั้งหมด</span>
+          </button>
+        </div>
       </header>
 
-      <main className="px-6 pt-5">
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 pb-32">
         {/* Filter Tabs */}
-        <div className="flex gap-2 overflow-x-auto no-scrollbar mb-5 pb-1">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar mb-8 pb-1">
           {[
-            { id: 'ALL', name: 'ทั้งหมด' },
-            { id: 'WIN', name: 'ถูกรางวัล' },
-            { id: 'DEPOSIT', name: 'ฝากเงิน' },
-            { id: 'WITHDRAW', name: 'ถอนเงิน' },
-            { id: 'SYSTEM', name: 'ระบบ' },
-            { id: 'broadcast', name: 'ประกาศ' }
+            { id: 'ALL', name: 'ทั้งหมด', icon: 'all_inbox' },
+            { id: 'WIN', name: 'ถูกรางวัล', icon: 'military_tech' },
+            { id: 'DEPOSIT', name: 'ฝากเงิน', icon: 'account_balance_wallet' },
+            { id: 'WITHDRAW', name: 'ถอนเงิน', icon: 'payments' },
+            { id: 'SYSTEM', name: 'ระบบ', icon: 'info' },
+            { id: 'broadcast', name: 'ประกาศ', icon: 'campaign' }
           ].map((f) => (
             <button
               key={f.id}
               onClick={() => setActiveFilter(f.id)}
-              className={`shrink-0 px-5 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+              className={`shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
                 activeFilter === f.id
-                  ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                  : 'bg-slate-50 text-slate-500 border border-slate-100'
+                  ? 'bg-primary text-white shadow-lg shadow-primary/25 ring-2 ring-primary/20'
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200/70'
               }`}
             >
+              <span className="material-symbols-outlined text-base">{f.icon}</span>
               {f.name}
             </button>
           ))}
         </div>
 
         {loading ? (
-          <div className="py-20 flex flex-col items-center gap-4">
-            <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          <div className="py-24 flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+            <p className="text-sm font-bold text-slate-400">กำลังโหลดการแจ้งเตือน...</p>
           </div>
         ) : filteredNotifications.length > 0 ? (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {groupedToday.length > 0 && (
-              <div>
-                <p className="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-3">วันนี้</p>
-                <div className="space-y-2">{groupedToday.map(n => <NotifItem key={n.id} n={n} />)}</div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-primary"></span>
+                  <p className="text-xs font-black text-slate-500 uppercase tracking-wider">วันนี้</p>
+                </div>
+                <div className="space-y-3">{groupedToday.map(n => <NotifItem key={n.id} n={n} />)}</div>
               </div>
             )}
             {groupedYesterday.length > 0 && (
-              <div>
-                <p className="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-3">เมื่อวาน</p>
-                <div className="space-y-2">{groupedYesterday.map(n => <NotifItem key={n.id} n={n} />)}</div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-slate-300"></span>
+                  <p className="text-xs font-black text-slate-500 uppercase tracking-wider">เมื่อวาน</p>
+                </div>
+                <div className="space-y-3">{groupedYesterday.map(n => <NotifItem key={n.id} n={n} />)}</div>
               </div>
             )}
             {groupedOlder.length > 0 && (
-              <div>
-                <p className="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-3">ก่อนหน้านี้</p>
-                <div className="space-y-2">{groupedOlder.map(n => <NotifItem key={n.id} n={n} />)}</div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-slate-200"></span>
+                  <p className="text-xs font-black text-slate-500 uppercase tracking-wider">ก่อนหน้านี้</p>
+                </div>
+                <div className="space-y-3">{groupedOlder.map(n => <NotifItem key={n.id} n={n} />)}</div>
               </div>
             )}
           </div>
         ) : (
-          <div className="py-20 text-center">
-            <span className="material-symbols-outlined text-slate-200 text-5xl">notifications_off</span>
-            <p className="mt-3 text-sm font-extrabold text-slate-900">ไม่พบการแจ้งเตือน</p>
-            <p className="text-xs text-slate-400 mt-1">การแจ้งเตือนทั้งหมดจะแสดงที่นี่</p>
+          <div className="py-24 text-center bg-white rounded-3xl border border-slate-100 p-8 shadow-sm">
+            <div className="w-20 h-20 rounded-3xl bg-slate-50 text-slate-300 flex items-center justify-center mx-auto mb-4 border border-slate-100">
+              <span className="material-symbols-outlined text-4xl">notifications_off</span>
+            </div>
+            <h3 className="text-lg font-black text-slate-900">ไม่พบการแจ้งเตือน</h3>
+            <p className="text-xs sm:text-sm text-slate-400 mt-1 font-medium">ไม่มีรายการแจ้งเตือนในหมวดหมู่นี้</p>
           </div>
         )}
       </main>
-
     </PageWrapper>
   );
 };

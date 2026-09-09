@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
+import { prewarmClientGeo } from '../services/authService';
 
 const FEATURE_LIST = [
   "ระบบผูกบัญชีธนาคารอัตโนมัติ ถอนเงินเข้าบัญชีตรง ปลอดภัยสูงสุด",
@@ -71,6 +72,7 @@ const Register = () => {
   }, [searchParams]);
 
   useEffect(() => {
+    prewarmClientGeo();
     supabase.from('settings')
       .select('key,value')
       .in('key', ['site_logo_url', 'site_name'])
@@ -268,10 +270,10 @@ const Register = () => {
               />
               <div className="min-w-0">
                 <p className="text-base font-bold tracking-tight text-white">{siteName}</p>
-                <p className="truncate text-[11px] font-medium text-brand-200">ลงทะเบียนสมาชิกใหม่</p>
+                <p className="truncate text-xs font-medium text-brand-200">ลงทะเบียนสมาชิกใหม่</p>
               </div>
-              <span className="ml-auto inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-medium text-brand-100 ring-1 ring-inset ring-white/15">
-                <ShieldCheck className="size-3" />
+              <span className="ml-auto inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-brand-100 ring-1 ring-inset ring-white/15">
+                <ShieldCheck className="size-3.5" />
                 SSL 256-Bit
               </span>
             </div>

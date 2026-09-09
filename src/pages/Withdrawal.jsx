@@ -349,9 +349,9 @@ const Withdrawal = () => {
                   </>
                 )}
               </button>
-              <div className="mt-3 flex items-center justify-center gap-1.5 opacity-40">
-                <span className="material-symbols-outlined text-[12px]">lock</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-900">Secure SSL 256-bit Encryption & PIN Protection</span>
+              <div className="mt-3 flex items-center justify-center gap-1.5 opacity-60">
+                <span className="material-symbols-outlined text-sm">lock</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Secure SSL 256-bit Encryption & PIN Protection</span>
               </div>
             </div>
 

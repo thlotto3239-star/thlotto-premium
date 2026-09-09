@@ -3,7 +3,6 @@ import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
 import { Link, useNavigate } from 'react-router-dom';
 import PageWrapper from '../components/PageWrapper';
-import AppHeader from '../components/AppHeader';
 
 const Wallet = () => {
   const { profile, user } = useAuth();
@@ -40,7 +39,7 @@ const Wallet = () => {
         .select('id, title, description, image_url, min_deposit, bonus_amount, badge_text')
         .eq('is_active', true)
         .order('id', { ascending: false })
-        .limit(5);
+        .limit(6);
       setPromotions(data || []);
     };
     fetchPromotions();
@@ -63,7 +62,10 @@ const Wallet = () => {
           .select('title')
           .eq('id', data.active_promo_id)
           .single();
-        setPromoStatus({ ...data, promo_title: promo?.title || 'โปรโมชั่น' });
+        setPromoStatus({
+          ...data,
+          promo_title: promo?.title || 'โปรโมชั่นพิเศษ',
+        });
       }
     };
     fetchPromoStatus();
@@ -71,12 +73,12 @@ const Wallet = () => {
 
   const getTypeThai = (type) => {
     switch (type) {
-      case 'DEPOSIT': return 'ฝากเงินผ่านบัญชีธนาคาร';
+      case 'DEPOSIT': return 'ฝากเงิน';
       case 'WITHDRAW': return 'ถอนเงิน';
-      case 'WIN':
-      case 'PAYOUT': return 'ถูกรางวัล';
-      case 'BET': return 'เดิมพัน';
-      case 'BONUS': return 'โบนัส';
+      case 'BET': return 'แทงหวย';
+      case 'WIN': return 'ถูกรางวัล';
+      case 'PAYOUT': return 'จ่ายเงินรางวัล';
+      case 'BONUS': return 'โบนัสโปรโมชั่น';
       case 'COMMISSION': return 'คอมมิชชั่นแนะนำเพื่อน';
       case 'ADMIN_CREDIT': return 'เติมเงินโดยแอดมิน';
       case 'ADMIN_DEBIT': return 'หักเงินโดยแอดมิน';
@@ -97,249 +99,281 @@ const Wallet = () => {
 
   return (
     <PageWrapper>
-      <div className="w-full max-w-2xl mx-auto bg-white min-h-screen flex flex-col relative overflow-hidden lg:border-x lg:border-slate-100">
-        <AppHeader />
-        <header className="pt-4 pb-4 px-6 flex flex-col items-center">
-          <div className="w-full flex justify-between items-center mb-6">
-            <div className="flex flex-col">
-              <p className="text-xs text-slate-400 font-medium">สวัสดีคุณ 👋</p>
-              <h2 className="text-lg font-bold tracking-tight">{profile?.full_name || 'สมาชิก'}</h2>
-            </div>
-            <div></div>
-          </div>
-
-          {/* Smart Card */}
-          <div className="w-full glass-card rounded-[2.5rem] p-6 text-white shadow-2xl relative">
-            <div className="flex justify-between items-start mb-8">
-              <div className="flex flex-col">
-                <p className="text-emerald-100/70 text-xs font-medium mb-1">{profile?.bank_account_name || profile?.full_name || 'ไม่ระบุชื่อ'}</p>
-                <h3 className="text-xl font-bold tracking-wide">{profile?.bank_name || 'ไม่ระบุธนาคาร'}</h3>
-              </div>
-              {/* Chip */}
-              <div className="w-12 h-9 bg-gradient-to-br from-gold-premium/80 to-yellow-600 rounded-md relative chip-glow border border-white/20">
-                <div className="absolute inset-2 border-t border-b border-black/10 flex flex-col justify-between">
-                  <div className="w-full h-[1px] bg-black/10"></div>
-                  <div className="w-full h-[1px] bg-black/10"></div>
-                </div>
-                <div className="absolute inset-x-4 inset-y-0 border-l border-r border-black/10"></div>
-              </div>
-            </div>
-            <div className="mb-4">
-              <p className="text-emerald-100/60 text-xs font-semibold tracking-[0.2em] uppercase mb-1">ยอดเงินคงเหลือ</p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-medium text-emerald-200">฿</span>
-                <h1 className="text-4xl font-extrabold tracking-tight font-display">
-                  {Number(profile?.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </h1>
-              </div>
-            </div>
-            <div className="flex justify-between items-end mt-4">
-              <div className="flex items-center gap-2">
-                {bankInfo?.image_url ? (
-                  <img src={bankInfo.image_url} alt={bankInfo.name} className="w-8 h-8 rounded-full object-cover border border-white/20" />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-white text-sm">account_balance</span>
-                  </div>
-                )}
-                <p className="text-xs text-emerald-100/70 font-medium">{profile?.bank_account_number || ''}</p>
-              </div>
-              <div className="text-right">
-                {memberSince && (
-                  <p className="text-xs text-emerald-100/50 tracking-wide">สมาชิกตั้งแต่ {memberSince}</p>
-                )}
-              </div>
-            </div>
-            <div className="absolute -bottom-10 -right-10 size-32 bg-emerald-400/20 rounded-full blur-2xl"></div>
-          </div>
-        </header>
-
-        {/* Promo Status */}
-        {promoStatus && (
-          <div className="mx-6 mb-2 bg-amber-50 border border-amber-200 rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="material-symbols-outlined text-amber-600 text-lg">redeem</span>
-              <span className="font-bold text-sm text-amber-800">โปรโมชั่นที่ใช้อยู่: {promoStatus.promo_title}</span>
-            </div>
-            <div className="mb-2">
-              <div className="flex justify-between text-xs text-amber-700 mb-1">
-                <span>เทิร์นโอเวอร์</span>
-                <span className="font-bold">
-                  {Number(promoStatus.turnover_completed).toLocaleString()} / {Number(promoStatus.turnover_required).toLocaleString()} บาท
-                </span>
-              </div>
-              <div className="w-full bg-amber-200 rounded-full h-2.5">
-                <div
-                  className="h-2.5 rounded-full transition-all"
-                  style={{
-                    width: `${Math.min(100, promoStatus.turnover_required > 0 ? (promoStatus.turnover_completed / promoStatus.turnover_required) * 100 : 0)}%`,
-                    background: promoStatus.turnover_completed >= promoStatus.turnover_required ? '#16a34a' : '#f59e0b'
-                  }}
-                />
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-amber-700">
-              {promoStatus.turnover_completed < promoStatus.turnover_required && (
-                <span>แทงอีก ฿{(promoStatus.turnover_required - promoStatus.turnover_completed).toLocaleString()} ถึงจะถอนได้</span>
-              )}
-              {promoStatus.turnover_completed >= promoStatus.turnover_required && (
-                <span className="text-green-600 font-bold">✅ ทำเทิร์นครบแล้ว ถอนได้</span>
-              )}
-              {promoStatus.promo_max_withdrawal > 0 && (
-                <span>ถอนสูงสุด ฿{Number(promoStatus.promo_max_withdrawal).toLocaleString()}</span>
-              )}
-              {promoStatus.promo_allowed_game && promoStatus.promo_allowed_game !== 'all' && (
-                <span>เล่นได้: {promoStatus.promo_allowed_game === 'instant' ? 'หวย 1 นาที' : 'หวยหลัก'}</span>
-              )}
+      {/* Top Header Bar */}
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200/80 px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto w-full flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="w-10 h-10 rounded-xl bg-white border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-700 transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-lg">arrow_back</span>
+            </button>
+            <div>
+              <h1 className="font-black text-slate-900 text-base sm:text-lg tracking-tight">กระเป๋าเงิน (Wallet)</h1>
+              <p className="text-xs text-slate-400 hidden sm:block">จัดการยอดเงิน ฝาก-ถอน และประวัติธุรกรรม</p>
             </div>
           </div>
-        )}
-
-        {/* Main Actions */}
-        <div className="px-6 grid grid-cols-2 gap-4 my-6">
-          <button
-            onClick={() => navigate('/deposit')}
-            className="glossy-green text-white h-14 rounded-2xl flex items-center justify-center gap-2 font-bold active:scale-95 transition-transform"
-          >
-            <span className="material-symbols-outlined text-xl">add_circle</span>
-            <span>ฝากเงิน</span>
-          </button>
-          <button
-            onClick={() => navigate('/withdrawal')}
-            className="bg-white border-2 border-primary/20 text-primary h-14 rounded-2xl flex items-center justify-center gap-2 font-bold active:scale-95 transition-transform"
-          >
-            <span className="material-symbols-outlined text-xl">payments</span>
-            <span>ถอนเงิน</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/transactions')}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-base">receipt_long</span>
+              <span className="hidden sm:inline">ดูรายการทั้งหมด</span>
+            </button>
+          </div>
         </div>
+      </header>
 
-        {/* Promotions */}
-        <section className="mb-8">
-          <div className="px-6 flex justify-between items-center mb-4">
-            <h4 className="font-bold text-lg">โปรโมชั่นแนะนำ</h4>
-            <button onClick={() => navigate('/promotions')} className="text-primary text-sm font-semibold">ดูทั้งหมด</button>
-          </div>
-          <div className="flex overflow-x-auto gap-4 px-6 no-scrollbar">
-            {promotions.length > 0 ? promotions.map((p) => (
-              <div
-                key={p.id}
-                onClick={() => navigate(`/deposit?promo=${p.promo_code || p.id}&promoName=${encodeURIComponent(p.title)}&promoId=${p.id}&amount=${p.min_deposit || 100}`)}
-                className="min-w-[280px] bg-slate-50 rounded-2xl p-4 border border-slate-100 cursor-pointer active:scale-[0.98] transition-all"
+      {/* Main Responsive Container */}
+      <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 pb-32">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+          {/* ════ LEFT COLUMN (5 cols on PC): Wallet Card & Financial Actions ════ */}
+          <div className="lg:col-span-5 space-y-6">
+
+            {/* Smart Holographic Wallet Card */}
+            <div className="w-full bg-gradient-to-br from-brand-900 via-emerald-950 to-slate-950 rounded-[2.5rem] p-7 text-white shadow-2xl relative overflow-hidden border border-emerald-800/40">
+              <div className="absolute -top-12 -right-12 size-44 rounded-full bg-emerald-500/20 blur-2xl pointer-events-none" />
+              <div className="absolute -bottom-10 -left-10 size-44 rounded-full bg-black/40 blur-2xl pointer-events-none" />
+
+              <div className="relative z-10 flex justify-between items-start mb-6">
+                <div>
+                  <p className="text-emerald-300/80 text-xs font-bold uppercase tracking-wider">
+                    {profile?.bank_account_name || profile?.full_name || 'สมาชิก TH-LOTTO'}
+                  </p>
+                  <h3 className="text-lg font-black tracking-tight mt-0.5">{profile?.bank_name || 'TH-LOTTO WALLET'}</h3>
+                </div>
+                {/* Chip pattern */}
+                <div className="w-11 h-8 rounded-lg bg-gradient-to-br from-amber-300 to-amber-600 p-1 border border-white/30 shadow-xs flex flex-col justify-between">
+                  <div className="w-full h-px bg-black/20" />
+                  <div className="w-full h-px bg-black/20" />
+                </div>
+              </div>
+
+              <div className="relative z-10 mb-6">
+                <p className="text-emerald-200/70 text-xs font-bold tracking-[0.2em] uppercase mb-1">ยอดเงินคงเหลือสุทธิ</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-bold text-emerald-400">฿</span>
+                  <h1 className="text-4xl sm:text-5xl font-black tracking-tight font-mono">
+                    {Number(profile?.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </h1>
+                </div>
+              </div>
+
+              <div className="relative z-10 flex justify-between items-end pt-2 border-t border-white/10 text-xs">
+                <div className="flex items-center gap-2">
+                  {bankInfo?.image_url ? (
+                    <img src={bankInfo.image_url} alt={bankInfo.name} className="size-6 rounded-full object-cover border border-white/30" />
+                  ) : (
+                    <span className="material-symbols-outlined text-sm text-emerald-400">account_balance</span>
+                  )}
+                  <span className="font-mono text-emerald-200/90 font-medium">
+                    {profile?.bank_account_number || 'ยังไม่ได้ผูกบัญชี'}
+                  </span>
+                </div>
+                {memberSince && (
+                  <span className="text-emerald-200/50">สมาชิกตั้งแต่ {memberSince}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Action Buttons (Deposit & Withdrawal) */}
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => navigate('/deposit')}
+                className="py-4 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-md transition-all active:scale-[0.99] cursor-pointer"
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="size-14 rounded-xl bg-white flex items-center justify-center border border-slate-100 overflow-hidden shrink-0">
-                    {p.image_url
-                      ? <img src={p.image_url} alt={p.title} className="w-full h-full object-cover" />
-                      : <span className="material-symbols-outlined text-primary text-3xl">redeem</span>
-                    }
+                <span className="material-symbols-outlined text-xl">add_circle</span>
+                <span>ฝากเงิน</span>
+              </button>
+              <button
+                onClick={() => navigate('/withdrawal')}
+                className="py-4 rounded-2xl bg-white hover:bg-slate-50 border-2 border-slate-200 text-slate-800 font-black text-sm flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.99] cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-xl text-brand-600">payments</span>
+                <span>ถอนเงิน</span>
+              </button>
+            </div>
+
+            {/* Active Promo Turnover Card (if active) */}
+            {promoStatus && (
+              <div className="bg-amber-50/80 border border-amber-200 rounded-3xl p-5 shadow-xs space-y-3">
+                <div className="flex items-center gap-2 text-amber-900">
+                  <span className="material-symbols-outlined text-lg text-amber-600">redeem</span>
+                  <span className="font-extrabold text-sm truncate">โปรโมชั่นที่ใช้อยู่: {promoStatus.promo_title}</span>
+                </div>
+                <div>
+                  <div className="flex justify-between text-xs text-amber-800 font-bold mb-1.5">
+                    <span>ความคืบหน้าเทิร์นโอเวอร์</span>
+                    <span className="font-mono">
+                      {Number(promoStatus.turnover_completed).toLocaleString()} / {Number(promoStatus.turnover_required).toLocaleString()} บ.
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <p className="font-bold text-sm truncate">{p.title}</p>
-                      {p.badge_text && (
-                        <span className="bg-primary text-white text-xs font-extrabold px-1.5 py-0.5 rounded-full shrink-0">{p.badge_text}</span>
+                  <div className="w-full bg-amber-200/80 rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${Math.min(100, promoStatus.turnover_required > 0 ? (promoStatus.turnover_completed / promoStatus.turnover_required) * 100 : 0)}%`,
+                        background: promoStatus.turnover_completed >= promoStatus.turnover_required ? '#16a34a' : '#f59e0b'
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="text-xs text-amber-800 font-medium">
+                  {promoStatus.turnover_completed < promoStatus.turnover_required ? (
+                    <span>ต้องการยอดเดิมพันอีก ฿{(promoStatus.turnover_required - promoStatus.turnover_completed).toLocaleString()} จึงจะถอนเงินได้</span>
+                  ) : (
+                    <span className="text-emerald-700 font-bold">✅ ครบเงื่อนไขเทิร์นโอเวอร์แล้ว สามารถทำรายการถอนเงินได้ทันที</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Bank Linking Info Card */}
+            <div className="bg-white rounded-3xl p-5 border border-slate-200/80 shadow-xs flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="size-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-xl">account_balance</span>
+                </div>
+                <div>
+                  <p className="font-extrabold text-slate-800 text-sm">{bankInfo?.name || profile?.bank_name || 'บัญชีธนาคาร'}</p>
+                  <p className="text-xs text-slate-400 font-mono">{profile?.bank_account_number || 'ยังไม่ได้ผูกบัญชี'}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => navigate('/bank-account')}
+                className="text-xs font-bold text-brand-600 hover:text-brand-700 cursor-pointer"
+              >
+                ดูรายละเอียด
+              </button>
+            </div>
+
+          </div>
+
+          {/* ════ RIGHT COLUMN (7 cols on PC): Recent Transactions & Promo Offers ════ */}
+          <div className="lg:col-span-7 space-y-6">
+
+            {/* Recent Transactions Desk */}
+            <div className="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-xs">
+              <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div>
+                  <h3 className="font-black text-slate-900 text-base">ประวัติธุรกรรมล่าสุด</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">รายการฝาก ถอน และเงินรางวัล 10 รายการล่าสุด</p>
+                </div>
+                <Link
+                  to="/transactions"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-brand-600 hover:text-brand-700"
+                >
+                  <span>ประวัติทั้งหมด</span>
+                  <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                </Link>
+              </div>
+
+              <div className="divide-y divide-slate-100">
+                {loading ? (
+                  <div className="py-16 text-center">
+                    <div className="w-8 h-8 border-3 border-brand-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                    <p className="text-xs text-slate-400 mt-3 font-bold">กำลังดึงข้อมูลธุรกรรม...</p>
+                  </div>
+                ) : transactions.length > 0 ? (
+                  transactions.map((tx) => {
+                    const income = isIncome(tx.type);
+                    const iconBg =
+                      tx.type === 'WIN' || tx.type === 'PAYOUT' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                      tx.type === 'DEPOSIT' || tx.type === 'BONUS' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                      'bg-rose-50 text-rose-600 border-rose-100';
+                    const icon =
+                      tx.type === 'WIN' || tx.type === 'PAYOUT' ? 'emoji_events' :
+                      tx.type === 'DEPOSIT' || tx.type === 'BONUS' ? 'arrow_downward' :
+                      'arrow_upward';
+                    const isDone = tx.status === 'COMPLETED' || tx.status === 'SUCCESS';
+                    const statusBadge =
+                      isDone ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                      tx.status === 'PENDING' ? 'bg-slate-100 text-slate-500 border-slate-200' :
+                      'bg-rose-50 text-rose-600 border-rose-100';
+                    const statusText =
+                      isDone ? 'สำเร็จ' :
+                      tx.status === 'PENDING' ? 'รอดำเนินการ' : 'ปฏิเสธ';
+
+                    return (
+                      <div key={tx.id} className="p-4 sm:p-5 flex items-center justify-between hover:bg-slate-50/60 transition-colors">
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <div className={`size-11 rounded-2xl flex items-center justify-center shrink-0 border ${iconBg}`}>
+                            <span className="material-symbols-outlined text-lg">{icon}</span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-extrabold text-slate-900 text-sm truncate">
+                              {tx.note || getTypeThai(tx.type)}
+                            </p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className="text-xs text-slate-400">
+                                {new Date(tx.created_at).toLocaleDateString('th-TH-u-ca-buddhist', { day: '2-digit', month: 'short' })} • {new Date(tx.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold border ${statusBadge}`}>
+                                {statusText}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <p className={`font-mono font-black text-base sm:text-lg shrink-0 ml-3 ${income ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {income ? '+' : '-'}฿{Math.abs(Number(tx.amount)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="py-16 text-center text-slate-400 space-y-2">
+                    <span className="material-symbols-outlined text-4xl text-slate-300">receipt</span>
+                    <p className="text-sm font-bold">ยังไม่มีประวัติการทำรายการ</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Recommended Promotions Section */}
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="font-black text-slate-900 text-base">โปรโมชั่นและสิทธิพิเศษ</h3>
+                  <p className="text-xs text-slate-400">เพิ่มยอดฝากรับโบนัสพิเศษทันที</p>
+                </div>
+                <Link to="/promotions" className="text-xs font-bold text-brand-600 hover:text-brand-700">
+                  ดูทั้งหมด
+                </Link>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {promotions.slice(0, 2).map((p) => (
+                  <div
+                    key={p.id}
+                    onClick={() => navigate(`/deposit?promo=${p.promo_code || p.id}&promoName=${encodeURIComponent(p.title)}&promoId=${p.id}&amount=${p.min_deposit || 100}`)}
+                    className="p-4 rounded-2xl bg-slate-50 hover:bg-slate-100/80 border border-slate-100 transition-all cursor-pointer flex items-center gap-3.5 group"
+                  >
+                    <div className="size-14 rounded-2xl bg-white border border-slate-200/60 flex items-center justify-center shrink-0 overflow-hidden shadow-2xs">
+                      {p.image_url ? (
+                        <img src={p.image_url} alt={p.title} className="size-full object-cover group-hover:scale-105 transition-transform" />
+                      ) : (
+                        <span className="material-symbols-outlined text-brand-600 text-2xl">redeem</span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{p.description}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-extrabold text-slate-900 text-sm truncate">{p.title}</p>
+                      <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{p.description}</p>
+                      {p.bonus_amount > 0 && (
+                        <p className="text-xs font-black text-brand-600 mt-1">โบนัส +฿{p.bonus_amount}</p>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  {p.bonus_amount > 0 && (
-                    <p className="text-xs font-bold text-primary">+{p.bonus_amount} บาท</p>
-                  )}
-                  <button className="ml-auto bg-primary text-white text-xs font-extrabold px-4 py-1.5 rounded-full shadow-sm shadow-primary/20">
-                    รับโปร
-                  </button>
-                </div>
+                ))}
               </div>
-            )) : (
-              <>
-                <div className="min-w-[280px] bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                  <div className="flex items-center gap-4">
-                    <div className="size-16 rounded-xl bg-white flex items-center justify-center border border-slate-100">
-                      <span className="material-symbols-outlined text-primary text-3xl">redeem</span>
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm">โบนัสฝากครั้งแรก</p>
-                      <p className="text-xs text-slate-500">รับเพิ่มทันที 10% สูงสุด 500.-</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="min-w-[280px] bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                  <div className="flex items-center gap-4">
-                    <div className="size-16 rounded-xl bg-white flex items-center justify-center border border-slate-100">
-                      <span className="material-symbols-outlined text-gold-premium text-3xl">stars</span>
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm">ลูกค้า VIP ระดับทอง</p>
-                      <p className="text-xs text-slate-500">คืนเงินทุกยอดเสีย 5% ทุกสัปดาห์</p>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </section>
+            </div>
 
-        {/* Transaction History */}
-        <section className="px-6 mb-32">
-          <div className="flex justify-between items-center mb-4">
-            <h4 className="font-bold text-lg">ประวัติรายการ</h4>
-            <Link to="/transactions" className="material-symbols-outlined text-slate-400">tune</Link>
           </div>
-          <div className="space-y-4">
-            {loading ? (
-              <div className="py-10 text-center">
-                <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin mx-auto"></div>
-              </div>
-            ) : transactions.length > 0 ? (
-              transactions.map((tx) => {
-                const income = isIncome(tx.type);
-                const iconBg =
-                  tx.type === 'WIN' || tx.type === 'PAYOUT' ? 'bg-yellow-100 text-yellow-600' :
-                  tx.type === 'DEPOSIT' || tx.type === 'BONUS' ? 'bg-green-100 text-green-600' :
-                  'bg-red-50 text-red-400';
-                const icon =
-                  tx.type === 'WIN' || tx.type === 'PAYOUT' ? 'military_tech' :
-                  tx.type === 'DEPOSIT' || tx.type === 'BONUS' ? 'input' :
-                  'output';
-                const isDone = tx.status === 'COMPLETED' || tx.status === 'SUCCESS';
-                const statusBadge =
-                  isDone ? 'bg-gold-premium/10 text-gold-premium' :
-                  tx.status === 'PENDING' ? 'bg-slate-100 text-slate-400' :
-                  'bg-red-50 text-red-500';
-                const statusText =
-                  isDone ? 'สำเร็จ' :
-                  tx.status === 'PENDING' ? 'รอดำเนินการ' : 'ปฏิเสธ';
-                return (
-                  <div key={tx.id} className="flex items-center justify-between p-4 rounded-2xl bg-white border border-slate-50 shadow-soft">
-                    <div className="flex items-center gap-4">
-                      <div className={`size-12 rounded-full flex items-center justify-center ${iconBg.split(' ')[0]}`}>
-                        <span className={`material-symbols-outlined ${iconBg.split(' ')[1]}`}>{icon}</span>
-                      </div>
-                      <div>
-                        <p className="font-bold text-sm">{tx.note || getTypeThai(tx.type)}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-xs text-slate-400">
-                            {new Date(tx.created_at).toLocaleDateString('th-TH-u-ca-buddhist', { day: '2-digit', month: 'short', year: '2-digit' })} • {new Date(tx.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                          <span className={`px-2 py-0.5 rounded-full text-xs font-bold whitespace-nowrap ${statusBadge}`}>{statusText}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <p className={`font-bold font-display ${income ? 'text-primary' : 'text-rose-500'}`}>
-                      {income ? '+' : '-'}฿{Math.abs(Number(tx.amount)).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                );
-              })
-            ) : (
-              <div className="py-12 text-center text-slate-400 text-sm">ไม่มีประวัติรายการ</div>
-            )}
-          </div>
-        </section>
 
-      </div>
+        </div>
+      </main>
     </PageWrapper>
   );
 };

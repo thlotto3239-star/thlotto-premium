@@ -93,9 +93,9 @@ const Results = () => {
   const historyDates = [...new Set(history.map(r => r.draw_date))];
 
   const Badge = ({ row }) => {
-    if (!row.has_draw_today) return <span className="text-[8px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-500">งวดล่าสุด</span>;
-    if (isPending(row.result_status)) return <span className="text-[8px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-400">รอผล</span>;
-    return <span className="text-[8px] font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">ประกาศแล้ว</span>;
+    if (!row.has_draw_today) return <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-100">งวดล่าสุด</span>;
+    if (isPending(row.result_status)) return <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 border border-slate-200">รอผล</span>;
+    return <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">ประกาศแล้ว</span>;
   };
 
   const SubDate = ({ row }) => {
@@ -222,8 +222,8 @@ const Results = () => {
                           ['2 ล่าง', pending(r) ? 'xx' : (r.result_2bottom || 'xx'), true],
                         ].map(([label, val, accent]) => (
                           <div key={label} className={`text-center p-2 rounded-xl border ${accent ? 'bg-brand-50/60 border-brand-200/80' : 'bg-slate-50 border-slate-100'}`}>
-                            <p className={`text-[8px] font-extrabold uppercase ${accent ? 'text-brand-700' : 'text-slate-400'}`}>{label}</p>
-                            <p className={`text-xs font-black font-mono mt-0.5 ${accent ? 'text-brand-700' : 'text-slate-800'}`}>{val}</p>
+                            <p className={`text-xs font-extrabold uppercase ${accent ? 'text-brand-700' : 'text-slate-500'}`}>{label}</p>
+                            <p className={`text-sm font-black font-mono mt-0.5 ${accent ? 'text-brand-700' : 'text-slate-800'}`}>{val}</p>
                           </div>
                         ))}
                       </div>
@@ -263,8 +263,8 @@ const Results = () => {
                           ['2 ล่าง', pending(r) ? 'xx' : (r.result_2bottom || 'xx'), true],
                         ].map(([label, val, accent]) => (
                           <div key={label} className={`text-center p-2 rounded-xl border ${accent ? 'bg-teal-50/60 border-teal-200/80' : 'bg-slate-50 border-slate-100'}`}>
-                            <p className={`text-[8px] font-extrabold uppercase ${accent ? 'text-teal-700' : 'text-slate-400'}`}>{label}</p>
-                            <p className={`text-xs font-black font-mono mt-0.5 ${accent ? 'text-teal-700' : 'text-slate-800'}`}>{val}</p>
+                            <p className={`text-xs font-extrabold uppercase ${accent ? 'text-teal-700' : 'text-slate-500'}`}>{label}</p>
+                            <p className={`text-sm font-black font-mono mt-0.5 ${accent ? 'text-teal-700' : 'text-slate-800'}`}>{val}</p>
                           </div>
                         ))}
                       </div>
@@ -299,8 +299,8 @@ const Results = () => {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h4 className="font-extrabold text-sm">{r.name}</h4>
-                            <span className="bg-emerald-500/20 text-emerald-300 text-[10px] px-2 py-0.5 rounded-full font-bold border border-emerald-500/30">96 รอบ</span>
+                            <h4 className="font-extrabold text-sm sm:text-base">{r.name}</h4>
+                            <span className="bg-emerald-500/20 text-emerald-300 text-xs px-2.5 py-0.5 rounded-full font-bold border border-emerald-500/30">96 รอบ</span>
                           </div>
                           <p className="text-slate-300 text-xs mt-1">ออกผลทุก 15 นาที พร้อมไลฟ์สด 24 ชม.</p>
                         </div>
@@ -339,12 +339,12 @@ const Results = () => {
                       </div>
                       <div className="flex items-center gap-2.5 sm:gap-4 shrink-0">
                         <div className="text-right">
-                          <p className="text-[7px] text-slate-400 font-bold uppercase">3 ตัว</p>
-                          <p className="text-xs font-bold text-slate-800">{pending(r) ? 'xxx' : (r.result_3top || 'xxx')}</p>
+                          <p className="text-xs text-slate-500 font-bold uppercase">3 ตัว</p>
+                          <p className="text-sm font-black text-slate-800 font-mono">{pending(r) ? 'xxx' : (r.result_3top || 'xxx')}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[7px] text-primary font-bold uppercase">2 ตัว</p>
-                          <p className="text-xs font-bold text-primary">{pending(r) ? 'xx' : (r.result_2top || 'xx')}</p>
+                          <p className="text-xs text-brand-700 font-bold uppercase">2 ตัว</p>
+                          <p className="text-sm font-black text-brand-700 font-mono">{pending(r) ? 'xx' : (r.result_2top || 'xx')}</p>
                         </div>
                         <Badge row={r} />
                       </div>
@@ -469,41 +469,41 @@ const Results = () => {
                             <p className="text-xs text-slate-400 font-mono">{r.lottery_markets?.code}</p>
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
                           {r.result_main && r.result_main !== r.result_3top && (
-                            <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                              <p className="text-[8px] text-slate-400 font-bold uppercase">รางวัล</p>
-                              <p className="text-sm font-bold text-slate-800">{r.result_main}</p>
+                            <div className="text-center bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
+                              <p className="text-xs text-slate-500 font-bold uppercase">รางวัล</p>
+                              <p className="text-sm font-black text-slate-800 font-mono mt-0.5">{r.result_main}</p>
                             </div>
                           )}
                           {r.result_3top && (
-                            <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                              <p className="text-[8px] text-slate-400 font-bold uppercase">3 ตัวบน</p>
-                              <p className="text-sm font-bold text-slate-800">{r.result_3top}</p>
+                            <div className="text-center bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
+                              <p className="text-xs text-slate-500 font-bold uppercase">3 ตัวบน</p>
+                              <p className="text-sm font-black text-slate-800 font-mono mt-0.5">{r.result_3top}</p>
                             </div>
                           )}
                           {r.result_3front && (
-                            <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                              <p className="text-[8px] text-slate-400 font-bold uppercase">3 ตัวหน้า</p>
-                              <p className="text-sm font-bold text-slate-800">{r.result_3front}</p>
+                            <div className="text-center bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
+                              <p className="text-xs text-slate-500 font-bold uppercase">3 ตัวหน้า</p>
+                              <p className="text-sm font-black text-slate-800 font-mono mt-0.5">{r.result_3front}</p>
                             </div>
                           )}
                           {r.result_3bottom && (
-                            <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                              <p className="text-[8px] text-slate-400 font-bold uppercase">3 ตัวล่าง</p>
-                              <p className="text-sm font-bold text-slate-800">{r.result_3bottom}</p>
+                            <div className="text-center bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
+                              <p className="text-xs text-slate-500 font-bold uppercase">3 ตัวล่าง</p>
+                              <p className="text-sm font-black text-slate-800 font-mono mt-0.5">{r.result_3bottom}</p>
                             </div>
                           )}
                           {r.result_2top && (
-                            <div className="text-center bg-slate-50 p-2 rounded-xl border border-slate-100">
-                              <p className="text-[8px] text-slate-400 font-bold uppercase">2 ตัวบน</p>
-                              <p className="text-sm font-bold text-slate-800">{r.result_2top}</p>
+                            <div className="text-center bg-slate-50 p-2.5 rounded-xl border border-slate-200/60">
+                              <p className="text-xs text-slate-500 font-bold uppercase">2 ตัวบน</p>
+                              <p className="text-sm font-black text-slate-800 font-mono mt-0.5">{r.result_2top}</p>
                             </div>
                           )}
                           {r.result_2bottom && (
-                            <div className="text-center bg-primary/5 p-2 rounded-xl border border-primary/10">
-                              <p className="text-[8px] text-primary font-bold uppercase">2 ตัวล่าง</p>
-                              <p className="text-sm font-bold text-primary">{r.result_2bottom}</p>
+                            <div className="text-center bg-brand-50/70 p-2.5 rounded-xl border border-brand-200/80">
+                              <p className="text-xs text-brand-700 font-bold uppercase">2 ตัวล่าง</p>
+                              <p className="text-sm font-black text-brand-700 font-mono mt-0.5">{r.result_2bottom}</p>
                             </div>
                           )}
                         </div>

@@ -131,7 +131,7 @@ const Deposit = () => {
                   <p className="text-brand-700 font-black text-xs uppercase tracking-wider">ฝากพร้อมโปรโมชั่น</p>
                   <p className="text-slate-800 text-sm font-extrabold truncate">{promoName || promoCode}</p>
                 </div>
-                <span className="text-[10px] font-black bg-brand-600 text-white px-2.5 py-1 rounded-full uppercase">Active</span>
+                <span className="text-xs font-bold bg-brand-600 text-white px-2.5 py-1 rounded-full uppercase">Active</span>
               </div>
             )}
 
@@ -145,7 +145,7 @@ const Deposit = () => {
               />
               <div className="flex items-center justify-between bg-slate-50 rounded-2xl p-4 border border-slate-100">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">เลขที่บัญชี</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-0.5">เลขที่บัญชี</p>
                   <p className="text-base sm:text-lg font-black font-mono tracking-wider text-slate-800">{bankSettings.bank_account_number}</p>
                 </div>
                 <button

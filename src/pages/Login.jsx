@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
+import { prewarmClientGeo } from '../services/authService';
 
 const FEATURE_LIST = [
   "ระบบคำนวณและปรับยอดรางวัลอัตโนมัติ แม่นยำทุกมาร์เก็ต",
@@ -63,6 +64,7 @@ const Login = () => {
   }, [lockSeconds]);
 
   useEffect(() => {
+    prewarmClientGeo();
     supabase.from('settings')
       .select('key,value')
       .in('key', ['site_logo_url', 'site_name'])
@@ -224,10 +226,10 @@ const Login = () => {
               />
               <div className="min-w-0">
                 <p className="text-base font-bold tracking-tight text-white">{siteName}</p>
-                <p className="truncate text-[11px] font-medium text-brand-200">เข้าสู่ระบบสมาชิก</p>
+                <p className="truncate text-xs font-medium text-brand-200">เข้าสู่ระบบสมาชิก</p>
               </div>
-              <span className="ml-auto inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-medium text-brand-100 ring-1 ring-inset ring-white/15">
-                <ShieldCheck className="size-3" />
+              <span className="ml-auto inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-white/10 px-2.5 py-1 text-xs font-medium text-brand-100 ring-1 ring-inset ring-white/15">
+                <ShieldCheck className="size-3.5" />
                 SSL 256-Bit
               </span>
             </div>
@@ -370,18 +372,18 @@ const Login = () => {
           <div className="mt-8 grid grid-cols-3 gap-2.5 pt-4">
             <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 text-center flex flex-col items-center">
               <ShieldCheck className="size-4 text-brand-600 mb-1" />
-              <p className="text-[11px] font-bold text-slate-800">ความปลอดภัย</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">SSL 256-Bit</p>
+              <p className="text-xs font-bold text-slate-800">ความปลอดภัย</p>
+              <p className="text-xs text-slate-500 mt-0.5">SSL 256-Bit</p>
             </div>
             <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 text-center flex flex-col items-center">
               <Zap className="size-4 text-amber-500 mb-1" />
-              <p className="text-[11px] font-bold text-slate-800">ธุรกรรมออโต้</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">ปรับยอดทันที</p>
+              <p className="text-xs font-bold text-slate-800">ธุรกรรมออโต้</p>
+              <p className="text-xs text-slate-500 mt-0.5">ปรับยอดทันที</p>
             </div>
             <div className="rounded-xl border border-slate-200/80 bg-slate-50/50 p-3 text-center flex flex-col items-center">
               <Headphones className="size-4 text-brand-600 mb-1" />
-              <p className="text-[11px] font-bold text-slate-800">ศูนย์บริการ</p>
-              <p className="text-[10px] text-slate-500 mt-0.5">ดูแล 24 ชม.</p>
+              <p className="text-xs font-bold text-slate-800">ศูนย์บริการ</p>
+              <p className="text-xs text-slate-500 mt-0.5">ดูแล 24 ชม.</p>
             </div>
           </div>
         </div>

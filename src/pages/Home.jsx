@@ -504,7 +504,7 @@ const Home = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-bold text-md">{instantCfg.name}</h4>
-                    <span className="bg-accent-red text-white text-[8px] px-2 py-0.5 rounded-full font-bold">HOT</span>
+                    <span className="bg-accent-red text-white text-xs px-2.5 py-0.5 rounded-full font-extrabold">HOT</span>
                   </div>
                   <p className="text-xs text-slate-400 whitespace-nowrap">ออกผลทุก 1 นาที ตลอด 24 ชั่วโมง</p>
                   <button
@@ -530,7 +530,7 @@ const Home = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-bold text-md">{item.title}</h4>
-                    <span className="bg-accent-red text-white text-[8px] px-2 py-0.5 rounded-full font-bold">HOT</span>
+                    <span className="bg-accent-red text-white text-xs px-2.5 py-0.5 rounded-full font-extrabold">HOT</span>
                   </div>
                   <p className="text-xs text-slate-400 whitespace-nowrap">{item.code}</p>
                   <button
@@ -641,8 +641,8 @@ const Home = () => {
                   <p className="text-2xl font-black text-accent-red leading-tight">{Number(item.value).toLocaleString()}</p>
                   <p className="text-xs text-gray-400 font-bold mb-3">บาทละ</p>
                   <div className="flex items-center gap-1.5">
-                    <img className="w-3.5 h-3.5 rounded-full" src="https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png" alt="TH-LOTTO" />
-                    <span className="text-[8px] font-black text-emerald-treasury">TH-LOTTO</span>
+                    <img className="w-4 h-4 rounded-full" src="https://img1.pic.in.th/images/e012bf8186b87f91c4892bef665aba4e.png" alt="TH-LOTTO" />
+                    <span className="text-xs font-black text-emerald-treasury">TH-LOTTO</span>
                   </div>
                 </div>
               ))}

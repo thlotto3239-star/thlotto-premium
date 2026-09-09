@@ -173,7 +173,7 @@ const BetHistory = () => {
           <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
             <span className="material-symbols-outlined text-8xl text-primary">analytics</span>
           </div>
-          <p className="text-slate-400 text-[11px] font-black uppercase tracking-widest mb-3">TH-LOTTO SUMMARY</p>
+          <p className="text-slate-400 text-xs font-black uppercase tracking-widest mb-3">TH-LOTTO SUMMARY</p>
           <div className="grid grid-cols-2 gap-4 relative z-10">
             <div className="space-y-1">
               <p className="text-slate-500 text-xs sm:text-sm">ยอดแทงสะสม</p>
