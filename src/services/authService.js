@@ -614,61 +614,8 @@ export function translateThaiLocation(city, region) {
 }
 
 /**
- * ขอพิกัด GPS/Wi-Fi จริงจากอุปกรณ์ (HTML5 Geolocation)
- */
-export async function getGpsCoordinates(timeoutMs = 1800) {
-  if (typeof window === 'undefined' || !navigator.geolocation) return null;
-  return new Promise((resolve) => {
-    const timer = setTimeout(() => resolve(null), timeoutMs);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        clearTimeout(timer);
-        resolve({
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-        });
-      },
-      () => {
-        clearTimeout(timer);
-        resolve(null);
-      },
-      { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 600000 }
-    );
-  });
-}
-
-/**
- * แปลงพิกัด GPS เป็นชื่อจังหวัดและอำเภอภาษาไทย
- */
-async function reverseGeocodeGps(lat, lon) {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&accept-language=th`,
-      { signal: AbortSignal.timeout(1200) }
-    );
-    if (res.ok) {
-      const data = await res.json();
-      const addr = data.address || {};
-      const province = addr.province || addr.state || '';
-      const district = addr.city || addr.town || addr.district || addr.county || '';
-      if (province || district) {
-        const parts = [];
-        if (district) parts.push(district);
-        if (province && province !== district) parts.push(province);
-        return parts.join(' ') + ' [GPS]';
-      }
-    }
-  } catch (_) {}
-
-  const nearest = matchNearestThaiProvince(lat, lon);
-  return nearest ? `${nearest.name} [GPS]` : 'ประเทศไทย [GPS]';
-}
-
-/**
- * ดึงข้อมูลพิกัดและ IP จริงของผู้ใช้งาน (Multi-Tier Architecture)
- * Tier 1: GPS ความแม่นยำสูง (ถ้าผู้ใช้อนุญาต)
- * Tier 2: Multi-Provider Public IP Waterfall (ipwho.is -> ipapi.co -> ipify)
+ * ดึงข้อมูลพิกัดและ IP จริงของผู้ใช้งานแบบเงียบในเบื้องหลัง (Silent High-Accuracy Client Geo)
+ * ทำงานใน Background ทันทีที่ผู้ใช้เข้าสู่ระบบ โดยไม่ต้องแสดงหน้าต่างขออนุญาต GPS
  */
 let _cachedGeo = null;
 let _isResolving = false;
@@ -687,25 +634,32 @@ export async function getClientGeo() {
     return _cachedGeo;
   }
 
-  // 1. ลองขอพิกัด GPS จากอุปกรณ์ก่อน
-  const gps = await getGpsCoordinates(1800);
-
-  // 2. ดึง IP จริงผ่าน Multi-Provider Waterfall
+  // ดึง IP และพิกัดจังหวัดจริงผ่าน Multi-Provider Waterfall ในเบื้องหลัง
   let ipData = null;
 
-  // Provider A: ipwho.is
+  // Provider A: ipwho.is (ความแม่นยำสูงสำหรับโครงข่ายไทยและมือถือ)
   try {
     const resA = await fetch('https://ipwho.is/', { signal: AbortSignal.timeout(2500) });
     const dataA = await resA.json();
-    if (dataA && dataA.success !== false) {
+    if (dataA && dataA.success !== false && dataA.ip) {
+      const cityTh = translateThaiLocation(dataA.city, dataA.region);
+      const rawIsp = (dataA.connection && (dataA.connection.org || dataA.connection.isp)) || '';
+      const shortIsp = rawIsp.includes('AIS') || rawIsp.includes('Advanced Info') ? 'AIS' :
+                       rawIsp.includes('True') || rawIsp.includes('TRUE') ? 'TRUE' :
+                       rawIsp.includes('Triple T') || rawIsp.includes('3BB') ? '3BB' :
+                       rawIsp.includes('National Telecom') || rawIsp.includes('TOT') || rawIsp.includes('CAT') ? 'NT' :
+                       rawIsp.includes('DTAC') || rawIsp.includes('Total Access') ? 'DTAC' : '';
+
+      const finalCity = shortIsp ? `${cityTh} (${shortIsp})` : cityTh;
+
       ipData = {
-        ip: dataA.ip || null,
-        city: dataA.city || '',
-        region: dataA.region || '',
+        ip: dataA.ip,
+        city: finalCity,
+        region: dataA.region || cityTh,
         country: dataA.country_code || 'TH',
-        lat: dataA.latitude || 13.7563,
-        lon: dataA.longitude || 100.5018,
-        isp: (dataA.connection && (dataA.connection.org || dataA.connection.isp)) || '',
+        lat: Number(dataA.latitude) || 13.7563,
+        lon: Number(dataA.longitude) || 100.5018,
+        isp: rawIsp || 'ISP ประเทศไทย',
       };
     }
   } catch (_) {}
@@ -715,15 +669,16 @@ export async function getClientGeo() {
     try {
       const resB = await fetch('https://ipapi.co/json/', { signal: AbortSignal.timeout(2500) });
       const dataB = await resB.json();
-      if (dataB && !dataB.error) {
+      if (dataB && !dataB.error && dataB.ip) {
+        const cityTh = translateThaiLocation(dataB.city, dataB.region);
         ipData = {
-          ip: dataB.ip || null,
-          city: dataB.city || '',
-          region: dataB.region || '',
+          ip: dataB.ip,
+          city: cityTh,
+          region: dataB.region || cityTh,
           country: dataB.country_code || 'TH',
-          lat: dataB.latitude || 13.7563,
-          lon: dataB.longitude || 100.5018,
-          isp: dataB.org || '',
+          lat: Number(dataB.latitude) || 13.7563,
+          lon: Number(dataB.longitude) || 100.5018,
+          isp: dataB.org || 'ISP ประเทศไทย',
         };
       }
     } catch (_) {}
@@ -737,8 +692,8 @@ export async function getClientGeo() {
       if (dataC?.ip) {
         ipData = {
           ip: dataC.ip,
-          city: 'กรุงเทพมหานคร',
-          region: 'Bangkok',
+          city: 'ประเทศไทย (เครือข่ายมือถือ/บรอดแบนด์)',
+          region: 'Thailand',
           country: 'TH',
           lat: 13.7563,
           lon: 100.5018,
@@ -748,38 +703,13 @@ export async function getClientGeo() {
     } catch (_) {}
   }
 
-  // รวมผลลัพธ์
-  let finalCity = 'กรุงเทพมหานคร';
-  let finalLat = 13.7563;
-  let finalLon = 100.5018;
-
-  if (gps) {
-    // ผู้ใช้อนุญาต GPS -> พิกัดและชื่อจังหวัดจะตรง 100%
-    finalLat = gps.lat;
-    finalLon = gps.lon;
-    finalCity = await reverseGeocodeGps(gps.lat, gps.lon);
-  } else if (ipData) {
-    finalLat = ipData.lat;
-    finalLon = ipData.lon;
-    finalCity = translateThaiLocation(ipData.city, ipData.region);
-    if (ipData.isp) {
-      const shortIsp = ipData.isp.includes('AIS') ? 'AIS' :
-                       ipData.isp.includes('True') ? 'TRUE' :
-                       ipData.isp.includes('Triple T') || ipData.isp.includes('3BB') ? '3BB' :
-                       ipData.isp.includes('National Telecom') || ipData.isp.includes('TOT') || ipData.isp.includes('CAT') ? 'NT' : '';
-      if (shortIsp && !finalCity.includes(shortIsp)) {
-        finalCity = `${finalCity} (${shortIsp})`;
-      }
-    }
-  }
-
   const result = {
     ip: ipData?.ip || '127.0.0.1',
-    city: finalCity,
+    city: ipData?.city || 'ประเทศไทย',
     region: ipData?.region || 'Thailand',
     country: ipData?.country || 'TH',
-    lat: finalLat,
-    lon: finalLon,
+    lat: ipData?.lat || 13.7563,
+    lon: ipData?.lon || 100.5018,
     isp: ipData?.isp || 'เครือข่ายอินเทอร์เน็ตในประเทศ',
     _timestamp: Date.now(),
   };
