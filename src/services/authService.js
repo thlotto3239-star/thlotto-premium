@@ -52,10 +52,23 @@ export async function signIn(phone, pin, rememberMe = false) {
   const email = `${phone}@thlotto.app`;
   const pinHash = await pinToPassword(phone, pin);
 
-  const { data, error } = await supabase.auth.signInWithPassword({
+  // 1. ลอง Sign in ด้วย hashed PIN (กรณีผู้ใช้ใช้รหัส PIN ดั้งเดิม)
+  let { data, error } = await supabase.auth.signInWithPassword({
     email,
     password: pinHash,
   });
+
+  // 2. Dual-Auth Fallback: หากไม่ผ่าน ให้ลองด้วย plain password ตรงๆ (กรณีตั้งรหัสผ่านแบบอิสระ)
+  if (error && pin) {
+    const directRes = await supabase.auth.signInWithPassword({
+      email,
+      password: pin,
+    });
+    if (!directRes.error && directRes.data?.session) {
+      data = directRes.data;
+      error = null;
+    }
+  }
 
   if (!error && data?.session) {
     setSessionExpiry(rememberMe);

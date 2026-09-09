@@ -84,8 +84,8 @@ const Login = () => {
       setError('กรุณากรอกหมายเลขโทรศัพท์ 10 หลัก');
       return;
     }
-    if (!pin || pin.length !== 4) {
-      setError('กรุณากรอกรหัส PIN ตัวเลข 4 หลัก');
+    if (!pin || pin.trim().length === 0) {
+      setError('กรุณากรอกรหัสผ่าน หรือ PIN');
       return;
     }
 
@@ -108,7 +108,7 @@ const Login = () => {
           setLockSeconds(300);
           setError('พยายามเข้าสู่ระบบมากเกินไป กรุณารอ 5 นาที');
         } else if (authError.message?.includes('Invalid login credentials')) {
-          setError('หมายเลขโทรศัพท์หรือรหัส PIN 4 หลักไม่ถูกต้อง');
+          setError('หมายเลขโทรศัพท์หรือรหัสผ่าน / PIN ไม่ถูกต้อง');
         } else {
           setError(authError.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ');
         }
@@ -269,34 +269,32 @@ const Login = () => {
               </div>
             </div>
 
-            {/* PIN (4 หลัก) Input */}
+            {/* รหัสผ่าน / PIN Input */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-700" htmlFor="pin">
-                  รหัส PIN (4 หลัก)
+                  รหัสผ่าน / PIN
                 </label>
                 <Link to="/forgot-password" className="text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline">
-                  ลืมรหัส PIN?
+                  ลืมรหัสผ่าน?
                 </Link>
               </div>
               <div className="relative flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-brand-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-600/15">
                 <input
                   id="pin"
                   type={showPin ? 'text' : 'password'}
-                  inputMode="numeric"
-                  maxLength={4}
-                  placeholder="••••"
+                  placeholder="กรอกรหัสผ่าน หรือ PIN"
                   value={pin}
-                  onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                  onChange={(e) => setPin(e.target.value)}
                   required
-                  className="h-full min-w-0 flex-1 bg-transparent px-4 text-center tracking-[0.5em] text-lg font-bold text-slate-900 outline-none placeholder:text-slate-300"
+                  className="h-full min-w-0 flex-1 bg-transparent px-4 text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400 placeholder:font-normal"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPin(!showPin)}
                   className="absolute right-3 flex items-center text-slate-400 hover:text-slate-700 transition-colors p-1"
                   tabIndex={-1}
-                  aria-label={showPin ? 'ซ่อนรหัส PIN' : 'แสดงรหัส PIN'}
+                  aria-label={showPin ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
                 >
                   {showPin ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                 </button>
