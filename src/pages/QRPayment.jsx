@@ -20,21 +20,38 @@ const QRPayment = () => {
 
   useEffect(() => {
     const fetchSettings = async () => {
-      const { data } = await supabase
-        .from('settings')
-        .select('key, value')
-        .in('key', ['company_promptpay_number', 'company_bank_account_name']);
-      if (data) {
-        const map = {};
-        data.forEach(r => { map[r.key] = r.value; });
+      // 1. Check if bank object was passed via location.state
+      const passedBank = location.state?.bank;
+      if (passedBank && passedBank.promptpay_id) {
         setSettings({
-          promptpay: map['company_promptpay_number'] || '',
-          accountName: map['company_bank_account_name'] || 'บจก. ทีเอช-ลอตโต พรีเมียม',
+          promptpay: passedBank.promptpay_id,
+          accountName: passedBank.account_name || 'บจก. ทีเอช ล็อตโต้ กรุ๊ป',
         });
+        return;
+      }
+
+      // 2. Otherwise fetch from company_bank_accounts
+      try {
+        const { data } = await supabase
+          .from('company_bank_accounts')
+          .select('promptpay_id, account_name')
+          .eq('is_active', true)
+          .order('id')
+          .limit(1)
+          .maybeSingle();
+
+        if (data) {
+          setSettings({
+            promptpay: data.promptpay_id || '0982543210',
+            accountName: data.account_name || 'บจก. ทีเอช ล็อตโต้ กรุ๊ป',
+          });
+        }
+      } catch (e) {
+        console.warn('Could not load company promptpay settings:', e);
       }
     };
     fetchSettings();
-  }, []);
+  }, [location.state]);
 
   useEffect(() => {
     timerRef.current = setInterval(() => {

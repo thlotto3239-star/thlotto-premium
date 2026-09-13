@@ -84,6 +84,7 @@ const UploadSlip = () => {
             p_amount: parseFloat(depositAmount),
             p_slip_url: publicUrl,
             p_promo_code: promoCode || null,
+            p_company_bank_id: location.state?.bank?.id || null,
           });
 
           if (rpcError) throw rpcError;

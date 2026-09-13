@@ -8,7 +8,7 @@ import BankBadge from '../components/BankBadge';
 const Deposit = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
-  const { showError } = useModal();
+  const { showError, showSuccess } = useModal();
   const [searchParams] = useSearchParams();
   const [amount, setAmount] = useState(() => searchParams.get('amount') || '');
   const promoCode = searchParams.get('promo') || null;
@@ -16,33 +16,46 @@ const Deposit = () => {
   const isPromoDeposit = !!promoCode;
   const [minDeposit, setMinDeposit] = useState(100);
   const [depositEnabled, setDepositEnabled] = useState(true);
-  const [bankSettings, setBankSettings] = useState({
+  const [companyBanks, setCompanyBanks] = useState([]);
+  const [selectedBank, setSelectedBank] = useState({
     bank_code: 'KBANK',
-    bank_account_name: 'บจก. ทีเอช-ลอตโต พรีเมียม',
-    bank_account_number: '123-x-xxxxx-x',
+    account_name: 'บจก. ทีเอช ล็อตโต้ กรุ๊ป',
+    account_number: '098-2-54321-0',
+    promptpay_id: '0982543210',
   });
 
   useEffect(() => {
-    const fetchBankSettings = async () => {
-      const { data, error } = await supabase
-        .from('settings')
-        .select('key, value')
-        .in('key', ['company_bank_code', 'company_bank_account_name', 'company_bank_account_number', 'min_deposit', 'deposit_enabled']);
-      if (data && !error) {
-        const map = {};
-        data.forEach(row => { map[row.key] = row.value; });
-        setBankSettings(prev => ({
-          bank_code: map['company_bank_code'] || prev.bank_code,
-          bank_account_name: map['company_bank_account_name'] || prev.bank_account_name,
-          bank_account_number: map['company_bank_account_number'] || prev.bank_account_number,
-        }));
-        if (map['min_deposit']) setMinDeposit(Number(map['min_deposit']));
-        if (map['deposit_enabled'] !== undefined) {
-          setDepositEnabled(String(map['deposit_enabled']).toLowerCase() !== 'false');
+    const fetchBankData = async () => {
+      try {
+        // 1. Fetch active company bank accounts
+        const { data: cBanks } = await supabase
+          .from('company_bank_accounts')
+          .select('*')
+          .eq('is_active', true)
+          .order('id');
+
+        if (cBanks && cBanks.length > 0) {
+          setCompanyBanks(cBanks);
+          setSelectedBank(cBanks[0]);
         }
+
+        // 2. Fetch min deposit from system_settings
+        const { data: sysData } = await supabase
+          .from('system_settings')
+          .select('min_deposit, maintenance_mode')
+          .maybeSingle();
+
+        if (sysData) {
+          if (sysData.min_deposit) setMinDeposit(Number(sysData.min_deposit));
+          if (sysData.maintenance_mode !== undefined) {
+            setDepositEnabled(!sysData.maintenance_mode);
+          }
+        }
+      } catch (err) {
+        console.warn('Error fetching deposit settings:', err);
       }
     };
-    fetchBankSettings();
+    fetchBankData();
   }, [searchParams]);
 
   const quickAmounts = promoCode ? ['300', '500', '1000', '5000'] : ['100', '500', '1000', '5000'];
@@ -70,9 +83,9 @@ const Deposit = () => {
       return;
     }
     if (isPromoDeposit) {
-      navigate('/upload-slip', { state: { amount, promoCode, promoName } });
+      navigate('/upload-slip', { state: { amount, promoCode, promoName, bank: selectedBank } });
     } else {
-      navigate('/qr-payment', { state: { amount } });
+      navigate('/qr-payment', { state: { amount, bank: selectedBank } });
     }
   };
 
@@ -137,19 +150,63 @@ const Deposit = () => {
 
             {/* Bank Card */}
             <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">บัญชีธนาคารสำหรับโอนเงิน</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">บัญชีธนาคารสำหรับโอนเงิน</h3>
+                {companyBanks.length > 1 && (
+                  <span className="text-[10px] font-bold text-brand-700 bg-brand-50 px-2.5 py-0.5 rounded-full border border-brand-200/60">
+                    เลือกบัญชีโอน
+                  </span>
+                )}
+              </div>
+
+              {/* Multi-account Switcher Tabs if multiple accounts */}
+              {companyBanks.length > 1 && (
+                <div className="flex gap-2 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200/60">
+                  {companyBanks.map((b) => {
+                    const isSelected = selectedBank?.id === b.id || selectedBank?.bank_code === b.bank_code;
+                    const isKBank = b.bank_code === 'KBANK';
+                    return (
+                      <button
+                        key={b.id || b.bank_code}
+                        type="button"
+                        onClick={() => setSelectedBank(b)}
+                        className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                          isSelected
+                            ? 'bg-white text-slate-900 shadow-xs font-black ring-1 ring-slate-200'
+                            : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
+                        }`}
+                      >
+                        <span
+                          className="size-2.5 rounded-full shrink-0"
+                          style={{ backgroundColor: isKBank ? '#138f2d' : '#4e2a84' }}
+                        ></span>
+                        <span>{b.bank_code}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               <BankBadge
-                code={bankSettings.bank_code}
-                accountName={bankSettings.bank_account_name}
+                code={selectedBank?.bank_code || 'KBANK'}
+                accountName={selectedBank?.account_name || 'บจก. ทีเอช ล็อตโต้ กรุ๊ป'}
                 size="lg"
               />
               <div className="flex items-center justify-between bg-slate-50 rounded-2xl p-4 border border-slate-100">
                 <div className="min-w-0">
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-0.5">เลขที่บัญชี</p>
-                  <p className="text-base sm:text-lg font-black font-mono tracking-wider text-slate-800">{bankSettings.bank_account_number}</p>
+                  <p className="text-base sm:text-lg font-black font-mono tracking-wider text-slate-800">
+                    {selectedBank?.account_number || '098-2-54321-0'}
+                  </p>
                 </div>
                 <button
-                  onClick={() => navigator.clipboard.writeText(bankSettings.bank_account_number)}
+                  type="button"
+                  onClick={() => {
+                    if (selectedBank?.account_number) {
+                      navigator.clipboard.writeText(selectedBank.account_number);
+                      showSuccess('คัดลอกเลขบัญชีแล้ว', selectedBank.account_number);
+                    }
+                  }}
                   className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 hover:text-brand-600 font-bold text-xs active:scale-95 transition-all shadow-2xs shrink-0 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-sm">content_copy</span>
