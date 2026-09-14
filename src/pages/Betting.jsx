@@ -109,12 +109,41 @@ const Betting = () => {
         rateMap['3TOP'] = Number(data.payout_3top);
       }
 
-      if (Object.keys(rateMap).length > 0) {
-        const filtered = BASE_CATEGORIES.map(c => ({ ...c, rate: rateMap[c.code] ?? c.rate }));
-        setCategories(filtered);
-        if (!filtered.find(c => c.code === currentCategory)) {
-          const first = filtered.find(c => c.code === '3TOP') || filtered[0];
-          if (first) { setCurrentCategory(first.code); setDigitLimit(first.limit); }
+      // Filter categories strictly based on active payout rates configured by admin
+      const activeCategories = BASE_CATEGORIES.filter(c => {
+        const r = rateMap[c.code];
+        // 6DIGIT: Only if explicitly configured with rate > 0 AND (market has has_6digit flag or rate > 0)
+        if (c.code === '6DIGIT') {
+          return Boolean(data.has_6digit || (r !== undefined && Number(r) > 0)) && Number(r ?? 0) > 0;
+        }
+        // 4TOP: Only if rateMap has it and rate > 0
+        if (c.code === '4TOP') {
+          return r !== undefined ? Number(r) > 0 : false;
+        }
+        // 3FRONT / 3BOTTOM: Only if rateMap has it and rate > 0
+        if (c.code === '3FRONT' || c.code === '3BOTTOM') {
+          return r !== undefined ? Number(r) > 0 : Boolean(data.has_3bottom);
+        }
+        // Standard bet types (3TOP, 3TODE, 2TOP, 2BOTTOM, RUN_UP, RUN_DOWN):
+        // If present in rateMap, must be > 0. If not in rateMap, active by default.
+        if (r !== undefined) {
+          return Number(r) > 0;
+        }
+        return true;
+      }).map(c => ({
+        ...c,
+        rate: rateMap[c.code] ?? DEFAULT_RATES[c.code]
+      }));
+
+      if (activeCategories.length > 0) {
+        setCategories(activeCategories);
+        if (!activeCategories.find(c => c.code === currentCategory)) {
+          const first = activeCategories.find(c => c.code === '3TOP') || activeCategories[0];
+          if (first) {
+            setCurrentCategory(first.code);
+            setDigitLimit(first.limit);
+            setCurrentDigits([]);
+          }
         }
       }
 
@@ -365,12 +394,15 @@ const Betting = () => {
       <div className="grid grid-cols-2 gap-2">
         {categories.map(cat => {
           const isActive = currentCategory === cat.code;
+          const isFull = cat.span === 'full';
           return (
             <button
               key={cat.code}
               type="button"
               onClick={() => handleCategoryChange(cat)}
               className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer border ${
+                isFull ? 'col-span-2' : 'col-span-1'
+              } ${
                 isActive
                   ? 'text-white border-emerald-600 shadow-sm ring-1 ring-emerald-400/40'
                   : 'bg-white border-slate-200/90 text-slate-700 hover:border-emerald-300 hover:bg-slate-50/80'
