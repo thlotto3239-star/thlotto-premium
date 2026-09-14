@@ -27,16 +27,44 @@ const Deposit = () => {
   useEffect(() => {
     const fetchBankData = async () => {
       try {
-        // 1. Fetch active company bank accounts
-        const { data: cBanks } = await supabase
+        // 1. Fetch active company bank accounts with fallback to settings
+        let { data: cBanks } = await supabase
           .from('company_bank_accounts')
           .select('*')
           .eq('is_active', true)
           .order('id');
 
+        if (!cBanks || cBanks.length === 0) {
+          const { data: setRows } = await supabase
+            .from('settings')
+            .select('key, value')
+            .in('key', ['company_bank_code', 'company_bank_account_number', 'company_bank_account_name', 'bank_account_name', 'bank_qr_url']);
+          
+          if (setRows && setRows.length > 0) {
+            const map = {};
+            setRows.forEach(s => { map[s.key] = s.value; });
+            if (map.company_bank_account_number) {
+              cBanks = [{
+                id: 1,
+                bank_code: map.company_bank_code || 'KBANK',
+                account_name: map.company_bank_account_name || map.bank_account_name || 'บริษัท ทีเอช ล็อตโต้ จำกัด',
+                account_number: map.company_bank_account_number,
+                promptpay_id: map.company_bank_account_number.replace(/[^\d]/g, ''),
+                qr_code_url: map.bank_qr_url || '',
+                is_active: true,
+              }];
+            }
+          }
+        }
+
         if (cBanks && cBanks.length > 0) {
-          setCompanyBanks(cBanks);
-          setSelectedBank(cBanks[0]);
+          const formatted = cBanks.map(b => ({
+            ...b,
+            account_number: b.account_number || b.account_no || '',
+            promptpay_id: b.promptpay_id || (b.account_number || b.account_no || '').replace(/[^\d]/g, ''),
+          }));
+          setCompanyBanks(formatted);
+          setSelectedBank(formatted[0]);
         }
 
         // 2. Fetch min deposit from system_settings

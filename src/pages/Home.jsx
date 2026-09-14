@@ -100,17 +100,26 @@ const Home = () => {
         const { data: popupSettings } = await supabase
           .from('settings')
           .select('key, value')
-          .in('key', ['popup_enabled', 'popup_title', 'popup_description', 'popup_image_url']);
+          .in('key', ['popup_enabled', 'popup_title', 'popup_description', 'popup_image_url', 'popup_version']);
         const popupMap = {};
         (popupSettings || []).forEach(s => { popupMap[s.key] = s.value; });
-        if (popupMap.popup_enabled?.toUpperCase() === 'TRUE' && (popupMap.popup_title || popupMap.popup_image_url)) {
-          const dismissed = localStorage.getItem('popup_dismissed');
+        
+        const isPopupEnabled = ['TRUE', '1', 'YES', 'TRUE'].includes(String(popupMap.popup_enabled || '').toUpperCase());
+        if (isPopupEnabled && (popupMap.popup_title || popupMap.popup_image_url)) {
+          const serverVersion = popupMap.popup_version || `${popupMap.popup_title}_${popupMap.popup_image_url}`;
+          const dismissedVersion = localStorage.getItem('popup_dismissed_version');
+          const dismissedDate = localStorage.getItem('popup_dismissed');
           const today = new Date().toISOString().slice(0, 10);
-          if (dismissed !== today) {
+
+          const isNewVersion = dismissedVersion !== serverVersion;
+          const isDismissedToday = (dismissedDate === today) && !isNewVersion;
+
+          if (!isDismissedToday) {
             setPopupData({
               title: popupMap.popup_title || '',
               description: popupMap.popup_description || '',
               image_url: popupMap.popup_image_url || '',
+              version: serverVersion,
             });
             setShowPopup(true);
           }
@@ -777,6 +786,9 @@ const Home = () => {
                 <button
                   onClick={() => {
                     localStorage.setItem('popup_dismissed', new Date().toISOString().slice(0, 10));
+                    if (popupData?.version) {
+                      localStorage.setItem('popup_dismissed_version', popupData.version);
+                    }
                     setShowPopup(false);
                   }}
                   className="flex-1 py-2.5 bg-slate-100 text-slate-500 text-sm font-bold rounded-xl active:scale-95 transition"

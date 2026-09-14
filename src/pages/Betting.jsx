@@ -94,15 +94,23 @@ const Betting = () => {
         setTimeLeft({ d: '00', h: '00', m: '00', s: '00', isExpired: true });
       }
 
-      // Fetch Payout Rates
+      // Fetch Payout Rates (checking both market code and market ID)
+      const targetKeys = Array.from(new Set([data.code, data.id, String(data.id)].filter(Boolean)));
       const { data: rates } = await supabase
         .from('payout_rates')
         .select('bet_type, rate')
-        .eq('market', data.code);
+        .in('market', targetKeys);
+      
+      const rateMap = {};
       if (rates && rates.length > 0) {
-        const rateMap = {};
         rates.forEach(r => { rateMap[r.bet_type] = Number(r.rate); });
-        const filtered = BASE_CATEGORIES.filter(c => rateMap[c.code] !== undefined).map(c => ({ ...c, rate: rateMap[c.code] }));
+      }
+      if (data.payout_3top) {
+        rateMap['3TOP'] = Number(data.payout_3top);
+      }
+
+      if (Object.keys(rateMap).length > 0) {
+        const filtered = BASE_CATEGORIES.map(c => ({ ...c, rate: rateMap[c.code] ?? c.rate }));
         setCategories(filtered);
         if (!filtered.find(c => c.code === currentCategory)) {
           const first = filtered.find(c => c.code === '3TOP') || filtered[0];

@@ -30,21 +30,39 @@ const QRPayment = () => {
         return;
       }
 
-      // 2. Otherwise fetch from company_bank_accounts
+      // 2. Otherwise fetch from company_bank_accounts with fallback to settings
       try {
         const { data } = await supabase
           .from('company_bank_accounts')
-          .select('promptpay_id, account_name')
+          .select('promptpay_id, account_name, account_number')
           .eq('is_active', true)
           .order('id')
           .limit(1)
           .maybeSingle();
 
         if (data) {
+          const ppId = data.promptpay_id || (data.account_number ? data.account_number.replace(/[^\d]/g, '') : '0982543210');
           setSettings({
-            promptpay: data.promptpay_id || '0982543210',
+            promptpay: ppId,
             accountName: data.account_name || 'บจก. ทีเอช ล็อตโต้ กรุ๊ป',
           });
+        } else {
+          // Fallback to settings table
+          const { data: setRows } = await supabase
+            .from('settings')
+            .select('key, value')
+            .in('key', ['company_bank_account_number', 'company_bank_account_name', 'bank_account_name']);
+          
+          if (setRows && setRows.length > 0) {
+            const map = {};
+            setRows.forEach(s => { map[s.key] = s.value; });
+            if (map.company_bank_account_number) {
+              setSettings({
+                promptpay: map.company_bank_account_number.replace(/[^\d]/g, ''),
+                accountName: map.company_bank_account_name || map.bank_account_name || 'บจก. ทีเอช ล็อตโต้ กรุ๊ป',
+              });
+            }
+          }
         }
       } catch (e) {
         console.warn('Could not load company promptpay settings:', e);
