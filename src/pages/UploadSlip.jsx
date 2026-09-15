@@ -169,10 +169,18 @@ const UploadSlip = () => {
                 const apiJson = await apiRes.json();
                 if (apiJson.success) {
                   createdRequestId = apiJson.request_id || apiJson.data?.id;
+                } else if (apiJson.error || apiJson.message) {
+                  const msg = apiJson.message || apiJson.error;
+                  if (!msg.includes('Unknown action')) {
+                    throw new Error(msg);
+                  }
                 }
               }
             } catch (apiErr) {
               console.warn('Tier 1 (Admin API) skipped:', apiErr);
+              if (apiErr.message && !apiErr.message.includes('fetch') && !apiErr.message.includes('Unknown')) {
+                throw apiErr;
+              }
             }
           }
 
@@ -187,9 +195,14 @@ const UploadSlip = () => {
 
               if (!rpcError && rpcData?.success) {
                 createdRequestId = rpcData.request_id;
+              } else if (rpcData && !rpcData.success && rpcData.message) {
+                throw new Error(rpcData.message);
               }
             } catch (rpcEx) {
-              console.warn('Tier 2 (RPC) skipped:', rpcEx);
+              console.warn('Tier 2 (RPC) warning:', rpcEx);
+              if (rpcEx.message) {
+                throw rpcEx;
+              }
             }
           }
 
@@ -207,7 +220,7 @@ const UploadSlip = () => {
             if (!insError && insData?.id) {
               createdRequestId = insData.id;
             } else if (insError) {
-              throw insError;
+              throw new Error('คุณมีรายการฝากรอตรวจสอบอยู่แล้ว หรือกรุณารอเจ้าหน้าที่ดำเนินการสักครู่');
             }
           }
 
@@ -229,7 +242,11 @@ const UploadSlip = () => {
           );
         } catch (err) {
           console.error('Error submitting slip:', err);
-          showError('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถส่งสลิปได้ กรุณาลองใหม่อีกครั้ง');
+          let userMessage = err.message || 'ไม่สามารถส่งสลิปได้ กรุณาลองใหม่อีกครั้ง';
+          if (userMessage.includes('row-level security') || userMessage.includes('violates')) {
+            userMessage = 'คุณมีรายการฝากเงินที่รอตรวจสอบอยู่แล้ว กรุณารอเจ้าหน้าที่อนุมัติยอดสักครู่';
+          }
+          showError('แจ้งเตือนการทำรายการ', userMessage);
           isSubmittingRef.current = false;
           setUploading(false);
         }
