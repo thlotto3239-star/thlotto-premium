@@ -1,20 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { useSettings } from '../contexts/SettingsContext';
 import { supabase } from '../supabaseClient';
 
-const NAV_ITEMS = [
-  { path: '/home', label: 'หน้าหลัก' },
-  { path: '/lotto-15m', label: 'ล็อตโต้ 15 นาที', badge: 'LIVE' },
-  { path: '/lottery-list', label: 'แทงหวย' },
-  { path: '/results', label: 'ผลรางวัล' },
-  { path: '/wallet', label: 'กระเป๋าเงิน' },
-  { path: '/profile', label: 'โปรไฟล์' },
-];
-
 const AppHeader = ({ announcements = [] }) => {
-  const location = useLocation();
   const { profile, user } = useAuth();
   const { settings } = useSettings();
   const [balance, setBalance] = useState(null);

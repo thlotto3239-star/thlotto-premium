@@ -4,8 +4,6 @@ import { supabase } from '../supabaseClient';
 import PageWrapper from '../components/PageWrapper';
 import { useAuth } from '../AuthContext';
 
-const brandGradient = 'linear-gradient(135deg, #1a7e2a 0%, #2ecc71 100%)';
-
 const Transactions = () => {
   const { user } = useAuth();
   const navigate = useNavigate();

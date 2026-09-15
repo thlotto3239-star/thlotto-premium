@@ -266,13 +266,13 @@ export function detectClientForensics() {
     deviceType = 'mobile';
     deviceModel = 'Apple iPhone';
     os = 'iOS';
-    const m = ua.match(/OS (\d+[_\.]\d+)/);
+    const m = ua.match(/OS (\d+[._]\d+)/);
     if (m) os = `iOS ${m[1].replace(/_/g, '.')}`;
   } else if (/iPad/i.test(ua)) {
     deviceType = 'tablet';
     deviceModel = 'Apple iPad';
     os = 'iPadOS';
-    const m = ua.match(/OS (\d+[_\.]\d+)/);
+    const m = ua.match(/OS (\d+[._]\d+)/);
     if (m) os = `iPadOS ${m[1].replace(/_/g, '.')}`;
   } else if (/Android/i.test(ua)) {
     deviceType = /Tablet|iPad/i.test(ua) ? 'tablet' : 'mobile';
@@ -285,7 +285,7 @@ export function detectClientForensics() {
     deviceType = 'desktop';
     deviceModel = 'Apple Mac / MacBook';
     os = 'macOS';
-    const m = ua.match(/Mac OS X (\d+[_\.]\d+)/);
+    const m = ua.match(/Mac OS X (\d+[._]\d+)/);
     if (m) os = `macOS ${m[1].replace(/_/g, '.')}`;
   } else if (/Windows/i.test(ua)) {
     deviceType = 'desktop';
@@ -300,16 +300,16 @@ export function detectClientForensics() {
   }
 
   if (/Edg\//i.test(ua)) {
-    const m = ua.match(/Edg\/(\d+[\.\d]*)/);
+    const m = ua.match(/Edg\/(\d+[.\d]*)/);
     browser = `Microsoft Edge ${m ? m[1].split('.')[0] : ''}`.trim();
   } else if (/Chrome\//i.test(ua) && !/Chromium|Edg/i.test(ua)) {
-    const m = ua.match(/Chrome\/(\d+[\.\d]*)/);
+    const m = ua.match(/Chrome\/(\d+[.\d]*)/);
     browser = `Google Chrome ${m ? m[1].split('.')[0] : ''}`.trim();
   } else if (/Safari\//i.test(ua) && !/Chrome/i.test(ua)) {
-    const m = ua.match(/Version\/(\d+[\.\d]*)/);
+    const m = ua.match(/Version\/(\d+[.\d]*)/);
     browser = `Apple Safari ${m ? m[1].split('.')[0] : ''}`.trim();
   } else if (/Firefox\//i.test(ua)) {
-    const m = ua.match(/Firefox\/(\d+[\.\d]*)/);
+    const m = ua.match(/Firefox\/(\d+[.\d]*)/);
     browser = `Mozilla Firefox ${m ? m[1].split('.')[0] : ''}`.trim();
   }
 
@@ -625,7 +625,9 @@ export async function prewarmClientGeo() {
   _isResolving = true;
   try {
     _cachedGeo = await getClientGeo();
-  } catch (_) {}
+  } catch {
+    // ignore
+  }
   _isResolving = false;
 }
 
@@ -662,7 +664,9 @@ export async function getClientGeo() {
         isp: rawIsp || 'ISP ประเทศไทย',
       };
     }
-  } catch (_) {}
+  } catch {
+    // ignore
+  }
 
   // Provider B: ipapi.co (fallback)
   if (!ipData) {
@@ -681,7 +685,9 @@ export async function getClientGeo() {
           isp: dataB.org || 'ISP ประเทศไทย',
         };
       }
-    } catch (_) {}
+    } catch {
+      // ignore
+    }
   }
 
   // Provider C: ipify for public IP
@@ -700,7 +706,9 @@ export async function getClientGeo() {
           isp: 'Thailand Gateway',
         };
       }
-    } catch (_) {}
+    } catch {
+      // ignore
+    }
   }
 
   const result = {
@@ -758,6 +766,8 @@ export async function heartbeat(userId) {
     } else {
       await supabase.rpc('update_user_heartbeat');
     }
-  } catch (_) {}
+  } catch {
+    // ignore
+  }
 }
 

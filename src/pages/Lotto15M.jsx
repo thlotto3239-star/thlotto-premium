@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../AuthContext';
 import Lotto15MLiveStudio from '../components/Lotto15MLiveStudio';
 import PageWrapper from '../components/PageWrapper';
 import AppHeader from '../components/AppHeader';
@@ -29,7 +28,6 @@ const PAYOUT_RATES = [
 
 export default function Lotto15M() {
   const navigate = useNavigate();
-  const { profile } = useAuth();
   const marketId = "2ecc136e-0734-4be0-9e26-cf3149cb84cd";
   const [recentSettledRounds, setRecentSettledRounds] = useState([]);
 

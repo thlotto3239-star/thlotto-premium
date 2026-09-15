@@ -41,7 +41,6 @@ const Results = () => {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('today');
-  const [tick, setTick] = useState(0);
 
   const fetchResults = useCallback(async () => {
     try {
@@ -74,16 +73,10 @@ const Results = () => {
   }, [fetchResults]);
 
   useEffect(() => {
-    const timer = setInterval(() => setTick(t => t + 1), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
     if (tab === 'history' && history.length === 0) fetchHistory();
   }, [tab, history.length, fetchHistory]);
 
   const govRow = rows.find(r => r.category === 'GOV' && (r.code === 'TH_GOV' || r.code === 'THAI_GOV')) || rows.find(r => r.category === 'GOV');
-  const otherGovRows = rows.filter(r => r.category === 'GOV' && r.id !== govRow?.id);
   const foreignRows = rows.filter(r => r.category === 'FOREIGN');
   const maekhongRows = rows.filter(r => r.category === 'MAEKHONG');
   const stockRows = rows.filter(r => r.category === 'STOCK');

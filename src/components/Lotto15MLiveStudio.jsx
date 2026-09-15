@@ -95,7 +95,6 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
   const [roundsData, setRoundsData] = useState([]);
   const [selectedRound, setSelectedRound] = useState(null);
   const [currentRoundData, setCurrentRoundData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [isRolling, setIsRolling] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [showRules, setShowRules] = useState(false);
@@ -103,12 +102,16 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
   const [videoMode, setVideoMode] = useState('live'); // 'live' | 'replay'
   const videoRef = useRef(null);
   const roundsScrollRef = useRef(null);
+  const callbackRef = useRef(onSelectRoundCallback);
+
+  useEffect(() => {
+    callbackRef.current = onSelectRoundCallback;
+  }, [onSelectRoundCallback]);
 
   // Fetch real-time results from LIW Lottery API (96 rounds)
   useEffect(() => {
     const fetchLiveResults = async () => {
       try {
-        setLoading(true);
         const res = await fetch('https://liwlottery.com/api/results/history?limit=96&offset=0');
         const json = await res.json();
         const liwItems = json.results || [];
@@ -143,11 +146,9 @@ export default function Lotto15MLiveStudio({ marketId = '2ecc136e-0734-4be0-9e26
         const lastSettled = [...merged].reverse().find((r) => r.isSettled) || active;
         setSelectedRound(lastSettled.key);
         setCurrentRoundData(lastSettled);
-        if (onSelectRoundCallback) onSelectRoundCallback(lastSettled, merged);
+        if (callbackRef.current) callbackRef.current(lastSettled, merged);
       } catch (err) {
         console.error('Failed to load 15M lotto API:', err);
-      } finally {
-        setLoading(false);
       }
     };
 

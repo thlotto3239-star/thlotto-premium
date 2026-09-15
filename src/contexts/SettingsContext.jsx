@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 
 const SettingsContext = createContext();
@@ -22,12 +22,12 @@ export function SettingsProvider({ children }) {
     ).toString(16).slice(1);
   };
 
-  const applyTheme = (color) => {
+  const applyTheme = useCallback((color) => {
     if (!color) return;
     document.documentElement.style.setProperty('--color-primary', color);
     document.documentElement.style.setProperty('--color-primary-dark', adjustBrightness(color, -20));
     document.documentElement.style.setProperty('--color-primary-light', adjustBrightness(color, 80));
-  };
+  }, []);
 
   useEffect(() => {
     // 1. Check URL parameters for Live Preview mode (used by Admin iframe)
@@ -95,7 +95,7 @@ export function SettingsProvider({ children }) {
         supabase.removeChannel(channel);
       };
     }
-  }, []);
+  }, [applyTheme]);
 
   return (
     <SettingsContext.Provider value={{ settings, loading }}>
@@ -104,4 +104,5 @@ export function SettingsProvider({ children }) {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useSettings = () => useContext(SettingsContext);
