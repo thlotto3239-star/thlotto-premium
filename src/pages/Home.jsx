@@ -201,6 +201,26 @@ const Home = () => {
 
     fetchData();
 
+    // Realtime: Listen for Admin updates to markets, sliders, announcements, and promotions
+    const homeChannel = supabase
+      .channel('realtime:home_data')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lottery_markets' }, () => {
+        fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sliders' }, () => {
+        fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, () => {
+        fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'promotions' }, () => {
+        fetchData();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, () => {
+        fetchData();
+      })
+      .subscribe();
+
     // Timers
     const countdownInterval = setInterval(() => {
       setTimeLeft(prev => {
@@ -246,6 +266,7 @@ const Home = () => {
       clearInterval(countdownInterval);
       clearInterval(bannerInterval);
       clearInterval(promoInterval);
+      supabase.removeChannel(homeChannel);
     };
   }, []);
 

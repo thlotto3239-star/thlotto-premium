@@ -64,6 +64,17 @@ const Promotions = () => {
       setLoading(false);
     };
     fetchData();
+
+    const promoChannel = supabase
+      .channel('realtime:promotions_page')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'promotions' }, () => {
+        fetchData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(promoChannel);
+    };
   }, [user]);
 
   return (

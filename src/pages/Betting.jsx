@@ -161,6 +161,24 @@ const Betting = () => {
       }
     };
     fetchDraw();
+
+    // Realtime: Listen for market status, restricted numbers, and payout rate updates
+    const bettingChannel = supabase
+      .channel(`realtime:betting_${drawId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lottery_markets', filter: `id=eq.${drawId}` }, () => {
+        fetchDraw();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'restricted_numbers' }, () => {
+        fetchDraw();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payout_rates' }, () => {
+        fetchDraw();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(bettingChannel);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [drawId]);
 

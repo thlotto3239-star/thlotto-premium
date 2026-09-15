@@ -7,18 +7,20 @@ const DepositSuccess = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useAuth();
+  const amount = location.state?.amount || 0;
+  const txRef = location.state?.txRef || '';
+  const rawDate = location.state?.createdAt;
+  const parsedDate = rawDate ? new Date(rawDate) : new Date();
+  const createdAt = (!isNaN(parsedDate.getTime())) ? parsedDate : new Date();
+
   const handleShare = () => {
-    const text = `เติมเงิน TH-LOTTO สำเร็จ ฿${Number(amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+    const text = `เติมเงิน TH-LOTTO สำเร็จ ฿${Number(amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
     if (navigator.share) {
       navigator.share({ title: 'TH-LOTTO Premium', text }).catch(() => {});
     } else {
       navigator.clipboard?.writeText(text);
     }
   };
-
-  const amount = location.state?.amount || 0;
-  const txRef = location.state?.txRef || '';
-  const createdAt = location.state?.createdAt ? new Date(location.state.createdAt) : new Date();
 
   return (
     <PageWrapper>

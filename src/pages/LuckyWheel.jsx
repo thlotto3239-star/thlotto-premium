@@ -81,7 +81,21 @@ const LuckyWheel = () => {
   }, []);
 
   useEffect(() => {
-    if (profile?.id) { fetchHistory(); fetchSpinStatus(); }
+    if (profile?.id) { 
+      fetchHistory(); 
+      fetchSpinStatus(); 
+
+      const wheelChannel = supabase
+        .channel('realtime:lucky_wheel')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'lucky_wheel_rewards' }, () => {
+          fetchSpinStatus();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(wheelChannel);
+      };
+    }
   }, [profile?.id, fetchHistory, fetchSpinStatus]);
 
   const handleSpin = async () => {
@@ -363,7 +377,7 @@ const LuckyWheel = () => {
                   <div>
                     <p className="text-white text-sm font-bold">{item.prize_name}</p>
                     <p className="text-xs text-white/25 font-bold uppercase">
-                      {new Date(item.spun_at).toLocaleString('th-TH', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}
+                      {item.spun_at ? new Date(item.spun_at).toLocaleString('th-TH', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }) : '—'}
                     </p>
                   </div>
                 </div>

@@ -59,10 +59,7 @@ export function SettingsProvider({ children }) {
     } else {
       // 2. Fetch from database for normal users
       const fetchSettings = async () => {
-        const { data } = await supabase.from('settings').select('key,value').in('key', [
-          'site_name', 'site_logo_url', 'site_primary_color',
-          'site_enabled', 'maintenance_mode'
-        ]);
+        const { data } = await supabase.from('settings').select('key,value');
         const map = {};
         data?.forEach(s => { map[s.key] = s.value });
         setSettings(map);
@@ -72,6 +69,31 @@ export function SettingsProvider({ children }) {
         setLoading(false);
       };
       fetchSettings();
+
+      // 3. Realtime Subscription: Update immediately when admin changes any setting in UI Admin
+      const channel = supabase
+        .channel('realtime:system_settings')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'settings' },
+          (payload) => {
+            const updated = payload.new;
+            if (updated && updated.key) {
+              setSettings(prev => {
+                const next = { ...prev, [updated.key]: updated.value };
+                if (updated.key === 'site_primary_color' && updated.value) {
+                  applyTheme(updated.value);
+                }
+                return next;
+              });
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, []);
 

@@ -42,6 +42,17 @@ const LotteryList = () => {
     };
     fetchLotteries();
 
+    // Realtime: Listen for Admin updates to lottery markets
+    const marketChannel = supabase
+      .channel('realtime:lottery_markets_list')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lottery_markets' }, () => {
+        fetchLotteries();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'draw_schedules' }, () => {
+        fetchLotteries();
+      })
+      .subscribe();
+
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         const next = { ...prev };
@@ -50,7 +61,10 @@ const LotteryList = () => {
       });
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      supabase.removeChannel(marketChannel);
+    };
   }, []);
 
   const formatTime = (seconds) => {

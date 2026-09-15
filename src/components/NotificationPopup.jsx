@@ -235,16 +235,52 @@ export default function NotificationPopup() {
     if (!user?.id) return;
 
     const unsub = subscribeNotifications(user.id, (notification) => {
-      // Logic: Only show popup modal if explicitly requested (is_popup = true)
-      // or if it's a critical transaction event (WIN, DEPOSIT, WITHDRAW) without explicit is_popup: false
-      const isExplicitPopup = notification.data?.is_popup === true;
-      const isAutoPopupType = ['WIN', 'DEPOSIT', 'WITHDRAW'].includes(notification.type);
-      const isExplicitInAppOnly = notification.data?.is_popup === false;
+      try {
+        if (!notification) return;
 
-      const shouldPopup = isExplicitPopup || (isAutoPopupType && !isExplicitInAppOnly);
+        // 1. Safe metadata parsing (JSON string or object)
+        let meta = notification.data;
+        if (typeof meta === 'string') {
+          try {
+            meta = JSON.parse(meta);
+          } catch {
+            meta = {};
+          }
+        }
+        meta = meta || {};
 
-      if (shouldPopup) {
-        setQueue(prev => [...prev, { ...notification, _popupId: Date.now() + Math.random() }]);
+        // 2. Normalize notification type
+        let rawType = (notification.type || 'DEFAULT').toUpperCase();
+        if (rawType === 'WITHDRAWAL') rawType = 'WITHDRAW';
+        if (rawType === 'SYSTEM_ALERT' || rawType === 'ALERT') rawType = 'WARNING';
+
+        // 3. Popup rules: Explicit is_popup OR critical transaction types (WIN, DEPOSIT, WITHDRAW)
+        const isExplicitPopup = meta.is_popup === true;
+        const isAutoPopupType = ['WIN', 'DEPOSIT', 'WITHDRAW', 'WARNING'].includes(rawType);
+        const isExplicitInAppOnly = meta.is_popup === false;
+
+        const shouldPopup = isExplicitPopup || (isAutoPopupType && !isExplicitInAppOnly);
+
+        if (shouldPopup) {
+          const safeNotif = {
+            ...notification,
+            type: rawType,
+            data: meta,
+            _popupId: Date.now() + Math.random(),
+          };
+          setQueue(prev => [...prev, safeNotif]);
+
+          // Optional subtle haptic feedback for mobile devices
+          if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            try {
+              navigator.vibrate([100, 50, 100]);
+            } catch {
+              // Ignore vibration errors
+            }
+          }
+        }
+      } catch (err) {
+        console.error('[NotificationPopup] Error processing incoming notification:', err);
       }
     });
 

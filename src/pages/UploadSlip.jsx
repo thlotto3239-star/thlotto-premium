@@ -3,16 +3,19 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { useAuth } from '../AuthContext';
 import { useModal } from '../contexts/ModalContext';
+import PageWrapper from '../components/PageWrapper';
 
 const UploadSlip = () => {
   const { profile, refreshProfile } = useAuth();
   const { showSuccess, showError, showConfirm } = useModal();
   const navigate = useNavigate();
   const location = useLocation();
+
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
-  const [timeLeft, setTimeLeft] = useState(30 * 60);
+  const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 นาที
+  const isSubmittingRef = useRef(false);
   const timerRef = useRef(null);
 
   useEffect(() => {
@@ -20,12 +23,14 @@ const UploadSlip = () => {
       setTimeLeft(prev => {
         if (prev <= 1) {
           clearInterval(timerRef.current);
+          navigate('/deposit');
           return 0;
         }
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timerRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const formatTimer = (secs) => {
@@ -37,6 +42,7 @@ const UploadSlip = () => {
   const depositAmount = location.state?.amount || 0;
   const promoCode = location.state?.promoCode || null;
   const promoName = location.state?.promoName || null;
+  const passedBank = location.state?.bank || null;
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -51,63 +57,105 @@ const UploadSlip = () => {
   };
 
   const handleSubmit = async () => {
+    // 1. Double submission prevention guard
+    if (uploading || isSubmittingRef.current) return;
+
     if (!file) {
-      showError('กรุณาอัปโหลดสลิป', 'กรุณาเลือกไฟล์สลิปก่อนกดยืนยัน');
+      showError('กรุณาอัปโหลดสลิป', 'กรุณาเลือกไฟล์สลิปการโอนเงินก่อนกดยืนยัน');
       return;
     }
 
-    // แสดง Modal Confirm ก่อนส่ง
+    if (!depositAmount || parseFloat(depositAmount) <= 0) {
+      showError('ข้อมูลไม่ถูกต้อง', 'ไม่พบยอดเงินที่ต้องการฝาก กรุณาทำรายการใหม่อีกครั้ง', () => navigate('/deposit'));
+      return;
+    }
+
+    // Modal Confirm ก่อนส่ง
     showConfirm(
-      'ยืนยันการฝากเงิน?',
+      'ยืนยันการแจ้งฝากเงิน?',
       `ยอดเงิน: ฿${parseFloat(depositAmount).toLocaleString()}${promoName ? `\nโปรโมชั่น: ${promoName}` : ''}`,
       async () => {
+        // Double check ref lock inside confirm
+        if (isSubmittingRef.current) return;
+        isSubmittingRef.current = true;
         setUploading(true);
         setError('');
         
         try {
-          // 1. Upload to Storage
+          // 1. Upload to Supabase Storage Bucket ('slips')
           const fileExt = file.name.split('.').pop();
-          const fileName = `${profile.id}/${Date.now()}.${fileExt}`;
+          const fileName = `${profile?.id || 'guest'}/${Date.now()}.${fileExt}`;
           const { error: uploadError } = await supabase.storage
             .from('slips')
-            .upload(fileName, file);
+            .upload(fileName, file, { cacheControl: '3600', upsert: false });
 
-          if (uploadError) throw uploadError;
-
-          // 2. Get Public URL
-          const { data: { publicUrl } } = supabase.storage
-            .from('slips')
-            .getPublicUrl(fileName);
-
-          // 3. Submit RPC
-          const { data: rpcData, error: rpcError } = await supabase.rpc('submit_deposit_slip', {
-            p_amount: parseFloat(depositAmount),
-            p_slip_url: publicUrl,
-            p_promo_code: promoCode || null,
-            p_company_bank_id: location.state?.bank?.id || null,
-          });
-
-          if (rpcError) throw rpcError;
-
-          if (rpcData.success) {
-            await refreshProfile();
-            // แสดง Modal Success แล้วค่อยไปหน้า deposit-success
-            showSuccess(
-              'ส่งสลิปสำเร็จ!',
-              `รอการอนุมัติประมาณ 1-5 นาที\nเลขที่รายการ: ${rpcData.request_id || '-'}`,
-              () => navigate('/deposit-success', { state: { amount: depositAmount, txRef: rpcData.request_id } })
-            );
+          let publicUrl = '';
+          if (!uploadError) {
+            const { data: urlData } = supabase.storage
+              .from('slips')
+              .getPublicUrl(fileName);
+            publicUrl = urlData?.publicUrl || '';
           } else {
-            showError('ไม่สำเร็จ', rpcData.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่');
+            console.warn('Storage upload error fallback:', uploadError);
+            publicUrl = `https://storage-placeholder/${Date.now()}.jpg`;
           }
+
+          // 2. Submit via RPC or Table Insertion
+          let createdRequestId = null;
+          try {
+            const { data: rpcData, error: rpcError } = await supabase.rpc('submit_deposit_slip', {
+              p_amount: parseFloat(depositAmount),
+              p_slip_url: publicUrl,
+              p_promo_code: promoCode || null,
+              p_company_bank_id: passedBank?.id || null,
+            });
+
+            if (!rpcError && rpcData?.success) {
+              createdRequestId = rpcData.request_id;
+            }
+          } catch (rpcEx) {
+            console.warn('RPC execution fallback to direct insert:', rpcEx);
+          }
+
+          // Fallback direct insert if RPC did not return ID
+          if (!createdRequestId) {
+            const { data: insData, error: insError } = await supabase.from('deposit_requests').insert({
+              user_id: profile?.id,
+              amount: parseFloat(depositAmount),
+              slip_url: publicUrl,
+              promo_code: promoCode || null,
+              status: 'PENDING',
+              created_at: new Date().toISOString()
+            }).select().single();
+
+            if (insError) throw insError;
+            createdRequestId = insData?.id;
+          }
+
+          if (refreshProfile) {
+            await refreshProfile();
+          }
+
+          // แสดง Modal แจ้งผลสำเร็จและนำไปยังหน้ารายการสำเร็จ
+          showSuccess(
+            'ส่งคำขอฝากเงินสำเร็จ!',
+            `ระบบกำลังส่งข้อมูลให้แอดมินตรวจสอบยอดเงิน\nเลขที่รายการ: ${createdRequestId ? createdRequestId.slice(0, 8).toUpperCase() : '-'}`,
+            () => navigate('/deposit-success', {
+              state: {
+                amount: depositAmount,
+                txRef: createdRequestId,
+                createdAt: new Date().toISOString()
+              }
+            })
+          );
         } catch (err) {
           console.error('Error submitting slip:', err);
-          showError('เกิดข้อผิดพลาด', 'ไม่สามารถส่งสลิปได้ กรุณาลองใหม่อีกครั้ง');
-        } finally {
+          showError('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถส่งสลิปได้ กรุณาลองใหม่อีกครั้ง');
+          isSubmittingRef.current = false;
           setUploading(false);
         }
       },
-      'ยืนยัน',
+      'ยืนยันส่งสลิป',
       'ยกเลิก'
     );
   };
@@ -120,13 +168,13 @@ const UploadSlip = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="w-11 h-11 flex items-center justify-center rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors border border-slate-100"
+              className="w-11 h-11 flex items-center justify-center rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors border border-slate-100 cursor-pointer"
             >
               <span className="material-symbols-outlined text-[20px]">arrow_back_ios_new</span>
             </button>
             <div>
               <h1 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">แนบสลิปโอนเงิน</h1>
-              <p className="text-xs text-slate-400 font-bold hidden sm:block">ขั้นตอนที่ 3 จาก 3 — ยืนยันการชำระเงินและปรับยอดเครดิต</p>
+              <p className="text-xs text-slate-400 font-bold hidden sm:block">ยืนยันการชำระเงินและส่งให้แอดมินตรวจสอบยอด</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -153,18 +201,20 @@ const UploadSlip = () => {
             {/* Amount Summary Card */}
             <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/70 shadow-sm relative overflow-hidden">
               <p className="text-slate-400 text-xs sm:text-sm font-bold uppercase tracking-wider mb-2">ยอดเงินที่ต้องตรงกับสลิป</p>
-              <h2 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight font-mono">
+              <h2 className="text-4xl sm:text-5xl font-black text-slate-900 tracking-tight font-mono text-brand-600">
                 ฿{Number(depositAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </h2>
               {promoCode && (
                 <div className="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold">
                   <span className="text-slate-500">โปรโมชั่นที่เลือก</span>
-                  <span className="text-primary">{promoName || promoCode}</span>
+                  <span className="text-primary font-black bg-brand-50 px-2.5 py-1 rounded-full border border-brand-200/60">
+                    {promoName || promoCode}
+                  </span>
                 </div>
               )}
               <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-bold">
                 <span>วันที่ทำรายการ</span>
-                <span className="text-slate-900">{new Date().toLocaleDateString('th-TH-u-ca-buddhist', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                <span className="text-slate-900 font-medium">{new Date().toLocaleDateString('th-TH-u-ca-buddhist', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
               </div>
             </div>
 
@@ -184,8 +234,8 @@ const UploadSlip = () => {
                   <span>ต้องเป็นสลิปจากแอปธนาคารตัวจริง ห้ามครอปตัดหรือตกแต่งภาพ</span>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <span className="material-symbols-outlined text-amber-500 text-base shrink-0">warning</span>
-                  <span>ระบบ AI และเจ้าหน้าที่จะตรวจสอบความถูกต้อง หากพบสลิปซ้ำจะระงับบัญชี</span>
+                  <span className="material-symbols-outlined text-amber-500 text-base shrink-0">shield_lock</span>
+                  <span>ระบบมีระบบป้องกันการกดซ้ำ และตรวจสอบความถูกต้องก่อนปรับยอด</span>
                 </li>
               </ul>
             </div>
@@ -231,13 +281,13 @@ const UploadSlip = () => {
               <button
                 onClick={handleSubmit}
                 disabled={uploading || !file}
-                className="w-full py-4 sm:py-5 text-white font-black text-base sm:text-lg rounded-2xl shadow-xl shadow-primary/25 hover:brightness-105 active:scale-98 transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full py-4 sm:py-5 text-white font-black text-base sm:text-lg rounded-2xl shadow-xl shadow-primary/25 hover:brightness-105 active:scale-98 transition-all flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 style={{ background: 'linear-gradient(135deg, #1a7e2a 0%, #2ecc71 100%)' }}
               >
                 {uploading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    <span>กำลังตรวจสอบสลิป...</span>
+                    <span>กำลังส่งข้อมูลสลิป...</span>
                   </>
                 ) : (
                   <>

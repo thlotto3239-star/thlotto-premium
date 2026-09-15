@@ -84,6 +84,18 @@ const Deposit = () => {
       }
     };
     fetchBankData();
+
+    // Realtime: Listen for Admin updates to company bank accounts
+    const bankChannel = supabase
+      .channel('realtime:deposit_banks')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'company_bank_accounts' }, () => {
+        fetchBankData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(bankChannel);
+    };
   }, [searchParams]);
 
   const quickAmounts = promoCode ? ['300', '500', '1000', '5000'] : ['100', '500', '1000', '5000'];
@@ -110,11 +122,15 @@ const Deposit = () => {
       );
       return;
     }
-    if (isPromoDeposit) {
-      navigate('/upload-slip', { state: { amount, promoCode, promoName, bank: selectedBank } });
-    } else {
-      navigate('/qr-payment', { state: { amount, bank: selectedBank } });
-    }
+    navigate('/qr-payment', {
+      state: {
+        amount,
+        promoCode,
+        promoName,
+        bank: selectedBank,
+        isPromo: isPromoDeposit,
+      },
+    });
   };
 
   const isProceedDisabled = !depositEnabled || !amount || parseFloat(amount) < minDeposit;
