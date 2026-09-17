@@ -57,12 +57,39 @@ const UploadSlip = () => {
     }
   };
 
-  const fileToBase64 = (fileToConvert) => {
+  const compressImage = (fileToConvert, maxWidth = 1200, quality = 0.82) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(fileToConvert);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = error => reject(error);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxWidth || height > maxWidth) {
+            if (width > height) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxWidth) / height);
+              height = maxWidth;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+          resolve(compressedBase64);
+        };
+        img.onerror = (err) => reject(err);
+      };
+      reader.onerror = (err) => reject(err);
     });
   };
 
@@ -95,10 +122,10 @@ const UploadSlip = () => {
           const authUser = (await supabase.auth.getUser())?.data?.user;
           const targetUserId = profile?.id || user?.id || authUser?.id;
 
-          // 1. Upload Slip Image (Service-Role Admin API first, fallback to Direct Storage)
+          // 1. Upload Slip Image with client-side canvas compression (avoids Vercel 4.5MB limit & RLS errors)
           let publicUrl = '';
           try {
-            const base64Data = await fileToBase64(file);
+            const base64Data = await compressImage(file, 1200, 0.82);
             const uploadRes = await fetch('https://th-lotto-admin-push-ten.vercel.app/api/admin/data', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -107,8 +134,8 @@ const UploadSlip = () => {
                 payload: {
                   user_id: targetUserId || 'guest',
                   base64_image: base64Data,
-                  file_name: file.name,
-                  mime_type: file.type || 'image/jpeg',
+                  file_name: file.name.replace(/\.[^/.]+$/, "") + ".jpg",
+                  mime_type: 'image/jpeg',
                 }
               })
             });
@@ -184,7 +211,7 @@ const UploadSlip = () => {
             }
           }
 
-          // Tier 2: Try RPC submit_deposit_slip
+          // Tier 2: Try RPC submit_deposit_slip (if Tier 1 was skipped)
           if (!createdRequestId) {
             try {
               const { data: rpcData, error: rpcError } = await supabase.rpc('submit_deposit_slip', {
@@ -200,7 +227,7 @@ const UploadSlip = () => {
               }
             } catch (rpcEx) {
               console.warn('Tier 2 (RPC) warning:', rpcEx);
-              if (rpcEx.message) {
+              if (rpcEx.message && !rpcEx.message.includes('violates check constraint')) {
                 throw rpcEx;
               }
             }

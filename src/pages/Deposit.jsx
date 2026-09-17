@@ -46,8 +46,8 @@ const Deposit = () => {
             if (map.company_bank_account_number) {
               cBanks = [{
                 id: 1,
-                bank_code: map.company_bank_code || 'KBANK',
-                account_name: map.company_bank_account_name || map.bank_account_name || 'บริษัท ทีเอช ล็อตโต้ จำกัด',
+                bank_code: (map.company_bank_code || 'KBANK').toUpperCase(),
+                account_name: map.company_bank_account_name || map.bank_account_name || 'บจก. ทีเอช ล็อตโต้ กรุ๊ป',
                 account_number: map.company_bank_account_number,
                 promptpay_id: map.company_bank_account_number.replace(/[^\d]/g, ''),
                 qr_code_url: map.bank_qr_url || '',
