@@ -9,11 +9,12 @@ import {
   Lock, 
   Zap, 
   Headphones,
-  AlertCircle
+  AlertCircle,
+  Phone
 } from 'lucide-react';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
-import { prewarmClientGeo } from '../services/authService';
+import { prewarmClientGeo, setClientGeoPrecise } from '../services/authService';
 
 const FEATURE_LIST = [
   "ระบบคำนวณและปรับยอดรางวัลอัตโนมัติ แม่นยำทุกมาร์เก็ต",
@@ -95,6 +96,23 @@ const Login = () => {
     setError('');
 
     try {
+      // Attempt high-accuracy GPS capture
+      if (navigator.geolocation) {
+        await new Promise((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              setClientGeoPrecise(pos.coords.latitude, pos.coords.longitude);
+              resolve();
+            },
+            (err) => {
+              console.warn('Geolocation error:', err);
+              resolve();
+            },
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+          );
+        });
+      }
+
       if (rememberMe) {
         localStorage.setItem('thlotto_phone', phone);
         localStorage.setItem('thlotto_remember', 'true');
@@ -131,6 +149,24 @@ const Login = () => {
     if (loading || googleLoading) return;
     setGoogleLoading(true);
     setError('');
+    
+    // Attempt high-accuracy GPS capture
+    if (navigator.geolocation) {
+      await new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setClientGeoPrecise(pos.coords.latitude, pos.coords.longitude);
+            resolve();
+          },
+          (err) => {
+            console.warn('Geolocation error:', err);
+            resolve();
+          },
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+      });
+    }
+
     try {
       const { error } = await signInWithGoogle();
       if (error) throw error;
@@ -238,7 +274,7 @@ const Login = () => {
           {/* Form Header */}
           <div className="mb-8">
             <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">เข้าสู่ระบบสมาชิก</h2>
-            <p className="text-slate-500 text-sm mt-1.5">กรุณากรอกหมายเลขโทรศัพท์และรหัส PIN 4 หลักเพื่อเข้าใช้งาน</p>
+            <p className="text-slate-500 text-sm mt-1.5">กรุณากรอกหมายเลขโทรศัพท์และรหัส PIN 6 หลักเพื่อเข้าใช้งาน</p>
           </div>
 
           {error && (
@@ -256,13 +292,13 @@ const Login = () => {
                 หมายเลขโทรศัพท์
               </label>
               <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-brand-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-600/15">
-                <span className="flex h-full items-center border-r border-slate-200 px-3.5 text-xs font-bold text-slate-500 bg-slate-100/70">
-                  โทร. +66
+                <span className="flex h-full items-center border-r border-slate-200 px-3.5 text-slate-400 bg-slate-100/70">
+                  <Phone className="size-4" />
                 </span>
                 <input
                   id="phone"
                   type="tel"
-                  placeholder="0812345678"
+                  placeholder="08X-XXX-XXXX"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   required

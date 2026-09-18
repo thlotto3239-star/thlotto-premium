@@ -20,6 +20,18 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/" state={{ from: location }} replace />;
   }
 
+  if (profile) {
+    const isProfileComplete = profile.phone && profile.bank_name && profile.bank_account_number && profile.pin_hash;
+
+    if (!isProfileComplete && location.pathname !== '/register') {
+      return <Navigate to="/register" state={{ from: location }} replace />;
+    }
+
+    if (isProfileComplete && (location.pathname === '/onboarding' || location.pathname === '/register')) {
+      return <Navigate to="/home" replace />;
+    }
+  }
+
   if (profile?.status === 'SUSPENDED' || profile?.status === 'BANNED') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">

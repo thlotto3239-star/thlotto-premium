@@ -132,6 +132,46 @@ export async function signUp(formData) {
 }
 
 /**
+ * Update profile for OAuth users who need to complete onboarding
+ */
+export async function updateOnboardingProfile(userId, formData) {
+  const { phone, pin, full_name, bank_name, bank_account_number, bank_account_name, referral_code } = formData;
+  const pinHash = await pinToPassword(phone, pin);
+  
+  const updatePayload = {
+    phone,
+    full_name,
+    bank_name,
+    bank_account_number,
+    bank_account_name,
+    pin_hash: pinHash,
+  };
+
+  if (referral_code) {
+    const { data: refUser } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('member_id', referral_code)
+      .single();
+    if (refUser && refUser.id) {
+      updatePayload.referrer_id = refUser.id;
+    }
+  }
+
+  const { data, error } = await supabase.from('profiles').update(updatePayload).eq('id', userId);
+
+  if (!error) {
+    try {
+      await supabase.rpc('set_user_pin', { p_pin: pin, p_user_id: userId });
+    } catch (e) {
+      logger.warn('set_user_pin fallback skipped:', e.message);
+    }
+  }
+
+  return { data, error };
+}
+
+/**
  * Sign out
  */
 export async function signOut() {
@@ -619,6 +659,25 @@ export function translateThaiLocation(city, region) {
  */
 let _cachedGeo = null;
 let _isResolving = false;
+
+export function setClientGeoPrecise(lat, lon) {
+  if (!_cachedGeo) {
+    _cachedGeo = {
+      ip: '127.0.0.1',
+      city: 'ประเทศไทย',
+      region: 'Thailand',
+      country: 'TH',
+      lat: lat,
+      lon: lon,
+      isp: 'เครือข่ายอินเทอร์เน็ตในประเทศ',
+      _timestamp: Date.now(),
+    };
+  } else {
+    _cachedGeo.lat = lat;
+    _cachedGeo.lon = lon;
+    _cachedGeo._timestamp = Date.now();
+  }
+}
 
 export async function prewarmClientGeo() {
   if (_cachedGeo || _isResolving) return;

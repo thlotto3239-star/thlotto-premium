@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { 
   ShieldCheck, 
@@ -11,11 +11,13 @@ import {
   Gift, 
   AlertCircle, 
   Plus, 
-  CheckCircle2 
+  CheckCircle2,
+  Phone,
+  X
 } from 'lucide-react';
 import { useAuth } from '../AuthContext';
 import { supabase } from '../supabaseClient';
-import { prewarmClientGeo } from '../services/authService';
+import { prewarmClientGeo, setClientGeoPrecise } from '../services/authService';
 
 const FEATURE_LIST = [
   "ระบบผูกบัญชีธนาคารอัตโนมัติ ถอนเงินเข้าบัญชีตรง ปลอดภัยสูงสุด",
@@ -60,16 +62,29 @@ const Register = () => {
   const [banks, setBanks] = useState([]);
   const [logoUrl, setLogoUrl] = useState('');
   const [siteName, setSiteName] = useState('TH LOTTO');
-  const { signUp, signInWithGoogle } = useAuth();
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const { user, profile, signUp, updateOnboardingProfile, signInWithGoogle, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  const referralFromUrl = searchParams.get('ref');
+
   useEffect(() => {
-    const ref = searchParams.get('ref');
-    if (ref) {
-      setFormData(prev => ({ ...prev, referral_code: ref }));
+    if (referralFromUrl) {
+      setFormData(prev => ({ ...prev, referral_code: referralFromUrl }));
     }
-  }, [searchParams]);
+  }, [referralFromUrl]);
+
+  useEffect(() => {
+    if (user && profile) {
+      const isProfileComplete = profile.phone && profile.bank_name && profile.bank_account_number && profile.pin_hash;
+      if (isProfileComplete) {
+        navigate('/home', { replace: true });
+      } else if (profile.full_name && !formData.full_name) {
+        setFormData(prev => ({ ...prev, full_name: profile.full_name }));
+      }
+    }
+  }, [user, profile, navigate, formData.full_name]);
 
   useEffect(() => {
     prewarmClientGeo();
@@ -104,7 +119,7 @@ const Register = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     if (name === 'pin' || name === 'confirm_pin') {
-      setFormData(prev => ({ ...prev, [name]: value.replace(/\D/g, '').slice(0, 4) }));
+      setFormData(prev => ({ ...prev, [name]: value.replace(/\D/g, '').slice(0, 6) }));
       return;
     }
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -120,8 +135,8 @@ const Register = () => {
       setError('กรุณากรอกชื่อ-นามสกุล');
       return;
     }
-    if (formData.pin.length !== 4) {
-      setError('รหัส PIN ต้องมีตัวเลข 4 หลัก');
+    if (formData.pin.length !== 6) {
+      setError('รหัส PIN ต้องมีตัวเลข 6 หลัก');
       return;
     }
     if (formData.pin !== formData.confirm_pin) {
@@ -132,8 +147,41 @@ const Register = () => {
     setStep(2);
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
+  const handleOpenSummary = (e) => {
+    if (e) e.preventDefault();
+    if (!formData.bank_name || !formData.bank_account_name.trim() || !formData.bank_account_number.trim()) {
+      setError('กรุณากรอกข้อมูลธนาคารให้ครบถ้วน');
+      return;
+    }
+    setError('');
+    setShowSummaryModal(true);
+  };
+
+  const handleFinalConfirm = async () => {
+    setLoading(true);
+    
+    // Attempt high-accuracy GPS capture
+    if (navigator.geolocation) {
+      await new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setClientGeoPrecise(pos.coords.latitude, pos.coords.longitude);
+            resolve();
+          },
+          (err) => {
+            console.warn('Geolocation error:', err);
+            resolve();
+          },
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
+      });
+    }
+
+    // Call actual register
+    await handleRegister();
+  };
+
+  const handleRegister = async () => {
     setLoading(true);
     setError('');
 
@@ -143,28 +191,46 @@ const Register = () => {
         throw new Error('หมายเลขโทรศัพท์นี้ถูกใช้สมัครสมาชิกไปแล้ว กรุณาเข้าสู่ระบบ หรือใช้หมายเลขอื่น');
       }
 
-      const { error: signUpError } = await signUp({
-        phone: formData.phone,
-        pin: formData.pin,
-        full_name: formData.full_name,
-        bank_name: formData.bank_name,
-        bank_account_number: formData.bank_account_number,
-        bank_account_name: formData.bank_account_name,
-        referral_code: formData.referral_code,
-      });
-      if (signUpError) throw signUpError;
-      navigate('/registration-success');
+      if (user) {
+        const { error: updateError } = await updateOnboardingProfile({
+          phone: formData.phone,
+          pin: formData.pin,
+          full_name: formData.full_name,
+          bank_name: formData.bank_name,
+          bank_account_number: formData.bank_account_number,
+          bank_account_name: formData.bank_account_name,
+          referral_code: formData.referral_code,
+        });
+        if (updateError) throw updateError;
+        await refreshProfile();
+        setShowSummaryModal(false);
+        navigate('/home');
+      } else {
+        const { error: signUpError } = await signUp({
+          phone: formData.phone,
+          pin: formData.pin,
+          full_name: formData.full_name,
+          bank_name: formData.bank_name,
+          bank_account_number: formData.bank_account_number,
+          bank_account_name: formData.bank_account_name,
+          referral_code: formData.referral_code,
+        });
+        if (signUpError) throw signUpError;
+        setShowSummaryModal(false);
+        navigate('/registration-success');
+      }
     } catch (err) {
       const raw = (err.message || '').toLowerCase();
       let msg = err.message || 'เกิดข้อผิดพลาดในการลงทะเบียน';
       if (raw.includes('duplicate') || raw.includes('unique') || raw.includes('already') || raw.includes('database error saving new user')) {
         msg = 'หมายเลขโทรศัพท์นี้ถูกใช้สมัครสมาชิกไปแล้ว กรุณาเข้าสู่ระบบ หรือใช้หมายเลขอื่น';
       } else if (raw.includes('password') || raw.includes('pin')) {
-        msg = 'รหัส PIN 4 หลักไม่ถูกต้องตามรูปแบบ';
+        msg = 'รหัส PIN 6 หลักไม่ถูกต้องตามรูปแบบ';
       } else if (raw.includes('network') || raw.includes('fetch')) {
         msg = 'ไม่สามารถเชื่อมต่อระบบได้ กรุณาลองใหม่';
       }
       setError(msg);
+      setShowSummaryModal(false);
       console.error(err);
     } finally {
       setLoading(false);
@@ -183,6 +249,7 @@ const Register = () => {
       setGoogleLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-white flex antialiased">
@@ -314,8 +381,8 @@ const Register = () => {
               <div className="space-y-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-slate-700">หมายเลขโทรศัพท์</label>
                 <div className="flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-brand-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-600/15">
-                  <span className="flex h-full items-center border-r border-slate-200 px-3.5 text-xs font-bold text-slate-500 bg-slate-100/70">
-                    โทร. +66
+                  <span className="flex h-full items-center border-r border-slate-200 px-3.5 text-slate-400 bg-slate-100/70">
+                    <Phone className="size-4" />
                   </span>
                   <input
                     name="phone"
@@ -323,7 +390,7 @@ const Register = () => {
                     onChange={handleInputChange}
                     required
                     type="tel"
-                    placeholder="0812345678"
+                    placeholder="08X-XXX-XXXX"
                     className="h-full min-w-0 flex-1 bg-transparent px-3.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 font-medium"
                   />
                 </div>
@@ -348,14 +415,14 @@ const Register = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">รหัส PIN (4 หลัก)</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">รหัส PIN (6 หลัก)</label>
                 <div className="relative flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-brand-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-600/15">
                   <input
                     name="pin"
                     type={showPassword ? 'text' : 'password'}
                     inputMode="numeric"
-                    maxLength={4}
-                    placeholder="••••"
+                    maxLength={6}
+                    placeholder="••••••"
                     value={formData.pin}
                     onChange={handleInputChange}
                     required
@@ -374,14 +441,14 @@ const Register = () => {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">ยืนยันรหัส PIN (4 หลัก)</label>
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">ยืนยันรหัส PIN (6 หลัก)</label>
                 <div className="relative flex h-12 items-center overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/60 transition-all focus-within:border-brand-600 focus-within:bg-white focus-within:ring-4 focus-within:ring-brand-600/15">
                   <input
                     name="confirm_pin"
                     type={showConfirmPassword ? 'text' : 'password'}
                     inputMode="numeric"
-                    maxLength={4}
-                    placeholder="••••"
+                    maxLength={6}
+                    placeholder="••••••"
                     value={formData.confirm_pin}
                     onChange={handleInputChange}
                     required
@@ -411,7 +478,8 @@ const Register = () => {
                     onChange={handleInputChange}
                     type="text"
                     placeholder="เช่น: FRIEND100"
-                    className="h-full min-w-0 flex-1 bg-transparent px-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 font-medium"
+                    readOnly={!!referralFromUrl}
+                    className={`h-full min-w-0 flex-1 bg-transparent px-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 font-medium ${referralFromUrl ? 'opacity-70 cursor-not-allowed' : ''}`}
                   />
                 </div>
               </div>
@@ -426,27 +494,31 @@ const Register = () => {
               </button>
 
               {/* Divider */}
-              <div className="relative my-4 flex items-center justify-center">
-                <div className="w-full border-t border-slate-200" />
-                <span className="absolute bg-white px-3 text-xs font-semibold text-slate-400">
-                  หรือ
-                </span>
-              </div>
+              {!user && (
+                <>
+                  <div className="relative my-4 flex items-center justify-center">
+                    <div className="w-full border-t border-slate-200" />
+                    <span className="absolute bg-white px-3 text-xs font-semibold text-slate-400">
+                      หรือ
+                    </span>
+                  </div>
 
-              {/* Google Sign-In Button */}
-              <button
-                type="button"
-                onClick={handleGoogleSignIn}
-                disabled={loading || googleLoading}
-                className="w-full flex items-center justify-center gap-3 h-12 rounded-2xl border border-slate-200 bg-white font-semibold text-sm text-slate-700 hover:bg-slate-50 hover:border-slate-300 active:scale-[0.99] transition-all shadow-xs cursor-pointer disabled:opacity-50"
-              >
-                {googleLoading ? (
-                  <div className="size-5 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
-                ) : (
-                  <GoogleLogo size={20} />
-                )}
-                <span>{googleLoading ? 'กำลังเชื่อมต่อ Google...' : 'เข้าสู่ระบบด้วย Google'}</span>
-              </button>
+                  {/* Google Sign-In Button */}
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={loading || googleLoading}
+                    className="w-full flex items-center justify-center gap-3 h-12 rounded-2xl border border-slate-200 bg-white font-semibold text-sm text-slate-700 hover:bg-slate-50 hover:border-slate-300 active:scale-[0.99] transition-all shadow-xs cursor-pointer disabled:opacity-50"
+                  >
+                    {googleLoading ? (
+                      <div className="size-5 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+                    ) : (
+                      <GoogleLogo size={20} />
+                    )}
+                    <span>{googleLoading ? 'กำลังเชื่อมต่อ Google...' : 'เข้าสู่ระบบด้วย Google'}</span>
+                  </button>
+                </>
+              )}
             </form>
           ) : (
             <div className="space-y-5">
@@ -477,30 +549,16 @@ const Register = () => {
                           : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 text-slate-700'
                       }`}
                     >
-                      <div className="w-9 h-9 rounded-xl overflow-hidden bg-white border border-slate-100 flex items-center justify-center p-1 mb-1.5">
+                      <div className="w-9 h-9 rounded-xl overflow-hidden bg-white border border-slate-100 flex items-center justify-center p-1 mb-1.5 shrink-0">
                         {b.image_url ? (
                           <img src={b.image_url} alt={b.label} className="w-full h-full object-contain" />
                         ) : (
                           <span className="text-xs font-bold text-slate-800">{b.name}</span>
                         )}
                       </div>
-                      <span className="text-[11px] font-bold truncate max-w-full">{b.label}</span>
+                      <span className="text-[10px] font-bold text-center leading-tight line-clamp-2">{b.label}</span>
                     </button>
                   ))}
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, bank_name: 'OTHER' }))}
-                    className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all cursor-pointer ${
-                      formData.bank_name === 'OTHER'
-                        ? 'border-brand-600 bg-brand-50/50 text-brand-700 shadow-xs'
-                        : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 text-slate-700'
-                    }`}
-                  >
-                    <div className="w-9 h-9 rounded-xl bg-slate-200 flex items-center justify-center text-slate-600 mb-1.5">
-                      <Plus className="size-4" />
-                    </div>
-                    <span className="text-[11px] font-bold">อื่นๆ</span>
-                  </button>
                 </div>
               </div>
 
@@ -541,7 +599,7 @@ const Register = () => {
 
               <button
                 type="button"
-                onClick={handleRegister}
+                onClick={handleOpenSummary}
                 disabled={loading}
                 className="w-full flex items-center justify-center gap-2 h-12 text-white font-bold text-sm tracking-wide rounded-2xl active:scale-[0.99] transition-all bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-600/20 disabled:opacity-50 cursor-pointer mt-6"
               >
@@ -568,6 +626,70 @@ const Register = () => {
           </div>
         </div>
       </main>
+
+      {/* ─── Summary Modal ─── */}
+      {showSummaryModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="mb-5 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-800">สรุปข้อมูลการสมัคร</h3>
+              <button
+                type="button"
+                onClick={() => setShowSummaryModal(false)}
+                disabled={loading}
+                className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4 rounded-2xl bg-slate-50 p-4 border border-slate-100">
+              <div className="flex justify-between border-b border-slate-200/60 pb-3">
+                <span className="text-xs font-semibold text-slate-500">เบอร์โทรศัพท์</span>
+                <span className="text-sm font-bold text-slate-800">{formData.phone}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200/60 pb-3">
+                <span className="text-xs font-semibold text-slate-500">ชื่อ-นามสกุล</span>
+                <span className="text-sm font-bold text-slate-800">{formData.full_name}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-200/60 pb-3">
+                <span className="text-xs font-semibold text-slate-500">ธนาคาร</span>
+                <span className="text-sm font-bold text-slate-800">{banks.find(b => b.name === formData.bank_name)?.label || formData.bank_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-xs font-semibold text-slate-500">เลขบัญชี</span>
+                <span className="text-sm font-bold text-slate-800">{formData.bank_account_number}</span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowSummaryModal(false)}
+                disabled={loading}
+                className="flex-1 rounded-2xl bg-slate-100 py-3.5 text-sm font-bold text-slate-600 transition-colors hover:bg-slate-200 disabled:opacity-50 cursor-pointer"
+              >
+                ยกเลิก
+              </button>
+              <button
+                type="button"
+                onClick={handleFinalConfirm}
+                disabled={loading}
+                className="flex flex-[2] items-center justify-center gap-2 rounded-2xl bg-brand-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-brand-600/30 transition-all hover:bg-brand-700 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+              >
+                {loading ? (
+                  <div className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    ยืนยันการสมัคร
+                    <CheckCircle2 className="size-4" />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

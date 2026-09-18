@@ -12,6 +12,7 @@ import SiteGuard from './components/SiteGuard';
 const Home               = lazy(() => import('./pages/Home'));
 const Login              = lazy(() => import('./pages/Login'));
 const Register           = lazy(() => import('./pages/Register'));
+const Onboarding         = lazy(() => import('./pages/Onboarding'));
 const Results            = lazy(() => import('./pages/Results'));
 const Profile            = lazy(() => import('./pages/Profile'));
 const EditProfile        = lazy(() => import('./pages/EditProfile'));
@@ -69,6 +70,7 @@ function App() {
             <Route path="/" element={<RootRedirect />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/registration-success" element={<RegistrationSuccess />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/results" element={<Results />} />

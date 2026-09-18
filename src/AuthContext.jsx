@@ -34,6 +34,10 @@ export const AuthProvider = ({ children }) => {
     const subscription = authService.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
+        if (_event === 'SIGNED_IN') {
+          const phone = session.user.user_metadata?.phone || '';
+          authService.recordLoginSession(phone, session.user.id, true).catch(() => {});
+        }
         loadProfile(session.user.id);
       } else {
         setProfile(null);
@@ -92,6 +96,10 @@ export const AuthProvider = ({ children }) => {
     return authService.signUp(formData);
   };
 
+  const updateOnboardingProfile = async (formData) => {
+    return authService.updateOnboardingProfile(user.id, formData);
+  };
+
   const signOut = async () => {
     cleanupWallet();
     cleanupNotifications();
@@ -99,7 +107,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signInWithGoogle, signUp, signOut, refreshProfile: () => loadProfile(user?.id) }}>
+    <AuthContext.Provider value={{ user, profile, loading, signIn, signInWithGoogle, signUp, updateOnboardingProfile, signOut, refreshProfile: () => loadProfile(user?.id) }}>
       {children}
     </AuthContext.Provider>
   );
