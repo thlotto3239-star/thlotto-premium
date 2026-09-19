@@ -23,9 +23,9 @@ const ChangePassword = () => {
 
   const validate = () => {
     if (hasPin && !currentPin) return 'กรุณากรอก PIN ปัจจุบัน';
-    if (hasPin && !/^\d{4}$/.test(currentPin)) return 'PIN ปัจจุบันต้องเป็นตัวเลข 4 หลัก';
+    if (hasPin && !/^\d{6}$/.test(currentPin)) return 'PIN ปัจจุบันต้องเป็นตัวเลข 6 หลัก';
     if (!newPin) return 'กรุณากรอก PIN ใหม่';
-    if (!/^\d{4}$/.test(newPin)) return 'PIN ต้องเป็นตัวเลข 4 หลักเท่านั้น';
+    if (!/^\d{6}$/.test(newPin)) return 'PIN ต้องเป็นตัวเลข 6 หลักเท่านั้น';
     if (newPin !== confirmPin) return 'PIN ใหม่ไม่ตรงกัน';
     if (hasPin && newPin === currentPin) return 'PIN ใหม่ต้องไม่ซ้ำกับ PIN ปัจจุบัน';
     return '';
@@ -91,12 +91,12 @@ const ChangePassword = () => {
             </button>
             <div>
               <h1 className="font-black text-slate-900 text-base sm:text-lg tracking-tight">ตั้งค่ารหัส PIN ความปลอดภัย</h1>
-              <p className="text-xs text-slate-400 hidden sm:block">จัดการรหัสผ่าน 4 หลักสำหรับเข้าสู่ระบบและถอนเงิน</p>
+              <p className="text-xs text-slate-400 hidden sm:block">จัดการรหัสผ่าน 6 หลักสำหรับเข้าสู่ระบบและถอนเงิน</p>
             </div>
           </div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">
             <span className="material-symbols-outlined text-sm text-brand-600">lock</span>
-            PIN 4 หลัก
+            PIN 6 หลัก
           </span>
         </div>
       </header>
@@ -171,7 +171,7 @@ const ChangePassword = () => {
                   <h2 className="font-black text-slate-900 text-lg">
                     {hasPin ? 'แก้ไขรหัส PIN เดิม' : 'ตั้งค่ารหัส PIN ใหม่'}
                   </h2>
-                  <p className="text-xs text-slate-500 mt-1">กรอกตัวเลข 4 หลักเพื่อความปลอดภัยของกระเป๋าเงินคุณ</p>
+                  <p className="text-xs text-slate-500 mt-1">กรอกตัวเลข 6 หลักเพื่อความปลอดภัยของกระเป๋าเงินคุณ</p>
                 </div>
 
                 {/* Form Inputs */}
@@ -187,10 +187,10 @@ const ChangePassword = () => {
                         <input
                           type="password"
                           inputMode="numeric"
-                          maxLength={4}
+                          maxLength={6}
                           value={currentPin}
-                          onChange={e => setCurrentPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                          placeholder="••••"
+                          onChange={e => setCurrentPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          placeholder="••••••"
                           className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none font-black text-2xl text-center tracking-[0.5em] text-slate-900 font-mono"
                         />
                       </div>
@@ -200,17 +200,17 @@ const ChangePassword = () => {
                   {/* New PIN */}
                   <div>
                     <label className="block text-xs font-extrabold text-slate-500 uppercase tracking-wider mb-2">
-                      รหัส PIN ใหม่ (4 หลัก)
+                      รหัส PIN ใหม่ (6 หลัก)
                     </label>
                     <div className="relative">
                       <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-xl">lock</span>
                       <input
                         type="password"
                         inputMode="numeric"
-                        maxLength={4}
+                        maxLength={6}
                         value={newPin}
-                        onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                        placeholder="••••"
+                        onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="••••••"
                         className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none font-black text-2xl text-center tracking-[0.5em] text-slate-900 font-mono"
                       />
                     </div>
@@ -226,17 +226,17 @@ const ChangePassword = () => {
                       <input
                         type="password"
                         inputMode="numeric"
-                        maxLength={4}
+                        maxLength={6}
                         value={confirmPin}
-                        onChange={e => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-                        placeholder="••••"
+                        onChange={e => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="••••••"
                         className="w-full pl-12 pr-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all outline-none font-black text-2xl text-center tracking-[0.5em] text-slate-900 font-mono"
                       />
                     </div>
                   </div>
 
                   {/* PIN match indicator */}
-                  {newPin.length === 4 && confirmPin.length > 0 && (
+                  {newPin.length === 6 && confirmPin.length > 0 && (
                     <div className="flex items-center gap-2 px-1">
                       <span className={`material-symbols-outlined text-base ${newPin === confirmPin ? 'text-emerald-500' : 'text-red-500'}`}
                             style={{ fontVariationSettings: "'FILL' 1" }}>
@@ -259,7 +259,7 @@ const ChangePassword = () => {
                   {/* Submit Button */}
                   <button
                     onClick={handleSubmit}
-                    disabled={loading || newPin.length !== 4 || confirmPin.length !== 4 || (hasPin && currentPin.length !== 4)}
+                    disabled={loading || newPin.length !== 6 || confirmPin.length !== 6 || (hasPin && currentPin.length !== 6)}
                     className="w-full py-4 rounded-2xl font-extrabold text-white text-sm uppercase tracking-wider transition-all shadow-md active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer bg-brand-600 hover:bg-brand-700"
                   >
                     {loading ? (
