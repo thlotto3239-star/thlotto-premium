@@ -103,8 +103,8 @@ const Withdrawal = () => {
   };
 
   const handleConfirmWithdrawal = async () => {
-    if (pin.length !== 4) {
-      setPinError('กรุณากรอก PIN 4 หลัก');
+    if (pin.length !== 6) {
+      setPinError('กรุณากรอก PIN 6 หลัก');
       return;
     }
     setLoading(true);
@@ -128,11 +128,11 @@ const Withdrawal = () => {
         );
       } else {
         if (data.error_code === 'WRONG_PIN') {
-          setPinError('รหัส PIN ไม่ถูกต้อง');
+          setPinError('รหัสผ่าน / PIN ไม่ถูกต้อง');
           setPin('');
         } else if (data.error_code === 'NO_PIN') {
           setShowPinModal(false);
-          showError('ยังไม่ได้ตั้งค่า PIN', 'กรุณาตั้งค่า PIN ก่อนถอนเงิน', () => navigate('/change-password'));
+          showError('ยังไม่ได้ตั้งรหัสผ่าน', 'กรุณาติดต่อแอดมินเพื่อขอตั้งหรือรีเซ็ตรหัสผ่านของคุณ');
         } else {
           showError('ถอนเงินไม่สำเร็จ', data.message || 'กรุณาลองใหม่');
         }
@@ -381,20 +381,20 @@ const Withdrawal = () => {
 
             {/* PIN Input */}
             <div className="mb-4">
-              <div className="flex justify-center gap-3 mb-3">
-                {[0, 1, 2, 3].map((i) => (
+              <div className="flex justify-center gap-2 mb-4">
+                {[0, 1, 2, 3, 4, 5].map((i) => (
                   <div
                     key={i}
-                    className={`w-14 h-14 rounded-2xl border-2 flex items-center justify-center text-2xl font-extrabold transition-all ${
+                    className={`w-12 h-14 sm:w-14 sm:h-16 rounded-2xl border-2 flex items-center justify-center text-3xl font-extrabold transition-all duration-300 ${
                       pin.length === i
-                        ? 'border-primary bg-primary/5'
+                        ? 'border-primary bg-primary/10 shadow-[0_0_15px_rgba(var(--color-primary),0.3)] scale-110'
                         : pin.length > i
-                        ? 'border-primary/30 bg-primary/5'
+                        ? 'border-primary/40 bg-primary/5'
                         : 'border-slate-200 bg-slate-50'
                     }`}
                   >
                     {pin.length > i ? (
-                      <div className="w-3 h-3 rounded-full bg-primary"></div>
+                      <div className="w-3 h-3 rounded-full bg-primary animate-in zoom-in duration-200"></div>
                     ) : null}
                   </div>
                 ))}
@@ -402,31 +402,31 @@ const Withdrawal = () => {
               <input
                 type="password"
                 inputMode="numeric"
-                maxLength={4}
+                maxLength={6}
                 autoFocus
                 value={pin}
                 onChange={(e) => {
-                  setPin(e.target.value.replace(/\D/g, '').slice(0, 4));
+                  setPin(e.target.value.replace(/\D/g, '').slice(0, 6));
                   setPinError('');
                 }}
                 className="opacity-0 absolute w-0 h-0"
-                onKeyDown={(e) => { if (e.key === 'Enter' && pin.length === 4) handleConfirmWithdrawal(); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && pin.length === 6) handleConfirmWithdrawal(); }}
               />
               {/* Tap area to focus input */}
               <div
-                className="text-center"
+                className="text-center cursor-pointer select-none"
                 onClick={(e) => {
                   const input = e.currentTarget.parentElement.querySelector('input');
                   if (input) input.focus();
                 }}
               >
                 {pinError ? (
-                  <p className="text-red-500 text-xs font-bold flex items-center justify-center gap-1">
-                    <span className="material-symbols-outlined text-sm">error</span>
+                  <p className="text-red-500 text-sm font-bold flex items-center justify-center gap-1.5 animate-in slide-in-from-top-2">
+                    <span className="material-symbols-outlined text-base">error</span>
                     {pinError}
                   </p>
                 ) : (
-                  <p className="text-slate-400 text-xs font-medium">แตะเพื่อกรอก PIN 4 หลัก</p>
+                  <p className="text-slate-400 text-sm font-medium hover:text-slate-600 transition-colors">แตะเพื่อกรอก PIN 6 หลัก</p>
                 )}
               </div>
             </div>
@@ -449,7 +449,7 @@ const Withdrawal = () => {
               </button>
               <button
                 onClick={handleConfirmWithdrawal}
-                disabled={loading || pin.length !== 4}
+                disabled={loading || pin.length !== 6}
                 className="flex-1 h-14 rounded-full flex items-center justify-center gap-2 text-white text-base font-extrabold active:scale-[0.98] transition-all disabled:opacity-50"
                 style={{ background: 'linear-gradient(135deg, #1a7e2a 0%, #156321 100%)' }}
               >
@@ -465,10 +465,10 @@ const Withdrawal = () => {
             </div>
 
             <button
-              onClick={() => { setShowPinModal(false); navigate('/change-password'); }}
-              className="w-full mt-3 text-center text-xs text-slate-400 font-bold hover:text-primary transition-colors"
+              onClick={() => { setShowPinModal(false); showError('ติดต่อแอดมิน', 'กรุณาติดต่อแอดมินผ่านทางไลน์เพื่อรีเซ็ตรหัสผ่าน'); }}
+              className="w-full mt-3 text-center text-xs text-slate-400 font-bold hover:text-primary transition-colors cursor-pointer"
             >
-              ลืม PIN? เปลี่ยน PIN ใหม่
+              ลืมรหัสผ่าน? ติดต่อแอดมิน
             </button>
           </div>
         </div>
