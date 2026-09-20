@@ -56,7 +56,7 @@ const Wallet = () => {
         .select('active_promo_id, turnover_required, turnover_completed, promo_max_withdrawal, promo_allowed_game')
         .eq('user_id', user.id)
         .single();
-      if (data?.active_promo_id) {
+      if (data?.active_promo_id && (Number(data.turnover_required) > 0 || Number(data.promo_max_withdrawal) > 0)) {
         const { data: promo } = await supabase
           .from('promotions')
           .select('title')
@@ -66,6 +66,8 @@ const Wallet = () => {
           ...data,
           promo_title: promo?.title || 'โปรโมชั่นพิเศษ',
         });
+      } else {
+        setPromoStatus(null);
       }
     };
     fetchPromoStatus();
