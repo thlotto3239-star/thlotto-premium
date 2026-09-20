@@ -183,10 +183,10 @@ export async function signOut() {
  * Fetch profile + wallet data
  */
 export async function fetchProfile(userId) {
-  const [profileRes, walletRes, bankRes] = await Promise.all([
+  const [profileRes, walletRes] = await Promise.all([
     supabase
       .from('profiles')
-      .select('id,serial_number,username,full_name,phone,vip_tier,is_admin,avatar_url,created_at,is_blocked')
+      .select('id,member_id,username,full_name,phone,bank_name,bank_account_number,bank_account_name,referrer_id,status,vip_level,is_admin,avatar_url,pin_hash,created_at,updated_at')
       .eq('id', userId)
       .single(),
     supabase
@@ -194,13 +194,6 @@ export async function fetchProfile(userId) {
       .select('balance, commission_balance, total_won, total_bets')
       .eq('user_id', userId)
       .single(),
-    supabase
-      .from('user_banks')
-      .select('bank_code, account_number, account_name, is_verified')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: true })
-      .limit(1)
-      .maybeSingle(),
   ]);
 
   if (profileRes.error) {
@@ -217,7 +210,7 @@ export async function fetchProfile(userId) {
             .from('profiles')
             .upsert({
               id: u.id,
-              serial_number: memberId,
+              member_id: memberId,
               full_name: meta.full_name || meta.name || u.email?.split('@')[0] || 'สมาชิก Google',
               username: meta.name || u.email?.split('@')[0] || 'member',
               phone: meta.phone || '',
@@ -245,7 +238,6 @@ export async function fetchProfile(userId) {
 
   const walletData = walletRes.data || {};
   let currentProfile = profileRes.data;
-  const bankData = bankRes.data || {};
 
   // ซิงค์ข้อมูล Gmail อัตโนมัติ (ชื่อและรูปโปรไฟล์) เมื่อล็อกอินผ่าน Google
   try {
@@ -278,17 +270,7 @@ export async function fetchProfile(userId) {
     logger.warn('Google metadata sync skipped:', err.message);
   }
 
-  return { 
-    ...currentProfile, 
-    ...walletData,
-    member_id: currentProfile.serial_number,
-    vip_level: currentProfile.vip_tier,
-    status: currentProfile.is_blocked ? 'suspended' : 'active',
-    bank_name: bankData.bank_code,
-    bank_account_number: bankData.account_number,
-    bank_account_name: bankData.account_name,
-    is_verified: bankData.is_verified
-  };
+  return { ...currentProfile, ...walletData };
 }
 
 /**

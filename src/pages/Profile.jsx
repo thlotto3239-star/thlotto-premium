@@ -268,7 +268,7 @@ const Profile = () => {
                       <span className="material-symbols-outlined text-xl">lock_reset</span>
                     </div>
                     <div>
-                      <p className="font-extrabold text-slate-900 text-sm">รหัส PIN ความปลอดภัย (4 หลัก)</p>
+                      <p className="font-extrabold text-slate-900 text-sm">รหัส PIN ความปลอดภัย (6 หลัก)</p>
                       <p className="text-xs text-slate-500 mt-0.5">สำหรับเข้าสู่ระบบและยืนยันการถอนเงิน</p>
                     </div>
                   </div>

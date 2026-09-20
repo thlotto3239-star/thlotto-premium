@@ -69,7 +69,7 @@ const ForgotPassword = () => {
       }
 
       setSuccess('เปลี่ยนรหัสผ่านสำเร็จแล้ว! กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่');
-      
+
       // รอ 2 วินาทีแล้ว redirect ไป login
       setTimeout(() => {
         navigate('/login');
@@ -114,11 +114,10 @@ const ForgotPassword = () => {
             ].map((st, i) => (
               <div
                 key={st.title}
-                className={`flex items-start gap-4 p-4 rounded-2xl border transition-all ${
-                  step === i + 1
+                className={`flex items-start gap-4 p-4 rounded-2xl border transition-all ${step === i + 1
                     ? 'bg-white/15 border-white/30 shadow-lg ring-2 ring-emerald-400/30'
                     : 'bg-white/5 border-white/10 opacity-70'
-                }`}
+                  }`}
               >
                 <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
                   <span className="material-symbols-outlined text-xl text-emerald-300">{st.icon}</span>
@@ -168,11 +167,11 @@ const ForgotPassword = () => {
               {step === 1 ? 'ระบุเบอร์โทรศัพท์' : step === 2 ? 'ยืนยันเลขบัญชีธนาคาร' : 'ตั้งรหัส PIN ใหม่'}
             </h2>
             <p className="text-slate-500 text-xs sm:text-sm mt-1.5 font-medium leading-relaxed">
-              {step === 1 
-                ? 'กรุณากรอกเบอร์โทรศัพท์ที่ใช้ลงทะเบียนสมาชิกเพื่อเริ่มต้นกู้คืนรหัส' 
+              {step === 1
+                ? 'กรุณากรอกเบอร์โทรศัพท์ที่ใช้ลงทะเบียนสมาชิกเพื่อเริ่มต้นกู้คืนรหัส'
                 : step === 2
-                ? 'กรุณาระบุเลขที่บัญชีธนาคารที่ผูกไว้กับระบบเพื่อยืนยันความเป็นเจ้าของบัญชี'
-                : 'ตั้งรหัส PIN 4 หลักใหม่ที่คุณจำได้เพื่อใช้เข้าสู่ระบบในครั้งต่อไป'}
+                  ? 'กรุณาระบุเลขที่บัญชีธนาคารที่ผูกไว้กับระบบเพื่อยืนยันความเป็นเจ้าของบัญชี'
+                  : 'ตั้งรหัส PIN 6 หลักใหม่ที่คุณจำได้เพื่อใช้เข้าสู่ระบบในครั้งต่อไป'}
             </p>
           </div>
 

@@ -50,7 +50,7 @@ const Register = () => {
     pin: '',
     confirm_pin: '',
     referral_code: '',
-    bank_name: 'KBank',
+    bank_name: 'KBANK',
     bank_account_number: '',
     bank_account_name: ''
   });
@@ -144,6 +144,10 @@ const Register = () => {
       return;
     }
     setError('');
+    setFormData(prev => ({
+      ...prev,
+      bank_account_name: prev.bank_account_name.trim() || prev.full_name.trim()
+    }));
     setStep(2);
   };
 

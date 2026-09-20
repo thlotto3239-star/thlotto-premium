@@ -72,8 +72,8 @@ const EditProfile = () => {
         showError('เบอร์โทรศัพท์ไม่ถูกต้อง', 'กรุณากรอกหมายเลขโทรศัพท์ 10 หลัก');
         return;
       }
-      if (!formData.pin || !/^[0-9]{4}$/.test(formData.pin)) {
-        showError('รหัส PIN ไม่ถูกต้อง', 'กรุณากำหนดรหัส PIN ตัวเลข 4 หลักเพื่อความปลอดภัย');
+      if (!formData.pin || !/^[0-9]{6}$/.test(formData.pin)) {
+        showError('รหัส PIN ไม่ถูกต้อง', 'กรุณากำหนดรหัส PIN ตัวเลข 6 หลักเพื่อความปลอดภัย');
         return;
       }
       if (formData.pin !== formData.confirm_pin) {

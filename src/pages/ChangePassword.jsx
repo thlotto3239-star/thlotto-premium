@@ -239,7 +239,7 @@ const ChangePassword = () => {
                   {newPin.length === 6 && confirmPin.length > 0 && (
                     <div className="flex items-center gap-2 px-1">
                       <span className={`material-symbols-outlined text-base ${newPin === confirmPin ? 'text-emerald-500' : 'text-red-500'}`}
-                            style={{ fontVariationSettings: "'FILL' 1" }}>
+                        style={{ fontVariationSettings: "'FILL' 1" }}>
                         {newPin === confirmPin ? 'check_circle' : 'cancel'}
                       </span>
                       <span className={`text-xs font-bold ${newPin === confirmPin ? 'text-emerald-600' : 'text-red-500'}`}>
