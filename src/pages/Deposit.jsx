@@ -27,56 +27,44 @@ const Deposit = () => {
   useEffect(() => {
     const fetchBankData = async () => {
       try {
-        // 1. Fetch active company bank accounts with fallback to settings
-        let { data: cBanks } = await supabase
-          .from('company_bank_accounts')
-          .select('*')
-          .eq('is_active', true)
-          .order('id');
+        // Fetch company bank and deposit configuration directly from settings (SSOT)
+        const { data: setRows } = await supabase
+          .from('settings')
+          .select('key, value')
+          .in('key', [
+            'company_bank_code',
+            'company_bank_account_number',
+            'company_bank_account_name',
+            'bank_account_name',
+            'bank_qr_url',
+            'min_deposit',
+            'deposit_enabled',
+            'maintenance_mode'
+          ]);
 
-        if (!cBanks || cBanks.length === 0) {
-          const { data: setRows } = await supabase
-            .from('settings')
-            .select('key, value')
-            .in('key', ['company_bank_code', 'company_bank_account_number', 'company_bank_account_name', 'bank_account_name', 'bank_qr_url']);
-          
-          if (setRows && setRows.length > 0) {
-            const map = {};
-            setRows.forEach(s => { map[s.key] = s.value; });
-            if (map.company_bank_account_number) {
-              cBanks = [{
-                id: 1,
-                bank_code: (map.company_bank_code || 'KBANK').toUpperCase(),
-                account_name: map.company_bank_account_name || map.bank_account_name || 'บจก. ทีเอช ล็อตโต้ กรุ๊ป',
-                account_number: map.company_bank_account_number,
-                promptpay_id: map.company_bank_account_number.replace(/[^\d]/g, ''),
-                qr_code_url: map.bank_qr_url || '',
-                is_active: true,
-              }];
-            }
+        if (setRows && setRows.length > 0) {
+          const map = {};
+          setRows.forEach(s => { map[s.key] = s.value; });
+
+          if (map.min_deposit) setMinDeposit(Number(map.min_deposit) || 100);
+          if (map.deposit_enabled !== undefined) {
+            setDepositEnabled(String(map.deposit_enabled).toLowerCase() !== 'false');
+          } else if (map.maintenance_mode !== undefined) {
+            setDepositEnabled(String(map.maintenance_mode).toLowerCase() !== 'true');
           }
-        }
 
-        if (cBanks && cBanks.length > 0) {
-          const formatted = cBanks.map(b => ({
-            ...b,
-            account_number: b.account_number || b.account_no || '',
-            promptpay_id: b.promptpay_id || (b.account_number || b.account_no || '').replace(/[^\d]/g, ''),
-          }));
-          setCompanyBanks(formatted);
-          setSelectedBank(formatted[0]);
-        }
-
-        // 2. Fetch min deposit from system_settings
-        const { data: sysData } = await supabase
-          .from('system_settings')
-          .select('min_deposit, maintenance_mode')
-          .maybeSingle();
-
-        if (sysData) {
-          if (sysData.min_deposit) setMinDeposit(Number(sysData.min_deposit));
-          if (sysData.maintenance_mode !== undefined) {
-            setDepositEnabled(!sysData.maintenance_mode);
+          if (map.company_bank_account_number) {
+            const cBank = {
+              id: 1,
+              bank_code: (map.company_bank_code || 'KBANK').toUpperCase(),
+              account_name: map.company_bank_account_name || map.bank_account_name || 'บจก. ทีเอช ล็อตโต้ กรุ๊ป',
+              account_number: map.company_bank_account_number,
+              promptpay_id: map.company_bank_account_number.replace(/[^\d]/g, ''),
+              qr_code_url: map.bank_qr_url || '',
+              is_active: true,
+            };
+            setCompanyBanks([cBank]);
+            setSelectedBank(cBank);
           }
         }
       } catch (err) {
@@ -85,10 +73,10 @@ const Deposit = () => {
     };
     fetchBankData();
 
-    // Realtime: Listen for Admin updates to company bank accounts
+    // Realtime: Listen for Admin updates to settings
     const bankChannel = supabase
-      .channel('realtime:deposit_banks')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'company_bank_accounts' }, () => {
+      .channel('realtime:deposit_settings')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, () => {
         fetchBankData();
       })
       .subscribe();

@@ -87,7 +87,7 @@ const LuckyWheel = () => {
 
       const wheelChannel = supabase
         .channel('realtime:lucky_wheel')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'lucky_wheel_rewards' }, () => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'lucky_wheel_prizes' }, () => {
           fetchSpinStatus();
         })
         .subscribe();
