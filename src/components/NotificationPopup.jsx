@@ -262,13 +262,26 @@ export default function NotificationPopup() {
         const shouldPopup = isExplicitPopup || (isAutoPopupType && !isExplicitInAppOnly);
 
         if (shouldPopup) {
-          const safeNotif = {
-            ...notification,
-            type: rawType,
-            data: meta,
-            _popupId: Date.now() + Math.random(),
-          };
-          setQueue(prev => [...prev, safeNotif]);
+          const incomingReqId = meta.request_id || notification.id;
+          const incomingTitle = (notification.title || "").trim();
+          const incomingBody = (notification.body || "").trim();
+
+          setQueue(prev => {
+            const isDuplicate = prev.some(item => {
+              const itemReqId = item.data?.request_id || item.id;
+              if (incomingReqId && itemReqId && incomingReqId === itemReqId) return true;
+              return item.title?.trim() === incomingTitle && item.body?.trim() === incomingBody;
+            });
+            if (isDuplicate) return prev;
+
+            const safeNotif = {
+              ...notification,
+              type: rawType,
+              data: meta,
+              _popupId: Date.now() + Math.random(),
+            };
+            return [...prev, safeNotif];
+          });
 
           // Optional subtle haptic feedback for mobile devices
           if (typeof navigator !== 'undefined' && navigator.vibrate) {
