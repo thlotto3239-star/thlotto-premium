@@ -119,13 +119,61 @@ const Withdrawal = () => {
 
   const handleConfirmWithdrawal = async () => {
     if (pin.length !== 6) {
-      setPinError('กรุณากรอก PIN 6 หลัก');
+      setPinError('กรุณากรอกรหัสผ่าน 6 หลัก');
       return;
     }
     setLoading(true);
     setPinError('');
     try {
       const hash = await pinToHash(pin);
+
+      // เรียกผ่าน Admin Backend API endpoint (ส่ง type: 'WITHDRAW' ถูกต้องตาม constraint)
+      const adminApiUrl = window.location.hostname === 'localhost'
+        ? '/api/admin/data'
+        : 'https://th-lotto-admin-push-ten.vercel.app/api/admin/data';
+
+      let result = null;
+      try {
+        const res = await fetch(adminApiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'create_withdrawal_request',
+            payload: {
+              user_id: userProfile?.id,
+              amount: pendingAmount,
+              pin: pin,
+              pin_hash: hash,
+            },
+          }),
+        });
+        result = await res.json();
+      } catch (fetchErr) {
+        console.warn('Backend API withdrawal fallback to RPC:', fetchErr);
+      }
+
+      if (result && result.success) {
+        setShowPinModal(false);
+        await refreshProfile();
+        showSuccess(
+          'ส่งคำขอถอนเงินสำเร็จ!',
+          `รอการอนุมัติประมาณ 10-30 นาที\nยอดถอน: ฿${pendingAmount?.toLocaleString()}`,
+          () => navigate('/withdrawal-confirm', { state: { amount: pendingAmount, bankName: userProfile?.bank_name } })
+        );
+        return;
+      }
+
+      if (result && !result.success) {
+        if (result.error_code === 'WRONG_PIN') {
+          setPinError('รหัสผ่าน / PIN ไม่ถูกต้อง');
+          setPin('');
+        } else {
+          showError('ถอนเงินไม่สำเร็จ', result.error || 'กรุณาลองใหม่อีกครั้ง');
+        }
+        return;
+      }
+
+      // Fallback: RPC request_withdrawal_securely
       const { data, error } = await supabase.rpc('request_withdrawal_securely', {
         p_amount: pendingAmount,
         p_pin_hash: hash
@@ -154,7 +202,7 @@ const Withdrawal = () => {
       }
     } catch (err) {
       console.error('Error requesting withdrawal:', err);
-      showError('เกิดข้อผิดพลาด', 'ไม่สามารถถอนเงินได้ กรุณาลองใหม่อีกครั้ง');
+      showError('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถถอนเงินได้ กรุณาลองใหม่อีกครั้ง');
     } finally {
       setLoading(false);
     }

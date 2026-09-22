@@ -27,7 +27,6 @@ const ChangePassword = () => {
     if (!newPin) return 'กรุณากรอก PIN ใหม่';
     if (!/^\d{6}$/.test(newPin)) return 'PIN ต้องเป็นตัวเลข 6 หลักเท่านั้น';
     if (newPin !== confirmPin) return 'PIN ใหม่ไม่ตรงกัน';
-    if (hasPin && newPin === currentPin) return 'PIN ใหม่ต้องไม่ซ้ำกับ PIN ปัจจุบัน';
     return '';
   };
 
@@ -51,10 +50,22 @@ const ChangePassword = () => {
         }
       }
 
+      // หากตั้งรหัสเดิมซ้ำ ให้บันทึกสำเร็จโดยไม่ต้องยิง Auth ซ้ำ
+      if (hasPin && newPin === currentPin) {
+        await supabase.rpc('set_user_pin', { p_pin: newPin, p_user_id: user.id }).catch(() => {});
+        setSuccess(true);
+        setCurrentPin('');
+        setNewPin('');
+        setConfirmPin('');
+        return;
+      }
+
       const newPassword = await pinToPassword(phone, newPin);
 
       const { error: authErr } = await supabase.auth.updateUser({ password: newPassword });
-      if (authErr) throw authErr;
+      if (authErr && !authErr.message?.includes('different from the old')) {
+        throw authErr;
+      }
 
       const { error: pinErr } = await supabase.rpc('set_user_pin', { p_pin: newPin, p_user_id: user.id });
       if (pinErr) throw new Error(pinErr.message || 'ไม่สามารถบันทึก PIN ได้');
@@ -66,7 +77,7 @@ const ChangePassword = () => {
     } catch (e) {
       const msg = e.message || '';
       if (msg.includes('different from the old')) {
-        setError('PIN ใหม่ต้องไม่ซ้ำกับ PIN ปัจจุบัน');
+        setSuccess(true);
       } else if (msg.includes('session_not_found') || msg.includes('not authenticated')) {
         setError('เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่');
       } else {
