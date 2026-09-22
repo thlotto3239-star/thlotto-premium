@@ -124,11 +124,21 @@ const Notifications = () => {
     return d !== todayStr && d !== yesterdayStr;
   });
 
+  const handleItemClick = async (n) => {
+    if (!n.is_read) {
+      await markAsRead(n.id);
+    }
+    const targetUrl = n.data?.action_url || n.action_url;
+    if (targetUrl) {
+      navigate(targetUrl);
+    }
+  };
+
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   const NotifItem = ({ n }) => (
     <div
-      onClick={() => !n.is_read && markAsRead(n.id)}
+      onClick={() => handleItemClick(n)}
       className={`relative flex items-start gap-4 p-5 rounded-2xl border transition-all cursor-pointer hover:shadow-md ${
         n.is_read ? 'bg-white border-slate-100 hover:border-slate-200' : 'bg-primary/[0.03] border-primary/20 hover:border-primary/40'
       }`}

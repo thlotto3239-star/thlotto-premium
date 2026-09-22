@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../AuthContext';
 import { useSettings } from '../contexts/SettingsContext';
+import { supabase } from '../supabaseClient';
 import {
   Home,
   Zap,
@@ -57,6 +58,32 @@ export default function DesktopSidebar() {
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
   const { settings } = useSettings();
+
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!profile?.id) return;
+    const fetchUnread = async () => {
+      const { count } = await supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', profile.id)
+        .eq('is_read', false);
+      setUnreadCount(count || 0);
+    };
+    fetchUnread();
+
+    const sub = supabase
+      .channel('sidebar-notifications')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${profile.id}` }, () => {
+        fetchUnread();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(sub);
+    };
+  }, [profile?.id]);
 
   const handleLogout = async () => {
     if (window.confirm('คุณต้องการออกจากระบบหรือไม่?')) {
@@ -168,13 +195,13 @@ export default function DesktopSidebar() {
                       <span className="truncate">{item.label}</span>
                     </div>
 
-                    {item.badge && (
-                      <span className={`${item.badgeColor || 'bg-red-500'} text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full animate-pulse shrink-0`}>
-                        {item.badge}
+                    {((item.path === '/notifications' && unreadCount > 0) || item.badge) && (
+                      <span className={`${(item.path === '/notifications' ? 'bg-rose-500' : item.badgeColor) || 'bg-red-500'} text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full shrink-0`}>
+                        {item.path === '/notifications' && unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount) : item.badge}
                       </span>
                     )}
 
-                    {!item.badge && isActive && (
+                    {!((item.path === '/notifications' && unreadCount > 0) || item.badge) && isActive && (
                       <ChevronRight className="size-3.5 text-white/80 shrink-0" />
                     )}
                   </Link>

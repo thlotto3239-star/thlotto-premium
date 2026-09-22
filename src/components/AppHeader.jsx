@@ -8,7 +8,7 @@ const AppHeader = ({ announcements = [] }) => {
   const { profile, user } = useAuth();
   const { settings } = useSettings();
   const [balance, setBalance] = useState(null);
-  const [unread, setUnread] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -28,7 +28,7 @@ const AppHeader = ({ announcements = [] }) => {
         .select('id', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('is_read', false);
-      setUnread(count > 0);
+      setUnreadCount(count || 0);
     };
     fetchUnread();
 
@@ -39,7 +39,17 @@ const AppHeader = ({ announcements = [] }) => {
       })
       .subscribe();
 
-    return () => supabase.removeChannel(walletSub);
+    const notifSub = supabase
+      .channel('header-notifications')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, () => {
+        fetchUnread();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(walletSub);
+      supabase.removeChannel(notifSub);
+    };
   }, [user]);
 
   const announcementText = announcements.length > 0
@@ -98,7 +108,11 @@ const AppHeader = ({ announcements = [] }) => {
             </div>
             <Link to="/notifications" className="relative p-1.5 rounded-full hover:bg-slate-100 transition-colors shrink-0">
               <span className="material-icons text-gray-500 text-xl">notifications</span>
-              {unread && <span className="absolute top-1 right-1 w-2 h-2 bg-accent-red rounded-full border border-white"></span>}
+              {unreadCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-xs">
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </Link>
             <Link to="/profile" className="w-9 h-9 rounded-full border border-gray-200 overflow-hidden bg-gray-50 flex items-center justify-center shrink-0 shadow-xs">
               <img
