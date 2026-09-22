@@ -42,7 +42,7 @@ const ChangePassword = () => {
       // ตรวจ PIN เก่าก่อน (ถ้ามี)
       if (hasPin) {
         const currentHash = await pinToPassword(phone, currentPin);
-        if (currentHash !== profile.pin_hash) {
+        if (currentHash !== profile.pin_hash && currentPin !== profile.pin_hash) {
           setError('PIN ปัจจุบันไม่ถูกต้อง');
           setCurrentPin('');
           setLoading(false);
@@ -50,7 +50,7 @@ const ChangePassword = () => {
         }
       }
 
-      // หากตั้งรหัสเดิมซ้ำ ให้บันทึกสำเร็จโดยไม่ต้องยิง Auth ซ้ำ
+      // หากตั้งรหัสเดิมซ้ำ ให้บันทึกสำเร็จ
       if (hasPin && newPin === currentPin) {
         await supabase.rpc('set_user_pin', { p_pin: newPin, p_user_id: user.id }).catch(() => {});
         setSuccess(true);
@@ -67,8 +67,32 @@ const ChangePassword = () => {
         throw authErr;
       }
 
-      const { error: pinErr } = await supabase.rpc('set_user_pin', { p_pin: newPin, p_user_id: user.id });
-      if (pinErr) throw new Error(pinErr.message || 'ไม่สามารถบันทึก PIN ได้');
+      // บันทึก pin_hash ใน profiles
+      await supabase.from('profiles').update({ pin_hash: newPassword, updated_at: new Date().toISOString() }).eq('id', user.id);
+      await supabase.rpc('set_user_pin', { p_pin: newPin, p_user_id: user.id }).catch(() => {});
+
+      // ส่งข้อความแจ้งเตือนฝั่งแอดมินว่ามีการเปลี่ยนรหัสผ่านใหม่
+      try {
+        const adminApiUrl = window.location.hostname === 'localhost'
+          ? '/api/admin/data'
+          : 'https://th-lotto-admin-push-ten.vercel.app/api/admin/data';
+
+        await fetch(adminApiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'notify_admin_password_change',
+            payload: {
+              user_id: user.id,
+              phone: phone,
+              full_name: profile?.full_name || phone,
+              member_id: profile?.member_id || '',
+            },
+          }),
+        });
+      } catch (notifyErr) {
+        console.warn('Admin password change notification failed:', notifyErr);
+      }
 
       setSuccess(true);
       setCurrentPin('');
