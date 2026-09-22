@@ -39,8 +39,8 @@ const ForgotPassword = () => {
   // ตั้งรหัสผ่านใหม่
   const handleResetPassword = async (e) => {
     e.preventDefault();
-    if (newPin.length !== 4) {
-      setError('รหัสผ่านต้องมี 4 หลัก');
+    if (newPin.length !== 6) {
+      setError('รหัสผ่านต้องมี 6 หลัก');
       return;
     }
     if (newPin !== confirmPin) {
@@ -110,7 +110,7 @@ const ForgotPassword = () => {
             {[
               { icon: 'phone_iphone', title: 'ขั้นตอนที่ 1: ตรวจสอบเบอร์โทร', desc: 'ระบุหมายเลขโทรศัพท์ที่ลงทะเบียนไว้' },
               { icon: 'account_balance', title: 'ขั้นตอนที่ 2: ยืนยันเลขบัญชี', desc: 'ตรวจสอบกับบัญชีธนาคารจริงที่ผูกไว้' },
-              { icon: 'key', title: 'ขั้นตอนที่ 3: ตั้งรหัส PIN ใหม่', desc: 'กำหนดรหัส PIN 4 หลักใหม่สำหรับการเข้าใช้งาน' }
+              { icon: 'key', title: 'ขั้นตอนที่ 3: ตั้งรหัส PIN ใหม่', desc: 'กำหนดรหัส PIN 6 หลักใหม่สำหรับการเข้าใช้งาน' }
             ].map((st, i) => (
               <div
                 key={st.title}
@@ -171,7 +171,7 @@ const ForgotPassword = () => {
                 ? 'กรุณากรอกเบอร์โทรศัพท์ที่ใช้ลงทะเบียนสมาชิกเพื่อเริ่มต้นกู้คืนรหัส'
                 : step === 2
                   ? 'กรุณาระบุเลขที่บัญชีธนาคารที่ผูกไว้กับระบบเพื่อยืนยันความเป็นเจ้าของบัญชี'
-                  : 'ตั้งรหัส PIN 6 หลักใหม่ที่คุณจำได้เพื่อใช้เข้าสู่ระบบในครั้งต่อไป'}
+                  : 'ตั้งรหัส PIN 6 หลักใหม่ที่คุณจำได้เพื่อใช้เข้าสู่ระบบและยืนยันการถอนเงิน'}
             </p>
           </div>
 
@@ -280,27 +280,27 @@ const ForgotPassword = () => {
             <form onSubmit={handleResetPassword} className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-slate-700 text-xs font-black uppercase tracking-wider">PIN ใหม่ (4 หลัก)</label>
+                  <label className="text-slate-700 text-xs font-black uppercase tracking-wider">PIN ใหม่ (6 หลัก)</label>
                   <input
                     type="password"
                     inputMode="numeric"
-                    maxLength={4}
-                    placeholder="••••"
+                    maxLength={6}
+                    placeholder="••••••"
                     value={newPin}
-                    onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    onChange={(e) => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     required
                     className="flex w-full rounded-2xl border border-slate-200 bg-slate-50/50 py-3.5 text-center text-xl font-black font-mono tracking-[0.4em] text-slate-900 placeholder:text-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-slate-700 text-xs font-black uppercase tracking-wider">ยืนยัน PIN ใหม่</label>
+                  <label className="text-slate-700 text-xs font-black uppercase tracking-wider">ยืนยัน PIN ใหม่ (6 หลัก)</label>
                   <input
                     type="password"
                     inputMode="numeric"
-                    maxLength={4}
-                    placeholder="••••"
+                    maxLength={6}
+                    placeholder="••••••"
                     value={confirmPin}
-                    onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                    onChange={(e) => setConfirmPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     required
                     className="flex w-full rounded-2xl border border-slate-200 bg-slate-50/50 py-3.5 text-center text-xl font-black font-mono tracking-[0.4em] text-slate-900 placeholder:text-slate-300 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
                   />
@@ -309,7 +309,7 @@ const ForgotPassword = () => {
 
               <button
                 type="submit"
-                disabled={loading || newPin.length !== 4 || newPin !== confirmPin}
+                disabled={loading || newPin.length !== 6 || newPin !== confirmPin}
                 className="w-full flex items-center justify-center gap-2 py-4 text-white font-black text-base rounded-2xl shadow-xl shadow-primary/25 hover:brightness-105 active:scale-98 transition-all disabled:opacity-50"
                 style={{ background: '#008a3e' }}
               >

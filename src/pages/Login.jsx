@@ -321,9 +321,11 @@ const Login = () => {
                 <input
                   id="pin"
                   type={showPin ? 'text' : 'password'}
-                  placeholder="กรอกรหัสผ่าน หรือ PIN"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="••••••"
                   value={pin}
-                  onChange={(e) => setPin(e.target.value)}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   required
                   className="h-full min-w-0 flex-1 bg-transparent px-4 text-sm font-semibold text-slate-900 outline-none placeholder:text-slate-400 placeholder:font-normal"
                 />
