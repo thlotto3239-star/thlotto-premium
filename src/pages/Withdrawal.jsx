@@ -30,6 +30,7 @@ const Withdrawal = () => {
   };
 
   useEffect(() => {
+    // ดึงการตั้งค่าจาก settings (ชื่อ table จริงใน DB ygopnjbvccenryejqmlw)
     const fetchSettings = async () => {
       const { data } = await supabase
         .from('settings')
@@ -37,7 +38,7 @@ const Withdrawal = () => {
         .in('key', ['min_withdraw', 'withdraw_enabled']);
       if (data) {
         data.forEach(row => {
-          if (row.key === 'min_withdraw') setMinWithdraw(Number(row.value));
+          if (row.key === 'min_withdraw') setMinWithdraw(Number(row.value) || 100);
           if (row.key === 'withdraw_enabled') {
             setWithdrawEnabled(String(row.value).toLowerCase() !== 'false');
           }
@@ -47,6 +48,7 @@ const Withdrawal = () => {
     fetchSettings();
 
     if (profile) {
+      // ตรวจสอบสถานะโปรโมชั่นและเทิร์นโอเวอร์จาก wallets จริง
       const fetchPromoStatus = async () => {
         const { data } = await supabase
           .from('wallets')
@@ -61,6 +63,7 @@ const Withdrawal = () => {
             .single();
           setPromoStatus({ ...data, promo_title: promo?.title || 'โปรโมชั่น' });
         } else {
+          // หากไม่มีโปรโมชั่น (ฝากเงินปกติ) ไม่ติดเทิร์นโอเวอร์
           setPromoStatus(null);
         }
       };
@@ -79,6 +82,16 @@ const Withdrawal = () => {
         'ยังไม่ได้เพิ่มบัญชีธนาคาร',
         'กรุณาเพิ่มบัญชีธนาคารก่อนทำรายการถอนเงิน',
         () => navigate('/bank-account')
+      );
+      return;
+    }
+
+    // ตรวจสอบเงื่อนไขเทิร์นโอเวอร์ (เฉพาะกรณีที่รับโปรโมชั่นและเทิร์นยังไม่ครบ)
+    if (promoStatus && Number(promoStatus.turnover_required) > 0 && Number(promoStatus.turnover_completed) < Number(promoStatus.turnover_required)) {
+      const remaining = Number(promoStatus.turnover_required) - Number(promoStatus.turnover_completed);
+      showError(
+        'ติดเงื่อนไขเทิร์นโอเวอร์',
+        `คุณยังทำยอดเดิมพันไม่ครบตามเงื่อนไขโปรโมชั่น (เหลืออีก ฿${remaining.toLocaleString()} บาท)`
       );
       return;
     }
