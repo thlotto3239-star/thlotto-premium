@@ -202,7 +202,7 @@ const EditProfile = () => {
                 className="flex items-center justify-between p-3 rounded-xl bg-zinc-50 hover:bg-zinc-100 transition-colors cursor-pointer group"
               >
                 <div>
-                  <p className="text-xs font-bold text-zinc-800">เปลี่ยนรหัส PIN (4 หลัก)</p>
+                  <p className="text-xs font-bold text-zinc-800">เปลี่ยนรหัส PIN (6 หลัก)</p>
                   <p className="text-[11px] text-zinc-400">ใช้ยืนยันการถอนเงิน</p>
                 </div>
                 <span className="material-symbols-outlined text-zinc-400 text-base group-hover:text-emerald-600 transition-colors">chevron_right</span>
@@ -250,17 +250,18 @@ const EditProfile = () => {
                   <div className="p-4 bg-emerald-50/60 border border-emerald-200 rounded-2xl space-y-3">
                     <div className="flex items-center gap-2 text-emerald-800">
                       <span className="material-symbols-outlined text-sm font-bold">pin</span>
-                      <p className="text-xs font-bold">กำหนดรหัส PIN 4 หลัก สำหรับยืนยันการถอนเงิน</p>
+                      <p className="text-xs font-bold">กำหนดรหัส PIN 6 หลัก สำหรับยืนยันการถอนเงิน</p>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <label className="block text-xs font-bold text-zinc-600 px-1">รหัส PIN 4 หลัก</label>
+                        <label className="block text-xs font-bold text-zinc-600 px-1">รหัส PIN 6 หลัก</label>
                         <input
                           type="password"
-                          maxLength={4}
-                          placeholder="••••"
+                          inputMode="numeric"
+                          maxLength={6}
+                          placeholder="••••••"
                           value={formData.pin}
-                          onChange={(e) => setFormData({ ...formData, pin: e.target.value.replace(/[^0-9]/g, '') })}
+                          onChange={(e) => setFormData({ ...formData, pin: e.target.value.replace(/[^0-9]/g, '').slice(0, 6) })}
                           className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-xl focus:ring-2 focus:ring-emerald-500 text-center font-mono text-xl font-bold tracking-widest"
                         />
                       </div>
@@ -268,10 +269,11 @@ const EditProfile = () => {
                         <label className="block text-xs font-bold text-zinc-600 px-1">ยืนยัน PIN อีกครั้ง</label>
                         <input
                           type="password"
-                          maxLength={4}
-                          placeholder="••••"
+                          inputMode="numeric"
+                          maxLength={6}
+                          placeholder="••••••"
                           value={formData.confirm_pin}
-                          onChange={(e) => setFormData({ ...formData, confirm_pin: e.target.value.replace(/[^0-9]/g, '') })}
+                          onChange={(e) => setFormData({ ...formData, confirm_pin: e.target.value.replace(/[^0-9]/g, '').slice(0, 6) })}
                           className="w-full px-4 py-3 bg-white border border-zinc-200 rounded-xl focus:ring-2 focus:ring-emerald-500 text-center font-mono text-xl font-bold tracking-widest"
                         />
                       </div>
